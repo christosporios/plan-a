@@ -1,8 +1,16 @@
 import { C, EYEBROW } from '../lib/theme';
 import { useIsMobile } from '../hooks/use-is-mobile';
 
-// Shared bottom-of-page footer with site nav (methodology + acknowledgements).
-// Appears on the cover, proposal pages, and static pages.
+// Shared bottom-of-page footer with site nav.
+// Appears on the cover, proposal pages, static pages, and aggregated lists.
+const LINKS = [
+  { href: '/methodologia',    label: 'Μεθοδολογία' },
+  { href: '/diavoulefsi',     label: 'Διαβούλευση' },
+  { href: '/kales-praktikes', label: 'Καλές πρακτικές' },
+  { href: '/parapombes',      label: 'Παραπομπές' },
+  { href: '/eucharisties',    label: 'Ευχαριστίες' },
+];
+
 export const SiteFooter = ({ navigate }) => {
   const mobile = useIsMobile();
   const px = mobile ? 20 : 40;
@@ -13,22 +21,31 @@ export const SiteFooter = ({ navigate }) => {
         margin: '0 auto',
         padding: `0 ${px}px`,
         display: 'flex',
-        flexDirection: mobile ? 'column' : 'row',
-        gap: mobile ? 16 : 12,
-        justifyContent: 'space-between',
-        alignItems: mobile ? 'flex-start' : 'baseline',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 14,
       }}>
-        <span style={{ ...EYEBROW, fontSize: 11, letterSpacing: '0.15em', fontWeight: 400 }}>
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          gap: mobile ? '8px 18px' : '6px 24px',
+        }}>
+          {LINKS.map(({ href, label }) => (
+            <a
+              key={href}
+              data-hover-underline
+              href={href}
+              onClick={(e) => { e.preventDefault(); navigate(href); }}
+              style={footLink}
+            >
+              {label}
+            </a>
+          ))}
+        </div>
+        <span style={{ ...EYEBROW, fontSize: 10, letterSpacing: '0.15em', fontWeight: 400, color: C.faint }}>
           Astylab · Plan A · 2026
         </span>
-        <div style={{ display: 'flex', gap: mobile ? 18 : 24 }}>
-          <a href="/methodologia" onClick={(e) => { e.preventDefault(); navigate('/methodologia'); }} style={footLink}>
-            Μεθοδολογία
-          </a>
-          <a href="/eucharisties" onClick={(e) => { e.preventDefault(); navigate('/eucharisties'); }} style={footLink}>
-            Ευχαριστίες
-          </a>
-        </div>
       </div>
     </footer>
   );
@@ -36,8 +53,8 @@ export const SiteFooter = ({ navigate }) => {
 
 const footLink = {
   ...EYEBROW,
-  fontSize: 13,
+  fontSize: 11,
   letterSpacing: '0.12em',
-  color: C.mid,
-  textDecoration: 'none',
+  fontWeight: 400,
+  color: C.light,
 };

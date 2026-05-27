@@ -48,7 +48,11 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
   const px = mobile ? 20 : 40;
 
   return (
-    <div style={{ fontFamily: C.sans, background: C.bg, color: C.ink, minHeight: '100vh', fontSize: 15, lineHeight: 1.7, WebkitFontSmoothing: 'antialiased' }}>
+    <div style={{
+      fontFamily: C.sans, background: C.bg, color: C.ink, minHeight: '100vh',
+      fontSize: 15, lineHeight: 1.7, WebkitFontSmoothing: 'antialiased',
+      animation: 'fade-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both',
+    }}>
       <SolidLine color={theme.accent} />
       {/* Header */}
       <header style={{

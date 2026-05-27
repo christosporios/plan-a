@@ -3,14 +3,19 @@ import { proposals, getProposalByNumber } from './lib/proposals';
 import { PlanACover } from './components/plan-a-cover';
 import { ProposalPage } from './components/proposal-page';
 import { StaticPage } from './components/static-page';
+import { AggregatedPage } from './components/aggregated-page';
+import { PolisPage } from './components/polis-page';
 
-// Routing: / (cover), /p/:n (proposal), /methodologia, /eucharisties
+// Routing: / (cover), /p/:n (proposal), static pages
 function parseRoute() {
   const path = window.location.pathname.replace(/\/$/, '');
   const m = path.match(/^\/p\/(\d+)/);
   if (m) return { kind: 'proposal', n: Number(m[1]) };
   if (path === '/methodologia') return { kind: 'methodologia' };
   if (path === '/eucharisties') return { kind: 'eucharisties' };
+  if (path === '/kales-praktikes') return { kind: 'kales-praktikes' };
+  if (path === '/parapombes') return { kind: 'parapombes' };
+  if (path === '/diavoulefsi') return { kind: 'diavoulefsi' };
   return { kind: 'cover' };
 }
 
@@ -25,7 +30,9 @@ export default function App() {
 
   const navigate = useCallback((path) => {
     window.history.pushState(null, '', path);
-    window.scrollTo(0, 0);
+    // Instant jump to top on route change; CSS `scroll-behavior: smooth` only
+    // applies to in-page anchor jumps (footnotes, theme chips).
+    window.scrollTo({ top: 0, behavior: 'instant' });
     setRoute(parseRoute());
   }, []);
 
@@ -43,6 +50,18 @@ export default function App() {
 
   if (route.kind === 'eucharisties') {
     return <StaticPage slug="eucharisties" navigate={navigate} />;
+  }
+
+  if (route.kind === 'kales-praktikes') {
+    return <AggregatedPage kind="good_practices" navigate={navigate} />;
+  }
+
+  if (route.kind === 'parapombes') {
+    return <AggregatedPage kind="references" navigate={navigate} />;
+  }
+
+  if (route.kind === 'diavoulefsi') {
+    return <PolisPage navigate={navigate} />;
   }
 
   return <PlanACover proposals={proposals} navigate={navigate} />;

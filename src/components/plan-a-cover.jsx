@@ -3,6 +3,12 @@ import { useIsMobile } from '../hooks/use-is-mobile';
 import { ScrollLine } from './scroll-line';
 import { SiteFooter } from './site-footer';
 
+// Choreographed cover entrance — each block fades + slides up in sequence.
+// Keyframe `fade-up` is defined globally in main.jsx.
+const enter = (delayMs) => ({
+  animation: `fade-up 560ms cubic-bezier(0.16, 1, 0.3, 1) ${delayMs}ms both`,
+});
+
 export const PlanACover = ({ proposals, navigate }) => {
   const mobile = useIsMobile();
   const px = mobile ? 20 : 40;
@@ -21,12 +27,26 @@ export const PlanACover = ({ proposals, navigate }) => {
       {/* Hero */}
       <section style={{ padding: mobile ? '60px 0 32px' : '96px 0 56px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto', padding: `0 ${px}px` }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28 }}>
+          <a
+            href="https://astylab.gr"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              marginBottom: 28,
+              textDecoration: 'none',
+              color: 'inherit',
+              width: 'fit-content',
+              ...enter(0),
+            }}
+          >
             <img src="/astylab-logo.png" alt="" style={{ width: 18, height: 18, display: 'block' }} />
-            <span style={{ ...EYEBROW, fontSize: 11, letterSpacing: '0.25em', fontWeight: 400 }}>
+            <span data-hover-underline style={{ ...EYEBROW, fontSize: 11, letterSpacing: '0.25em', fontWeight: 400 }}>
               Astylab
             </span>
-          </div>
+          </a>
           <h1 style={{
             fontFamily: C.serif,
             fontSize: mobile ? 72 : 120,
@@ -35,6 +55,7 @@ export const PlanACover = ({ proposals, navigate }) => {
             lineHeight: 0.95,
             margin: 0,
             color: C.ink,
+            ...enter(80),
           }}>
             Plan A
           </h1>
@@ -47,6 +68,7 @@ export const PlanACover = ({ proposals, navigate }) => {
             margin: 0,
             marginTop: 12,
             lineHeight: 1.25,
+            ...enter(160),
           }}>
             20 προτάσεις για την Αθήνα
           </p>
@@ -64,6 +86,7 @@ export const PlanACover = ({ proposals, navigate }) => {
             WebkitOverflowScrolling: 'touch',
             // Hide scrollbar on mobile (it appears only when scrolling)
             scrollbarWidth: 'none',
+            ...enter(240),
           }}>
             {THEME_ORDER.map((t, i) => {
               const tinfo = THEMES[t];
@@ -78,6 +101,7 @@ export const PlanACover = ({ proposals, navigate }) => {
                     }}>·</span>
                   )}
                   <a
+                    data-hover-underline
                     href={`#theme-${t}`}
                     onClick={(e) => {
                       e.preventDefault();
@@ -90,7 +114,6 @@ export const PlanACover = ({ proposals, navigate }) => {
                       fontWeight: 500,
                       fontSize: mobile ? 14 : 17,
                       color: tinfo.accent,
-                      textDecoration: 'none',
                       lineHeight: 1.2,
                       whiteSpace: 'nowrap',
                     }}
@@ -115,17 +138,18 @@ export const PlanACover = ({ proposals, navigate }) => {
             display: 'grid',
             gridTemplateColumns: mobile ? '1fr 1fr 1fr' : 'repeat(3, 1fr)',
             gap: mobile ? '0 12px' : '0 24px',
+            ...enter(360),
           }}>
             <Stat label="Πολίτες στη διαβούλευση" value="2.077" mobile={mobile} />
             <Stat label="Ψήφοι" value="126.819" mobile={mobile} />
             <Stat label="Ειδικοί" value="29" mobile={mobile} />
           </div>
-          <p style={{ fontSize: 16, lineHeight: 1.85, color: C.mid, marginTop: 0, marginBottom: 16 }}>
+          <p style={{ fontSize: 16, lineHeight: 1.85, color: C.mid, marginTop: 0, marginBottom: 16, ...enter(440) }}>
             Το Plan A διατυπώνει είκοσι συγκεκριμένες προτάσεις για την Αθήνα. Δεν λύνουν τα
             πάντα — αλλά είναι επιλεγμένες ώστε, με το μικρότερο κόστος εφαρμογής, να φέρουν
             το μεγαλύτερο όφελος στους περισσότερους.
           </p>
-          <p style={{ fontSize: 14.5, lineHeight: 1.8, color: C.light, margin: 0 }}>
+          <p style={{ fontSize: 14.5, lineHeight: 1.8, color: C.light, margin: 0, ...enter(520) }}>
             <a
               href="/methodologia"
               onClick={(e) => { e.preventDefault(); navigate('/methodologia'); }}
@@ -138,7 +162,7 @@ export const PlanACover = ({ proposals, navigate }) => {
       </section>
 
       {/* TOC */}
-      <section style={{ padding: mobile ? '0 0 80px' : '0 0 120px' }}>
+      <section style={{ padding: mobile ? '0 0 80px' : '0 0 120px', ...enter(600) }}>
         <div style={{ maxWidth: 760, margin: '0 auto', padding: `0 ${px}px` }}>
 
           {proposals.length === 0 && (
@@ -150,7 +174,7 @@ export const PlanACover = ({ proposals, navigate }) => {
             if (!bucket?.length) return null;
             const tinfo = THEMES[t];
             return (
-              <div key={t} id={`theme-${t}`} style={{ marginBottom: 44, scrollMarginTop: 24 }}>
+              <div key={t} id={`theme-${t}`} style={{ marginBottom: 56, scrollMarginTop: 24 }}>
                 {tinfo?.label && (
                   <div style={{
                     fontFamily: C.serif,
@@ -177,18 +201,22 @@ export const PlanACover = ({ proposals, navigate }) => {
                       borderTop: `1px solid ${C.rule}`,
                       textDecoration: 'none',
                       color: 'inherit',
-                      transition: 'background 0.15s',
+                      transition: 'background 200ms cubic-bezier(0.16, 1, 0.3, 1)',
                       alignItems: 'start',
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.background = C.hover;
                       const num = e.currentTarget.querySelector('[data-num]');
+                      const body = e.currentTarget.querySelector('[data-body]');
                       if (num) num.style.color = tinfo.accent;
+                      if (body) body.style.transform = 'translateX(6px)';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.background = 'transparent';
                       const num = e.currentTarget.querySelector('[data-num]');
+                      const body = e.currentTarget.querySelector('[data-body]');
                       if (num) num.style.color = C.faint;
+                      if (body) body.style.transform = 'translateX(0)';
                     }}
                   >
                     <span data-num style={{
@@ -199,11 +227,11 @@ export const PlanACover = ({ proposals, navigate }) => {
                       lineHeight: 0.95,
                       letterSpacing: '-0.02em',
                       paddingTop: mobile ? 3 : 4,
-                      transition: 'color 0.2s',
+                      transition: 'color 240ms cubic-bezier(0.16, 1, 0.3, 1)',
                     }}>
                       {String(p.data.number).padStart(2, '0')}
                     </span>
-                    <div>
+                    <div data-body style={{ transition: 'transform 280ms cubic-bezier(0.16, 1, 0.3, 1)' }}>
                       <div style={{
                         fontFamily: C.serif,
                         fontSize: mobile ? 17 : 20,
