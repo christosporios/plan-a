@@ -140,18 +140,26 @@ export const PlanACover = ({ proposals, navigate }) => {
       {/* Intro + metrics share the same bounding box */}
       <section style={{ padding: mobile ? '8px 0 48px' : '8px 0 64px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto', padding: `0 ${px}px` }}>
+          {/* Metrics — 2-row grid so values align horizontally across columns,
+              regardless of whether labels wrap to 1 or 2 lines. */}
           <div style={{
             paddingTop: 0,
             paddingBottom: 4,
             marginBottom: 24,
             display: 'grid',
-            gridTemplateColumns: mobile ? '1fr 1fr 1fr' : 'repeat(3, 1fr)',
-            gap: mobile ? '0 12px' : '0 24px',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gridTemplateRows: 'auto auto',
+            columnGap: mobile ? 12 : 24,
+            rowGap: mobile ? 6 : 8,
+            alignItems: 'end',
             ...enter(360),
           }}>
-            <Stat label="Πολίτες στη διαβούλευση" value="2.077" mobile={mobile} />
-            <Stat label="Ψήφοι" value="126.819" mobile={mobile} />
-            <Stat label="Ειδικοί" value="29" mobile={mobile} />
+            <StatLabel mobile={mobile}>Πολίτες στη διαβούλευση</StatLabel>
+            <StatLabel mobile={mobile}>Ψήφοι</StatLabel>
+            <StatLabel mobile={mobile}>Ειδικοί</StatLabel>
+            <StatValue mobile={mobile}>2.077</StatValue>
+            <StatValue mobile={mobile}>126.819</StatValue>
+            <StatValue mobile={mobile}>29</StatValue>
           </div>
           <div style={{ ...EYEBROW, fontSize: 9, color: C.faint, marginBottom: 28, ...enter(400) }}>
             Από τη διαβούλευση Pol.is και την έρευνα της Astylab, Απρ–Μάι 2026
