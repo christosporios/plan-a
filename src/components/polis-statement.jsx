@@ -100,11 +100,11 @@ export const PolisStatement = ({ statement, overall, groups = [], statementId, m
       <div style={{ marginBottom: 18 }}>
         <GroupBlock label="OVERALL" data={overall} />
       </div>
-      {/* Groups A · B · C — 3 equal columns */}
+      {/* Groups A · B · C — 3 columns on desktop, stacked on mobile */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: mobile ? '0 12px' : '0 22px',
+        gridTemplateColumns: mobile ? '1fr' : 'repeat(3, 1fr)',
+        gap: mobile ? '14px 0' : '0 22px',
       }}>
         {groups.map((g, i) => (
           <GroupBlock key={i} label={g.label} data={g} />
