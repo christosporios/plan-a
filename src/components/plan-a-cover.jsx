@@ -321,15 +321,28 @@ export const PlanACover = ({ proposals, navigate }) => {
   );
 };
 
-function Stat({ label, value, mobile }) {
+// Metrics-grid cells. Label and value are separate grid children so that the
+// values line up on a single baseline across all columns, even when some labels
+// wrap to 2 lines and others fit on 1.
+function StatLabel({ children, mobile }) {
   return (
-    <div>
-      <div style={{ ...EYEBROW, fontSize: mobile ? 10 : 11, marginBottom: 8 }}>
-        {label}
-      </div>
-      <div style={{ fontFamily: C.serif, fontSize: mobile ? 22 : 28, fontWeight: 600, color: C.ink, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
-        {value}
-      </div>
+    <div style={{ ...EYEBROW, fontSize: mobile ? 10 : 11, lineHeight: 1.25 }}>
+      {children}
+    </div>
+  );
+}
+
+function StatValue({ children, mobile }) {
+  return (
+    <div style={{
+      fontFamily: C.serif,
+      fontSize: mobile ? 22 : 28,
+      fontWeight: 600,
+      color: C.ink,
+      lineHeight: 1,
+      fontVariantNumeric: 'tabular-nums',
+    }}>
+      {children}
     </div>
   );
 }

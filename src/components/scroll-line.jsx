@@ -124,7 +124,7 @@ export const SolidLine = ({ color, showProgress = false }) => {
       <div
         aria-hidden
         style={{
-          position: 'fixed', top: 0, left: 0, bottom: 0, width: 8,
+          position: 'fixed', top: 0, left: 0, width: 8, height: '100dvh',
           background: color, zIndex: 50, pointerEvents: 'none',
         }}
       />
@@ -135,7 +135,7 @@ export const SolidLine = ({ color, showProgress = false }) => {
     <div
       aria-hidden
       style={{
-        position: 'fixed', top: 0, left: 0, bottom: 0, width: 8,
+        position: 'fixed', top: 0, left: 0, width: 8, height: '100dvh',
         background: alpha(color, 0.22),
         zIndex: 50, pointerEvents: 'none', overflow: 'hidden',
       }}
