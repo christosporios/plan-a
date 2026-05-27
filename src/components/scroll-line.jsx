@@ -76,13 +76,16 @@ export const ScrollLine = () => {
       aria-hidden
       style={{
         position: 'fixed',
-        top: 0,
+        top: RAIL_TOP,
         left: 0,
-        bottom: 0,
         width: 8,
+        height: RAIL_HEIGHT,
         overflow: 'hidden',
         zIndex: 50,
         pointerEvents: 'none',
+        // Bg covers the safe-area overshoot regions (where the inner gradient
+        // doesn't reach). Use the same neutral that the gradient starts with.
+        background: C.ink,
       }}
     >
       <div
@@ -92,6 +95,10 @@ export const ScrollLine = () => {
           background: gradient,
           transform: `translateY(${-scrollY}px)`,
           willChange: 'transform',
+          // Push inner down past the top safe-area inset so, at scrollY=0,
+          // gradient y=0 lines up with viewport y=0 instead of with the
+          // overshoot top (which would shift the whole gradient up).
+          marginTop: 'env(safe-area-inset-top, 0px)',
         }}
       />
     </div>
