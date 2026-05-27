@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react';
 import { C, THEMES, THEME_ORDER } from '../lib/theme';
 
+// Position the fixed rail so it extends behind iOS Safari's chrome (URL bar,
+// status bar, home indicator). With viewport-fit=cover on the meta viewport,
+// env(safe-area-inset-*) values are non-zero on iOS and the rail spans the
+// whole physical screen instead of only the visible content area.
+const RAIL_TOP = 'calc(0px - env(safe-area-inset-top, 0px))';
+const RAIL_HEIGHT = 'calc(100dvh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px))';
+
 // Fixed vertical line on the left edge of the viewport, used on the cover.
 // Gradient is computed across the whole document height with stops at each theme
 // section, then translated by -scrollY so the visible portion corresponds to
@@ -124,7 +131,7 @@ export const SolidLine = ({ color, showProgress = false }) => {
       <div
         aria-hidden
         style={{
-          position: 'fixed', top: 0, left: 0, width: 8, height: '100dvh',
+          position: 'fixed', top: RAIL_TOP, left: 0, width: 8, height: RAIL_HEIGHT,
           background: color, zIndex: 50, pointerEvents: 'none',
         }}
       />
@@ -135,12 +142,13 @@ export const SolidLine = ({ color, showProgress = false }) => {
     <div
       aria-hidden
       style={{
-        position: 'fixed', top: 0, left: 0, width: 8, height: '100dvh',
+        position: 'fixed', top: RAIL_TOP, left: 0, width: 8, height: RAIL_HEIGHT,
         background: alpha(color, 0.22),
         zIndex: 50, pointerEvents: 'none', overflow: 'hidden',
       }}
     >
       <div
+        data-progress-fill
         style={{
           width: '100%',
           height: `${progress}%`,

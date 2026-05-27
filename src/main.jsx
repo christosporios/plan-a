@@ -47,6 +47,22 @@ globalStyle.textContent = `
     [data-section-rail] { display: none !important; }
   }
 
+  /* Scroll-linked progress fill on the proposal-page left rail. The browser
+     drives the fill height directly from the scroll position, so it updates
+     smoothly during iOS Safari momentum scrolling (where JS scroll events
+     are batched). Falls back to the JS-driven inline height in older
+     browsers that don't support animation-timeline. */
+  @keyframes plan-a-scroll-progress {
+    from { height: 0%; }
+    to   { height: 100%; }
+  }
+  @supports (animation-timeline: scroll()) {
+    [data-progress-fill] {
+      animation: plan-a-scroll-progress linear both;
+      animation-timeline: scroll(root block);
+    }
+  }
+
   /* Accessibility: honor reduced-motion preference everywhere. */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
