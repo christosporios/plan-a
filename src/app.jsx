@@ -5,17 +5,24 @@ import { ProposalPage } from './components/proposal-page';
 import { StaticPage } from './components/static-page';
 import { AggregatedPage } from './components/aggregated-page';
 import { PolisPage } from './components/polis-page';
+import { MethodologyPage } from './components/methodology-page';
 
-// Routing: / (cover), /p/:n (proposal), static pages
+// Routing. Accepted forms for a proposal:
+//   /<number>           e.g. /6
+//   /<number>-<slug>    e.g. /6-mikres-pezodromiseis (canonical)
+//   /p/<number>         legacy
+//   /p/<number>-<slug>  legacy with slug
 function parseRoute() {
   const path = window.location.pathname.replace(/\/$/, '');
-  const m = path.match(/^\/p\/(\d+)/);
-  if (m) return { kind: 'proposal', n: Number(m[1]) };
+  // Static pages first — these are word slugs, not numbers, so no conflict.
   if (path === '/methodologia') return { kind: 'methodologia' };
   if (path === '/eucharisties') return { kind: 'eucharisties' };
   if (path === '/kales-praktikes') return { kind: 'kales-praktikes' };
   if (path === '/parapombes') return { kind: 'parapombes' };
   if (path === '/diavoulefsi') return { kind: 'diavoulefsi' };
+  // Proposal: /N, /N-slug, /p/N, /p/N-slug
+  const m = path.match(/^\/(?:p\/)?(\d+)(?:-[^/]+)?$/);
+  if (m) return { kind: 'proposal', n: Number(m[1]) };
   return { kind: 'cover' };
 }
 
@@ -45,7 +52,7 @@ export default function App() {
   }
 
   if (route.kind === 'methodologia') {
-    return <StaticPage slug="methodologia" navigate={navigate} />;
+    return <MethodologyPage navigate={navigate} />;
   }
 
   if (route.kind === 'eucharisties') {

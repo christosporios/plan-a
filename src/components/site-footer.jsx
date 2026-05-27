@@ -15,7 +15,7 @@ export const SiteFooter = ({ navigate }) => {
   const mobile = useIsMobile();
   const px = mobile ? 20 : 40;
   return (
-    <footer style={{ borderTop: `1px solid ${C.rule}`, padding: mobile ? '28px 0' : '36px 0' }}>
+    <footer style={{ borderTop: `1px solid ${C.rule}`, padding: mobile ? '32px 0' : '44px 0' }}>
       <div style={{
         maxWidth: 760,
         margin: '0 auto',
@@ -23,7 +23,7 @@ export const SiteFooter = ({ navigate }) => {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 14,
+        gap: 18,
       }}>
         <div style={{
           display: 'flex',
@@ -43,8 +43,16 @@ export const SiteFooter = ({ navigate }) => {
             </a>
           ))}
         </div>
-        <span style={{ ...EYEBROW, fontSize: 10, letterSpacing: '0.15em', fontWeight: 400, color: C.faint }}>
-          Astylab · Plan A · 2026
+        {/* Colophon closing line — italic serif, the publication's signature. */}
+        <span style={{
+          fontFamily: C.serif,
+          fontStyle: 'italic',
+          fontSize: mobile ? 13 : 14,
+          color: C.faint,
+          textAlign: 'center',
+          lineHeight: 1.5,
+        }}>
+          Plan A — 20 προτάσεις για την Αθήνα · Astylab · Μάιος 2026
         </span>
       </div>
     </footer>

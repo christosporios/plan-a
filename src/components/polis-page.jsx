@@ -4,6 +4,7 @@ import { useIsMobile } from '../hooks/use-is-mobile';
 import { proposals } from '../lib/proposals';
 import { PolisStatement } from './polis-statement';
 import { SiteFooter } from './site-footer';
+import { SolidLine } from './scroll-line';
 
 // /diavoulefsi: every Pol.is statement that surfaced in the deliberation,
 // grouped by statement and mapped to the proposals each one led to.
@@ -33,7 +34,11 @@ export const PolisPage = ({ navigate }) => {
   });
 
   return (
-    <div style={{ fontFamily: C.sans, background: C.bg, color: C.ink, minHeight: '100vh' }}>
+    <div style={{
+      fontFamily: C.sans, background: C.bg, color: C.ink, minHeight: '100vh',
+      animation: 'fade-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both',
+    }}>
+      <SolidLine color={C.ink} />
       <div style={{ padding: mobile ? '40px 0 56px' : '64px 0 80px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto', padding: `0 ${px}px` }}>
           <a
@@ -82,8 +87,8 @@ export const PolisPage = ({ navigate }) => {
                   {sources.map((p, j) => (
                     <a
                       key={p.slug}
-                      href={`/p/${p.data.number}`}
-                      onClick={(e) => { e.preventDefault(); navigate(`/p/${p.data.number}`); }}
+                      href={`/${p.data.number}-${p.data.slug || p.slug}`}
+                      onClick={(e) => { e.preventDefault(); navigate(`/${p.data.number}-${p.data.slug || p.slug}`); }}
                       style={{
                         fontFamily: C.serif,
                         fontStyle: 'italic',

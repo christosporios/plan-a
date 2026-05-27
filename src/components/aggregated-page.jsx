@@ -4,6 +4,7 @@ import { useIsMobile } from '../hooks/use-is-mobile';
 import { proposals } from '../lib/proposals';
 import { GoodPractice } from './good-practice';
 import { SiteFooter } from './site-footer';
+import { SolidLine } from './scroll-line';
 
 // /kales-praktikes and /parapombes: per-proposal collections of all good
 // practices / references across the whole publication.
@@ -24,7 +25,11 @@ export const AggregatedPage = ({ kind, navigate }) => {
     .filter(({ items }) => items.length > 0);
 
   return (
-    <div style={{ fontFamily: C.sans, background: C.bg, color: C.ink, minHeight: '100vh' }}>
+    <div style={{
+      fontFamily: C.sans, background: C.bg, color: C.ink, minHeight: '100vh',
+      animation: 'fade-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both',
+    }}>
+      <SolidLine color={C.ink} />
       <div style={{ padding: mobile ? '40px 0 56px' : '64px 0 80px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto', padding: `0 ${px}px` }}>
           <a
@@ -57,8 +62,8 @@ export const AggregatedPage = ({ kind, navigate }) => {
           {sections.map(({ p, items }) => (
             <section key={p.slug} style={{ marginBottom: 36 }}>
               <a
-                href={`/p/${p.data.number}`}
-                onClick={(e) => { e.preventDefault(); navigate(`/p/${p.data.number}`); }}
+                href={`/${p.data.number}-${p.data.slug || p.slug}`}
+                onClick={(e) => { e.preventDefault(); navigate(`/${p.data.number}-${p.data.slug || p.slug}`); }}
                 style={{
                   display: 'inline-block',
                   textDecoration: 'none',

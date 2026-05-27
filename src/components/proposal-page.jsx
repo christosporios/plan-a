@@ -12,6 +12,7 @@ import { FootnotesSection } from './footnotes-section';
 import { ProposalSection } from './proposal-section';
 import { SolidLine } from './scroll-line';
 import { SiteFooter } from './site-footer';
+import { SectionRail } from './section-rail';
 
 export const ProposalPage = ({ entry, prev, next, navigate }) => {
   const mobile = useIsMobile();
@@ -47,33 +48,83 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
   const theme = themeOf(d.theme);
   const px = mobile ? 20 : 40;
 
+  // Section anchors for the right-side rail (desktop only).
+  const sectionList = [
+    d.problem && { id: 'problem', label: 'Το πρόβλημα' },
+    d.proposal && { id: 'proposal', label: 'Η πρόταση' },
+    d.implementation && { id: 'implementation', label: 'Υλοποίηση' },
+    d.limitations?.length && { id: 'limitations', label: 'Περιορισμοί' },
+    d.benefits?.length && { id: 'benefits', label: 'Οφέλη' },
+    d.good_practices?.length && { id: 'good-practices', label: 'Καλές πρακτικές' },
+    d.polis?.length && { id: 'polis', label: 'Από το Pol.is' },
+    d.references?.length && { id: 'references', label: 'Παραπομπές' },
+  ].filter(Boolean);
+
   return (
     <div style={{
       fontFamily: C.sans, background: C.bg, color: C.ink, minHeight: '100vh',
       fontSize: 15, lineHeight: 1.7, WebkitFontSmoothing: 'antialiased',
       animation: 'fade-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both',
     }}>
-      <SolidLine color={theme.accent} />
+      <SolidLine color={theme.accent} showProgress />
+      {!mobile && <SectionRail sections={sectionList} accent={theme.accent} />}
       {/* Header */}
       <header style={{
         padding: mobile ? '40px 0 24px' : '64px 0 36px',
         borderBottom: `1px solid ${C.rule}`,
         background: C.bg,
       }}>
-        <div style={{ maxWidth: 760, margin: '0 auto', padding: `0 ${px}px` }}>
-          <a
-            href="/"
-            onClick={(e) => { e.preventDefault(); navigate('/'); }}
-            style={backLinkStyle}
-          >
-            ← Plan A
-          </a>
+        <div style={{ maxWidth: 720, margin: '0 auto', padding: `0 ${px}px` }}>
+          {/* Top nav: ← prev title | Plan A | next title → */}
+          <nav style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr auto 1fr',
+            alignItems: 'baseline',
+            gap: mobile ? 10 : 20,
+            marginBottom: mobile ? 24 : 28,
+          }}>
+            <div style={{ minWidth: 0, overflow: 'hidden' }}>
+              {prev && (
+                <a
+                  href={`/${prev.data.number}-${prev.data.slug || prev.slug}`}
+                  onClick={(e) => { e.preventDefault(); navigate(`/${prev.data.number}-${prev.data.slug || prev.slug}`); }}
+                  data-hover-underline
+                  title={prev.data.title}
+                  style={topNavLink}
+                >
+                  ← {prev.data.title}
+                </a>
+              )}
+            </div>
+            <a
+              href="/"
+              onClick={(e) => { e.preventDefault(); navigate('/'); }}
+              data-hover-underline
+              data-hover-darken
+              style={backLinkStyle}
+            >
+              Plan A
+            </a>
+            <div style={{ minWidth: 0, overflow: 'hidden', textAlign: 'right' }}>
+              {next && (
+                <a
+                  href={`/${next.data.number}-${next.data.slug || next.slug}`}
+                  onClick={(e) => { e.preventDefault(); navigate(`/${next.data.number}-${next.data.slug || next.slug}`); }}
+                  data-hover-underline
+                  title={next.data.title}
+                  style={topNavLink}
+                >
+                  {next.data.title} →
+                </a>
+              )}
+            </div>
+          </nav>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, marginTop: 28, marginBottom: 8 }}>
-            <span style={{ ...EYEBROW, fontSize: 12, letterSpacing: '0.12em', color: theme.accent }}>
+            <span style={{ ...EYEBROW, fontSize: 12, letterSpacing: '0.12em', color: theme.accent, fontWeight: 700 }}>
               Πρόταση {String(d.number).padStart(2, '0')}
             </span>
             {theme.label && (
-              <span style={{ ...EYEBROW, fontSize: 12, letterSpacing: '0.12em', color: theme.accent }}>
+              <span style={{ ...EYEBROW, fontSize: 12, letterSpacing: '0.12em', color: theme.accent, fontWeight: 700 }}>
                 · {theme.label}
               </span>
             )}
@@ -86,6 +137,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
             letterSpacing: '-0.02em',
             margin: 0,
             color: C.ink,
+            textWrap: 'balance',
           }}>
             {d.title}
           </h1>
@@ -93,7 +145,6 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
             <p style={{
               fontFamily: C.serif,
               fontSize: mobile ? 17 : 19,
-              fontStyle: 'italic',
               fontWeight: 400,
               color: C.mid,
               marginTop: 16,
@@ -108,10 +159,10 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
 
       {/* Body */}
       <main style={{ padding: mobile ? '8px 0 40px' : '8px 0 56px' }}>
-        <div style={{ maxWidth: 760, margin: '0 auto', padding: `0 ${px}px` }}>
+        <div style={{ maxWidth: 720, margin: '0 auto', padding: `0 ${px}px` }}>
 
           {d.problem && (
-            <ProposalSection title="Το πρόβλημα">
+            <ProposalSection id="problem" title="Το πρόβλημα" accent={theme.accent}>
               <Body text={d.problem.body} onRefClick={onRefClick} />
               {d.problem.callouts?.map((c, i) => (
                 <CalloutBox key={i} text={c} onRefClick={onRefClick} />
@@ -120,7 +171,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
           )}
 
           {d.proposal && (
-            <ProposalSection title="Η πρόταση">
+            <ProposalSection id="proposal" title="Η πρόταση" accent={theme.accent}>
               <Body text={d.proposal.body} onRefClick={onRefClick} />
               {d.proposal.callouts?.map((c, i) => (
                 <CalloutBox key={i} text={c} onRefClick={onRefClick} />
@@ -129,7 +180,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
           )}
 
           {d.implementation && (
-            <ProposalSection title="Υλοποίηση">
+            <ProposalSection id="implementation" title="Υλοποίηση" accent={theme.accent}>
               {d.implementation.body && <Body text={d.implementation.body} onRefClick={onRefClick} />}
               {d.implementation.phases?.length > 0 && (
                 <PhaseList phases={d.implementation.phases} onRefClick={onRefClick} />
@@ -145,7 +196,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
           )}
 
           {d.limitations?.length > 0 && (
-            <ProposalSection title="Περιορισμοί & τρόποι αντιμετώπισης">
+            <ProposalSection id="limitations" title="Περιορισμοί & τρόποι αντιμετώπισης" accent={theme.accent}>
               {d.limitations.map((l, i) => (
                 <LimitationQA key={i} q={l.q} a={l.a} onRefClick={onRefClick} />
               ))}
@@ -153,7 +204,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
           )}
 
           {d.benefits?.length > 0 && (
-            <ProposalSection title="Επιπρόσθετα οφέλη">
+            <ProposalSection id="benefits" title="Επιπρόσθετα οφέλη" accent={theme.accent}>
               {d.benefits.map((b, i) => (
                 <div key={i} style={{ marginBottom: 18 }}>
                   <div style={{ fontWeight: 600, color: C.ink, fontSize: 15, marginBottom: 6 }}>
@@ -166,7 +217,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
           )}
 
           {d.good_practices?.length > 0 && (
-            <ProposalSection title="Καλές πρακτικές">
+            <ProposalSection id="good-practices" title="Καλές πρακτικές" accent={theme.accent}>
               {d.good_practices.map((gp, i) => (
                 <GoodPractice key={i} city={gp.city} period={gp.period} body={gp.body} onRefClick={onRefClick} />
               ))}
@@ -174,7 +225,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
           )}
 
           {d.polis?.length > 0 && (
-            <ProposalSection title="Από το Pol.is">
+            <ProposalSection id="polis" title="Από το Pol.is" accent={theme.accent}>
               {d.polis.map((p, i) => (
                 <PolisStatement
                   key={i}
@@ -188,14 +239,16 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
             </ProposalSection>
           )}
 
-          <FootnotesSection references={d.references} />
+          <div id="references">
+            <FootnotesSection references={d.references} />
+          </div>
         </div>
       </main>
 
       {/* Prev / next nav */}
       <nav style={{ borderTop: `1px solid ${C.rule}`, padding: mobile ? '20px 0' : '24px 0' }}>
         <div style={{
-          maxWidth: 760,
+          maxWidth: 720,
           margin: '0 auto',
           padding: `0 ${px}px`,
           display: 'grid',
@@ -205,8 +258,8 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
           <div>
             {prev && (
               <a
-                href={`/p/${prev.data.number}`}
-                onClick={(e) => { e.preventDefault(); navigate(`/p/${prev.data.number}`); }}
+                href={`/${prev.data.number}-${prev.data.slug || prev.slug}`}
+                onClick={(e) => { e.preventDefault(); navigate(`/${prev.data.number}-${prev.data.slug || prev.slug}`); }}
                 style={navLinkStyle}
               >
                 <div style={{ ...EYEBROW, fontSize: 9, marginBottom: 4 }}>← Προηγούμενη</div>
@@ -217,8 +270,8 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
           <div style={{ textAlign: 'right' }}>
             {next && (
               <a
-                href={`/p/${next.data.number}`}
-                onClick={(e) => { e.preventDefault(); navigate(`/p/${next.data.number}`); }}
+                href={`/${next.data.number}-${next.data.slug || next.slug}`}
+                onClick={(e) => { e.preventDefault(); navigate(`/${next.data.number}-${next.data.slug || next.slug}`); }}
                 style={navLinkStyle}
               >
                 <div style={{ ...EYEBROW, fontSize: 9, marginBottom: 4 }}>Επόμενη →</div>
@@ -235,3 +288,18 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
 
 const backLinkStyle = { ...EYEBROW, fontSize: 11, letterSpacing: '0.15em', fontWeight: 400, textDecoration: 'none' };
 const navLinkStyle = { display: 'inline-block', textDecoration: 'none' };
+
+// Inline prev/next link at the top of a proposal — italic serif, ellipsis on overflow.
+const topNavLink = {
+  fontFamily: C.serif,
+  fontStyle: 'italic',
+  fontSize: 14,
+  color: C.light,
+  textDecoration: 'none',
+  display: 'inline-block',
+  maxWidth: '100%',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+  verticalAlign: 'bottom',
+};

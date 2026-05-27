@@ -27,6 +27,26 @@ globalStyle.textContent = `
   [data-hover-underline] { text-decoration: none; text-underline-offset: 3px; }
   [data-hover-underline]:hover { text-decoration: underline; }
 
+  /* Opt-in hover-darken: text shifts from its faint resting color to ink. */
+  [data-hover-darken] { transition: color 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+  [data-hover-darken]:hover { color: #1a1a1a !important; }
+
+  /* External-link indicator: faint ↗ that brightens on hover. */
+  [data-external-link]::after {
+    content: '↗';
+    font-size: 0.85em;
+    margin-left: 4px;
+    opacity: 0.4;
+    transition: opacity 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  [data-external-link]:hover::after { opacity: 1; }
+
+  /* Section rail: only render at viewports wide enough to host it without
+     overlapping the content column (max-width 720 + 24 gap + 160 rail width). */
+  @media (max-width: 1199px) {
+    [data-section-rail] { display: none !important; }
+  }
+
   /* Accessibility: honor reduced-motion preference everywhere. */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {

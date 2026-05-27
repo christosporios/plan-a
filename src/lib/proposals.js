@@ -25,3 +25,10 @@ export function getProposalByNumber(n) {
 export function getProposalBySlug(slug) {
   return proposals.find(p => p.slug === slug) || null;
 }
+
+// Canonical URL path for a proposal entry: /<number>-<slug>
+export function proposalPath(entry) {
+  if (!entry?.data?.number) return '/';
+  const slug = entry.data.slug || entry.slug;
+  return slug ? `/${entry.data.number}-${slug}` : `/${entry.data.number}`;
+}

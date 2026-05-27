@@ -19,7 +19,7 @@ export const BudgetTable = ({ items, total, period }) => (
               {item.label}
               {item.note && <span style={{ color: C.faint, fontSize: 12, marginLeft: 8 }}>({item.note})</span>}
             </td>
-            <td style={{ padding: '10px 0', textAlign: 'right', fontFamily: C.mono, fontSize: 12.5, color: C.mid, whiteSpace: 'nowrap' }}>
+            <td style={{ padding: '10px 0', textAlign: 'right', fontFamily: C.mono, fontSize: 12.5, color: C.mid, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
               {item.cost}
             </td>
           </tr>
@@ -29,7 +29,7 @@ export const BudgetTable = ({ items, total, period }) => (
             <td style={{ padding: '12px 0', fontWeight: 600, color: C.ink, borderTop: `1.5px solid ${C.ink}` }}>
               Σύνολο{period && <span style={{ fontWeight: 400, color: C.light, marginLeft: 8 }}>· {period}</span>}
             </td>
-            <td style={{ padding: '12px 0', textAlign: 'right', fontFamily: C.mono, fontSize: 13, fontWeight: 600, color: C.ink, whiteSpace: 'nowrap', borderTop: `1.5px solid ${C.ink}` }}>
+            <td style={{ padding: '12px 0', textAlign: 'right', fontFamily: C.mono, fontSize: 13, fontWeight: 500, color: C.ink, whiteSpace: 'nowrap', borderTop: `1.5px solid ${C.ink}`, fontVariantNumeric: 'tabular-nums' }}>
               {total}
             </td>
           </tr>

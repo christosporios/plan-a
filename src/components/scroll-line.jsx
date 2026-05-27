@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { C, THEMES, THEME_ORDER } from '../lib/theme';
 
 // Fixed vertical line on the left edge of the viewport, used on the cover.
-// Color is a linear gradient computed across the whole document height with stops at
-// each theme section, so as the user scrolls the visible portion of the line
-// transitions smoothly through the section colors.
+// Gradient is computed across the whole document height with stops at each theme
+// section, then translated by -scrollY so the visible portion corresponds to
+// the current scroll position. No progress dimming.
 export const ScrollLine = () => {
   const [scrollY, setScrollY] = useState(0);
   const [docHeight, setDocHeight] = useState(0);
@@ -19,7 +19,7 @@ export const ScrollLine = () => {
 
       // Reach a stable color (theme) BEFORE the section starts — a transition band of
       // 6% gives the "plateau when inside a section" feel rather than a constant slow shift.
-      const BAND = 6; // percent of page height for the colour transition zone
+      const BAND = 6;
 
       const stops = [];
       stops.push(`${C.ink} 0%`);
@@ -30,9 +30,7 @@ export const ScrollLine = () => {
         if (!el) return;
         const top = el.getBoundingClientRect().top + window.scrollY;
         const pos = (top / total) * 100;
-        // Just before the section: still previous colour.
         stops.push(`${prevColor} ${Math.max(0, pos - BAND).toFixed(2)}%`);
-        // At the section: switch to this section's accent.
         stops.push(`${THEMES[t].accent} ${pos.toFixed(2)}%`);
         prevColor = THEMES[t].accent;
       });
@@ -42,7 +40,6 @@ export const ScrollLine = () => {
     };
 
     compute();
-    // Re-measure once layout settles + after Google Fonts swap.
     const t1 = setTimeout(compute, 100);
     const t2 = setTimeout(compute, 600);
     window.addEventListener('resize', compute);
@@ -94,19 +91,70 @@ export const ScrollLine = () => {
   );
 };
 
-// Simpler variant for a single-color page (proposal pages).
-export const SolidLine = ({ color }) => (
-  <div
-    aria-hidden
-    style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      bottom: 0,
-      width: 8,
-      background: color,
-      zIndex: 50,
-      pointerEvents: 'none',
-    }}
-  />
-);
+// Simpler variant for a single-color page (proposal + static pages).
+// `showProgress`: also tracks scroll progress as a filled portion at the top
+// of the rail, against a faded background of the same color.
+export const SolidLine = ({ color, showProgress = false }) => {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    if (!showProgress) return undefined;
+    let raf = 0;
+    const compute = () => {
+      const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = scrollable > 0 ? (window.scrollY / scrollable) * 100 : 0;
+      setProgress(Math.max(0, Math.min(100, pct)));
+    };
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(compute);
+    };
+    compute();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [showProgress]);
+
+  if (!showProgress) {
+    return (
+      <div
+        aria-hidden
+        style={{
+          position: 'fixed', top: 0, left: 0, bottom: 0, width: 8,
+          background: color, zIndex: 50, pointerEvents: 'none',
+        }}
+      />
+    );
+  }
+
+  return (
+    <div
+      aria-hidden
+      style={{
+        position: 'fixed', top: 0, left: 0, bottom: 0, width: 8,
+        background: alpha(color, 0.22),
+        zIndex: 50, pointerEvents: 'none', overflow: 'hidden',
+      }}
+    >
+      <div
+        style={{
+          width: '100%',
+          height: `${progress}%`,
+          background: color,
+          transition: 'height 80ms linear',
+        }}
+      />
+    </div>
+  );
+};
+
+// hex (#rrggbb) → rgba with given alpha. Used to fade the rail background.
+function alpha(hex, a) {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+  if (!m) return hex;
+  return `rgba(${parseInt(m[1], 16)}, ${parseInt(m[2], 16)}, ${parseInt(m[3], 16)}, ${a})`;
+}

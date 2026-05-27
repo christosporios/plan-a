@@ -43,7 +43,7 @@ export const PlanACover = ({ proposals, navigate }) => {
             }}
           >
             <img src="/astylab-logo.png" alt="" style={{ width: 18, height: 18, display: 'block' }} />
-            <span data-hover-underline style={{ ...EYEBROW, fontSize: 11, letterSpacing: '0.25em', fontWeight: 400 }}>
+            <span data-external-link style={{ ...EYEBROW, fontSize: 11, letterSpacing: '0.25em', fontWeight: 400 }}>
               Astylab
             </span>
           </a>
@@ -76,7 +76,16 @@ export const PlanACover = ({ proposals, navigate }) => {
           {/* Theme chips (clickable, scroll to TOC bucket).
               Desktop: one line, no wrap. Mobile: horizontal scroll if needed. */}
           <div style={{
-            marginTop: mobile ? 14 : 20,
+            ...EYEBROW,
+            fontSize: 10,
+            letterSpacing: '0.18em',
+            marginTop: mobile ? 22 : 28,
+            marginBottom: 6,
+            ...enter(220),
+          }}>
+            Θεματικές ενότητες ↓
+          </div>
+          <div style={{
             display: 'flex',
             alignItems: 'baseline',
             flexWrap: 'nowrap',
@@ -86,7 +95,7 @@ export const PlanACover = ({ proposals, navigate }) => {
             WebkitOverflowScrolling: 'touch',
             // Hide scrollbar on mobile (it appears only when scrolling)
             scrollbarWidth: 'none',
-            ...enter(240),
+            ...enter(260),
           }}>
             {THEME_ORDER.map((t, i) => {
               const tinfo = THEMES[t];
@@ -133,8 +142,8 @@ export const PlanACover = ({ proposals, navigate }) => {
         <div style={{ maxWidth: 760, margin: '0 auto', padding: `0 ${px}px` }}>
           <div style={{
             paddingTop: 0,
-            paddingBottom: 28,
-            marginBottom: 8,
+            paddingBottom: 4,
+            marginBottom: 24,
             display: 'grid',
             gridTemplateColumns: mobile ? '1fr 1fr 1fr' : 'repeat(3, 1fr)',
             gap: mobile ? '0 12px' : '0 24px',
@@ -144,20 +153,67 @@ export const PlanACover = ({ proposals, navigate }) => {
             <Stat label="Ψήφοι" value="126.819" mobile={mobile} />
             <Stat label="Ειδικοί" value="29" mobile={mobile} />
           </div>
-          <p style={{ fontSize: 16, lineHeight: 1.85, color: C.mid, marginTop: 0, marginBottom: 16, ...enter(440) }}>
+          <div style={{ ...EYEBROW, fontSize: 9, color: C.faint, marginBottom: 28, ...enter(400) }}>
+            Από τη διαβούλευση Pol.is και την έρευνα της Astylab, Απρ–Μάι 2026
+          </div>
+          <p style={{ fontSize: 16, lineHeight: 1.85, color: C.mid, marginTop: 0, marginBottom: 22, ...enter(440) }}>
             Το Plan A διατυπώνει είκοσι συγκεκριμένες προτάσεις για την Αθήνα. Δεν λύνουν τα
             πάντα — αλλά είναι επιλεγμένες ώστε, με το μικρότερο κόστος εφαρμογής, να φέρουν
-            το μεγαλύτερο όφελος στους περισσότερους.
-          </p>
-          <p style={{ fontSize: 14.5, lineHeight: 1.8, color: C.light, margin: 0, ...enter(520) }}>
+            το μεγαλύτερο όφελος στους περισσότερους.{' '}
             <a
               href="/methodologia"
               onClick={(e) => { e.preventDefault(); navigate('/methodologia'); }}
-              style={{ color: C.mid, textDecoration: 'underline', textUnderlineOffset: 3 }}
+              style={{
+                color: C.mid,
+                textDecoration: 'underline dotted',
+                textDecorationThickness: 1,
+                textUnderlineOffset: 3,
+                transition: 'color 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = C.ink; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = C.mid; }}
             >
-              Πώς φτιάχτηκε το Plan A →
+              Πώς φτιάχτηκε το Plan A;
             </a>
           </p>
+
+          {/* Primary path: pick a starting proposal */}
+          <div style={{
+            display: 'flex', flexWrap: 'wrap', alignItems: 'baseline',
+            gap: mobile ? '8px 18px' : '0 24px',
+            ...enter(500),
+          }}>
+            <a
+              href={proposals[0] ? `/${proposals[0].data.number}-${proposals[0].data.slug || proposals[0].slug}` : '/1'}
+              onClick={(e) => {
+                e.preventDefault();
+                const p = proposals[0];
+                navigate(p ? `/${p.data.number}-${p.data.slug || p.slug}` : '/1');
+              }}
+              data-hover-underline
+              style={{
+                fontFamily: C.serif, fontStyle: 'italic', fontSize: mobile ? 17 : 19,
+                fontWeight: 500, color: C.ink, textUnderlineOffset: 4,
+              }}
+            >
+              Διαβάστε από την αρχή →
+            </a>
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                const p = proposals[Math.floor(Math.random() * proposals.length)];
+                if (p) navigate(`/${p.data.number}-${p.data.slug || p.slug}`);
+              }}
+              data-hover-underline
+              style={{
+                fontFamily: C.serif, fontStyle: 'italic', fontSize: mobile ? 15 : 16,
+                color: C.light, textUnderlineOffset: 4,
+              }}
+            >
+              ή μία τυχαία πρόταση ↻
+            </a>
+          </div>
         </div>
       </section>
 
@@ -191,8 +247,8 @@ export const PlanACover = ({ proposals, navigate }) => {
                 {bucket.map(p => (
                   <a
                     key={p.slug}
-                    href={`/p/${p.data.number}`}
-                    onClick={(e) => { e.preventDefault(); navigate(`/p/${p.data.number}`); }}
+                    href={`/${p.data.number}-${p.data.slug || p.slug}`}
+                    onClick={(e) => { e.preventDefault(); navigate(`/${p.data.number}-${p.data.slug || p.slug}`); }}
                     style={{
                       display: 'grid',
                       gridTemplateColumns: mobile ? '56px 1fr' : '72px 1fr',
@@ -271,7 +327,7 @@ function Stat({ label, value, mobile }) {
       <div style={{ ...EYEBROW, fontSize: mobile ? 10 : 11, marginBottom: 8 }}>
         {label}
       </div>
-      <div style={{ fontFamily: C.serif, fontSize: mobile ? 22 : 28, fontWeight: 600, color: C.ink, lineHeight: 1 }}>
+      <div style={{ fontFamily: C.serif, fontSize: mobile ? 22 : 28, fontWeight: 600, color: C.ink, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
         {value}
       </div>
     </div>

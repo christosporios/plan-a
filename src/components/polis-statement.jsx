@@ -1,15 +1,13 @@
 import { C, EYEBROW } from '../lib/theme';
 
 // The signature Plan A widget: a Pol.is statement with agreement bars
-// for OVERALL + group A + B + C, each annotated with percentages and count.
+// for OVERALL + group A + B + C.
 //
-// Source PDF layout:
-//   [statement text]    OVERALL nnn  A nn  B nn  C nnn
-//                       97% 0% 1%    91%…  100%… 97%…
-//                       (619)        (79)  (96)  (444)
+// Card layout: statement spans full width on top; below, a row of 4 mini-bar
+// cards (OVERALL · A · B · C). Wraps to 2 columns on narrow viewports.
 
 function Bar({ agree, disagree, pass }) {
-  // Normalize in case the numbers don't quite sum to 100 (rounding in source PDF).
+  // Normalize in case numbers don't sum to exactly 100 (rounding in source PDF).
   const total = Math.max(1, agree + disagree + pass);
   const a = (agree / total) * 100;
   const d = (disagree / total) * 100;
@@ -26,25 +24,36 @@ function Bar({ agree, disagree, pass }) {
   );
 }
 
-function GroupCol({ label, count, data, mobile }) {
+function GroupBlock({ label, data }) {
   return (
-    <div style={{ minWidth: mobile ? 64 : 0 }}>
-      <div style={{ ...EYEBROW, fontSize: 9, letterSpacing: '0.15em', marginBottom: 6 }}>
-        {label} {count}
+    <div>
+      <div style={{
+        ...EYEBROW, fontSize: 10, letterSpacing: '0.15em', marginBottom: 8,
+        fontWeight: 700,
+        display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+      }}>
+        <span>{label}</span>
+        <span style={{ color: C.ink, fontWeight: 700 }}>{data.count}</span>
       </div>
       <Bar agree={data.agree} disagree={data.disagree} pass={data.pass} />
       <div style={{
-        fontFamily: C.mono, fontSize: 10, color: C.mid, marginTop: 6,
-        letterSpacing: '0.02em', lineHeight: 1.4,
+        fontFamily: C.mono, fontSize: 11, color: C.mid, marginTop: 8,
+        letterSpacing: '0.02em', lineHeight: 1.3,
+        fontVariantNumeric: 'tabular-nums',
+        display: 'flex', justifyContent: 'space-between', gap: '0 8px',
       }}>
-        <span style={{ color: C.agree, fontWeight: 600 }}>{data.agree}%</span>
-        {' '}
-        <span style={{ color: C.disagree, fontWeight: 600 }}>{data.disagree}%</span>
-        {' '}
-        <span style={{ color: C.light }}>{data.pass}%</span>
-      </div>
-      <div style={{ fontFamily: C.mono, fontSize: 9.5, color: C.faint, marginTop: 1 }}>
-        ({data.count})
+        <span>
+          <span style={{ color: C.agree, fontWeight: 700 }}>{data.agree}%</span>
+          <span style={{ color: C.faint, marginLeft: 4 }}>ΝΑΙ</span>
+        </span>
+        <span>
+          <span style={{ color: C.disagree, fontWeight: 700 }}>{data.disagree}%</span>
+          <span style={{ color: C.faint, marginLeft: 4 }}>ΟΧΙ</span>
+        </span>
+        <span>
+          <span style={{ color: C.light, fontWeight: 700 }}>{data.pass}%</span>
+          <span style={{ color: C.faint, marginLeft: 4 }}>ΠΑΣΟ</span>
+        </span>
       </div>
     </div>
   );
@@ -53,29 +62,54 @@ function GroupCol({ label, count, data, mobile }) {
 export const PolisStatement = ({ statement, overall, groups = [], statementId, mobile = false }) => {
   return (
     <div style={{
-      borderTop: `1px solid ${C.rule}`,
-      borderBottom: `1px solid ${C.rule}`,
-      padding: '14px 0',
-      margin: '12px 0',
-      display: 'grid',
-      gridTemplateColumns: mobile ? '1fr' : '1.6fr repeat(4, 1fr)',
-      gap: mobile ? 16 : 18,
-      alignItems: 'start',
+      background: C.card,
+      border: `1px solid ${C.rule}`,
+      borderRadius: 4,
+      padding: mobile ? '18px 18px 20px' : '22px 24px 24px',
+      margin: '14px 0',
     }}>
-      <div>
+      {/* Statement + # inline; the serif numeral acts as a hanging indent so
+          the prompt text aligns with the cap-height of the number, not its
+          baseline (which would leave the number visually floating above). */}
+      <div style={{
+        marginBottom: 18, paddingBottom: 18, borderBottom: `1px solid ${C.rule}`,
+        display: 'flex', alignItems: 'flex-start', gap: mobile ? 12 : 16,
+      }}>
         {statementId != null && (
-          <div style={{ ...EYEBROW, fontSize: 9, letterSpacing: 0, marginBottom: 4 }}>
+          <div style={{
+            fontFamily: C.serif,
+            fontSize: mobile ? 22 : 26,
+            fontWeight: 600,
+            fontStyle: 'italic',
+            color: C.faint,
+            lineHeight: 1.15,
+            flexShrink: 0,
+            letterSpacing: '-0.01em',
+            // Nudge down slightly so the cap-top of the number aligns with the
+            // x-height-top of the prompt text — they look anchored together.
+            marginTop: mobile ? 0 : 1,
+          }}>
             #{statementId}
           </div>
         )}
-        <div style={{ fontSize: 13.5, color: C.ink, lineHeight: 1.55 }}>
+        <div style={{ fontSize: mobile ? 14 : 15, color: C.ink, lineHeight: 1.5, paddingTop: 2 }}>
           {statement}
         </div>
       </div>
-      <GroupCol label="OVERALL" count={overall.count} data={overall} mobile={mobile} />
-      {groups.map((g, i) => (
-        <GroupCol key={i} label={g.label} count={g.count} data={g} mobile={mobile} />
-      ))}
+      {/* OVERALL — full width */}
+      <div style={{ marginBottom: 18 }}>
+        <GroupBlock label="OVERALL" data={overall} />
+      </div>
+      {/* Groups A · B · C — 3 equal columns */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: mobile ? '0 12px' : '0 22px',
+      }}>
+        {groups.map((g, i) => (
+          <GroupBlock key={i} label={g.label} data={g} />
+        ))}
+      </div>
     </div>
   );
 };
