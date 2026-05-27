@@ -1,0 +1,90 @@
+# Plan A proposal schema — commented template.
+# Copy this to `NN-slug.yaml` (e.g. 01-mikres-pezodromiseis.yaml) to create a proposal.
+# Fields marked OPTIONAL can be omitted entirely.
+
+number: 1                                # 1–20
+slug: mikres-pezodromiseis               # URL-safe ASCII transliteration; final URL is /p/<number>
+theme: mobility                          # public-space | mobility | housing | municipality
+title: Μικρές πεζοδρομήσεις μέσα στις γειτονιές
+one_line: >                              # one-sentence summary shown on the cover + OG image
+  Η Αθήνα μπορεί να αποκτήσει τα λεγόμενα «superblocks»: σε μικρές ομάδες
+  οικοδομικών τετραγώνων, η κυκλοφορία των αυτοκινήτων αποκλείεται από τους
+  εσωτερικούς δρόμους.
+
+# ── ΤΟ ΠΡΟΒΛΗΜΑ ──────────────────────────────────────────────────────────────
+problem:
+  body: |
+    Free-flowing Greek prose. Paragraph breaks are blank lines.
+
+    Use **bold** and *italic* sparingly. For footnote citations use ^N inline:
+    "το 70% των πεζοδρομίων είναι εκτός προδιαγραφών^1" — N must match a
+    references[] entry below.
+  callouts:                              # OPTIONAL — bordered call-out boxes
+    - |
+      Βάσει των προδιαγραφών που θέτει η νομοθεσία, το ελάχιστο πλάτος των
+      πεζοδρομίων θα έπρεπε να είναι 2,1 μέτρα... ^1
+
+# ── Η ΠΡΟΤΑΣΗ ───────────────────────────────────────────────────────────────
+proposal:
+  body: |
+    The actual proposal in prose.
+  callouts: []                           # OPTIONAL, same shape as problem.callouts
+
+# ── ΥΛΟΠΟΙΗΣΗ ───────────────────────────────────────────────────────────────
+implementation:                          # OPTIONAL — many proposals have this
+  body: |
+    Optional intro prose for implementation.
+  phases:                                # OPTIONAL — used when the proposal is staged
+    - title: Φάση 1
+      months: "1–9"
+      body: |
+        Σχεδιασμός & προκήρυξη...
+  budget:                                # OPTIONAL — used for proposals 12, 13, 14
+    items:
+      - label: Σχεδιασμός & παραγωγή σακουλών
+        cost: "€250.000"
+        note: εφάπαξ                     # OPTIONAL inline note
+    total: "€520.000"
+    period: 1ο έτος λειτουργίας          # OPTIONAL (e.g. "εφάπαξ", "ετήσιο")
+
+# ── ΠΕΡΙΟΡΙΣΜΟΙ + ΤΡΟΠΟΙ ΑΝΤΙΜΕΤΩΠΙΣΗΣ ──────────────────────────────────────
+limitations:                             # OPTIONAL — Q&A pattern, "X; → Y"
+  - q: "Τι γίνεται με όσους θέλουν να παρκάρουν στο πάρκινγκ του σπιτιού τους;"
+    a: "Το μέτρο θα εφαρμοστεί σε δρόμους όπου τα κτίρια εκατέρωθεν δεν διαθέτουν ιδιόκτητο πάρκινγκ..."
+
+# ── ΕΠΙΠΡΟΣΘΕΤΑ ΟΦΕΛΗ ───────────────────────────────────────────────────────
+benefits:                                # OPTIONAL — used in some proposals
+  - title: Πιο δροσερές γειτονιές
+    body: |
+      Οι προσομοιώσεις του Δήμου Βαρκελώνης εκτιμούν μείωση θερμοκρασίας... ^5
+
+# ── ΚΑΛΕΣ ΠΡΑΚΤΙΚΕΣ ─────────────────────────────────────────────────────────
+good_practices:                          # OPTIONAL but typical
+  - city: Βαρκελώνη                      # city/country label
+    period: 2017–σήμερα                  # OPTIONAL
+    body: |
+      Στη Βαρκελώνη, το Bicing λειτουργεί 8.000 ποδήλατα σε 557 σταθμούς...
+
+# ── ΑΠΟ ΤΟ POL.IS ──────────────────────────────────────────────────────────
+# The most distinctive Plan A widget. One entry per statement (often 1–4 per proposal).
+# Numbers from the source come as integer percentages.
+polis:                                   # OPTIONAL
+  - statement: "Η Αθήνα πρέπει να στοχεύει σε ανάπτυξη που αυξάνει την ποιότητα ζωής, όχι μόνο τον τουρισμό."
+    statement_id: 1                      # OPTIONAL — statement # in original Pol.is dataset
+    overall: { agree: 97, disagree: 0, pass: 1, count: 619 }
+    groups:
+      - { label: A, agree: 91, disagree: 1, pass: 7, count: 79 }
+      - { label: B, agree: 100, disagree: 0, pass: 0, count: 96 }
+      - { label: C, agree: 97, disagree: 0, pass: 1, count: 444 }
+
+# ── ΠΑΡΑΠΟΜΠΕΣ ──────────────────────────────────────────────────────────────
+references:                              # OPTIONAL — numbered footnotes referenced by ^N
+  - n: 1
+    text: "Πρότυπο Γεωχωρικό Παρατηρητήριο Βαδισιμότητας Δήμου Αθηναίων."
+    url: "https://walkable.cityofathens.gr/map"
+  - n: 2
+    author: "S. Nello-Deakin"
+    title: "Exploring traffic evaporation: Findings from tactical urbanism interventions in Barcelona"
+    year: 2022
+    publication: "Case Studies on Transport Policy"
+    url: "https://www.sciencedirect.com/science/article/pii/S2213624X22002085"
