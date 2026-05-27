@@ -9,7 +9,18 @@ import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { resolveMeta, loadProposals, STATIC_PAGES, applyMeta } from './page-meta.mjs';
 
-const SITE_URL = (process.env.PLAN_A_URL || 'https://plan-a.astylab.gr').replace(/\/$/, '');
+// Resolve the site URL for canonical/OG tags:
+//   1. Explicit PLAN_A_URL (set this in Vercel project settings once a custom domain is wired up)
+//   2. Vercel's production URL (e.g. plan-a-seven.vercel.app)
+//   3. Vercel's per-deployment URL (preview deploys)
+//   4. Local dev fallback
+const SITE_URL = (
+  process.env.PLAN_A_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL && `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`) ||
+  (process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}`) ||
+  'http://localhost:5173'
+).replace(/\/$/, '');
+console.log(`Using SITE_URL=${SITE_URL}`);
 
 const distHtml = readFileSync('dist/index.html', 'utf8');
 
