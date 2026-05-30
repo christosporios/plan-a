@@ -88,7 +88,7 @@ export const SectionRail = ({ sections, accent }) => {
             }}
             style={{
               ...EYEBROW,
-              fontSize: 9,
+              fontSize: 10.5,
               letterSpacing: '0.12em',
               color: isActive ? accent : C.light,
               opacity: isActive ? 1 : 0.75,

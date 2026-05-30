@@ -34,18 +34,6 @@ proposal:
 implementation:                          # OPTIONAL — many proposals have this
   body: |
     Optional intro prose for implementation.
-  phases:                                # OPTIONAL — used when the proposal is staged
-    - title: Φάση 1
-      months: "1–9"
-      body: |
-        Σχεδιασμός & προκήρυξη...
-  budget:                                # OPTIONAL — used for proposals 12, 13, 14
-    items:
-      - label: Σχεδιασμός & παραγωγή σακουλών
-        cost: "€250.000"
-        note: εφάπαξ                     # OPTIONAL inline note
-    total: "€520.000"
-    period: 1ο έτος λειτουργίας          # OPTIONAL (e.g. "εφάπαξ", "ετήσιο")
 
 # ── ΠΕΡΙΟΡΙΣΜΟΙ + ΤΡΟΠΟΙ ΑΝΤΙΜΕΤΩΠΙΣΗΣ ──────────────────────────────────────
 limitations:                             # OPTIONAL — Q&A pattern, "X; → Y"
@@ -57,13 +45,6 @@ benefits:                                # OPTIONAL — used in some proposals
   - title: Πιο δροσερές γειτονιές
     body: |
       Οι προσομοιώσεις του Δήμου Βαρκελώνης εκτιμούν μείωση θερμοκρασίας... ^5
-
-# ── ΚΑΛΕΣ ΠΡΑΚΤΙΚΕΣ ─────────────────────────────────────────────────────────
-good_practices:                          # OPTIONAL but typical
-  - city: Βαρκελώνη                      # city/country label
-    period: 2017–σήμερα                  # OPTIONAL
-    body: |
-      Στη Βαρκελώνη, το Bicing λειτουργεί 8.000 ποδήλατα σε 557 σταθμούς...
 
 # ── ΑΠΟ ΤΟ POL.IS ──────────────────────────────────────────────────────────
 # The most distinctive Plan A widget. One entry per statement (often 1–4 per proposal).

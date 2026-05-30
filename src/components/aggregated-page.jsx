@@ -2,14 +2,12 @@ import { useEffect } from 'react';
 import { C, EYEBROW } from '../lib/theme';
 import { useIsMobile } from '../hooks/use-is-mobile';
 import { proposals } from '../lib/proposals';
-import { GoodPractice } from './good-practice';
 import { SiteFooter } from './site-footer';
 import { SolidLine } from './scroll-line';
 
-// /kales-praktikes and /parapombes: per-proposal collections of all good
-// practices / references across the whole publication.
+// /parapombes: per-proposal collection of all references across the publication.
 //
-// kind = 'good_practices' | 'references'
+// kind = 'references'
 export const AggregatedPage = ({ kind, navigate }) => {
   const mobile = useIsMobile();
   const px = mobile ? 20 : 40;
@@ -78,9 +76,6 @@ export const AggregatedPage = ({ kind, navigate }) => {
                   {p.data.title}
                 </span>
               </a>
-              {kind === 'good_practices' && items.map((gp, i) => (
-                <GoodPractice key={i} city={gp.city} period={gp.period} body={gp.body} />
-              ))}
               {kind === 'references' && (
                 <ol style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                   {items.map((r) => (
@@ -100,16 +95,34 @@ export const AggregatedPage = ({ kind, navigate }) => {
                         {r.n}.
                       </span>
                       <span>
-                        {r.text
-                          ? <>{r.text} {r.url && <a href={r.url} target="_blank" rel="noopener noreferrer" style={{ color: C.light }}>{r.url}</a>}</>
-                          : <>
-                              {r.author && <>{r.author}, </>}
-                              <em>{r.title}</em>
-                              {r.year && <>, {r.year}</>}
+                        {(() => {
+                          let body;
+                          if (r.text) {
+                            body = r.text;
+                          } else {
+                            // Join only the parts that exist so missing fields
+                            // don't leave stray punctuation (e.g. "Author, , 2021").
+                            const cite = [
+                              r.author,
+                              r.title && <em key="t">{r.title}</em>,
+                              r.year,
+                            ].filter(Boolean);
+                            body = <>
+                              {cite.map((part, i) => <span key={i}>{i > 0 && ', '}{part}</span>)}
                               {r.publication && <>. {r.publication}</>}
-                              {r.url && <>. <a href={r.url} target="_blank" rel="noopener noreferrer" style={{ color: C.light }}>{r.url}</a></>}
-                            </>
-                        }
+                            </>;
+                          }
+                          return r.url
+                            ? <a
+                                href={r.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                data-hover-underline
+                                data-external-link
+                                style={{ color: 'inherit' }}
+                              >{body}</a>
+                            : body;
+                        })()}
                       </span>
                     </li>
                   ))}
@@ -125,11 +138,6 @@ export const AggregatedPage = ({ kind, navigate }) => {
 };
 
 const KINDS = {
-  good_practices: {
-    field: 'good_practices',
-    title: 'Καλές πρακτικές',
-    subtitle: 'Παραδείγματα από {n} προτάσεις. Κάθε καρτέλα συνδέεται με την αρχική πρόταση.',
-  },
   references: {
     field: 'references',
     title: 'Παραπομπές',

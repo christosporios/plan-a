@@ -1,17 +1,26 @@
 // Generate OG images for every shareable page on the site:
 // - og-cover.jpg (homepage)
 // - og-1.jpg … og-20.jpg (per proposal, theme-colored)
-// - og-methodologia.jpg, og-eucharisties.jpg, og-kales-praktikes.jpg,
-//   og-parapombes.jpg, og-diavoulefsi.jpg (static pages)
+// - og-methodologia.jpg, og-eucharisties.jpg, og-parapombes.jpg,
+//   og-diavoulefsi.jpg (static pages)
 //
 // Output: 1200×630 JPGs. Each shares the Plan A visual identity:
 // off-white bg, left-edge accent bar (theme color for proposals,
 // gradient for cover, neutral ink for static), serif title, mono eyebrow.
+//
+// Typography matches the live site: EB Garamond (= C.serif) for the wordmark,
+// titles and italics, and Cousine — a Courier-compatible mono with Greek — for
+// the eyebrows (the site's monospace). The SVG is rasterized with resvg, which
+// (unlike librsvg, which sharp uses for SVG input) renders the bundled font
+// files in scripts/og-fonts/ rather than depending on system-installed fonts,
+// so output is identical on every machine. sharp then encodes the JPEG.
 
 import sharp from 'sharp';
 import yaml from 'js-yaml';
+import { Resvg } from '@resvg/resvg-js';
 import { readFileSync, readdirSync, existsSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 const W = 1200;
 const H = 630;
@@ -25,12 +34,29 @@ const COLORS = {
   rule: '#d4d4d4',
 };
 
+// Keep in sync with src/lib/theme.js (THEMES + THEME_ORDER). Object order here
+// is the cover order — it drives the left-bar gradient and the chip row.
 const THEMES = {
-  'public-space': { label: 'Δημόσιος χώρος',           accent: '#5a8c5a' },
-  mobility:       { label: 'Κίνηση',                    accent: '#4a7a8c' },
-  housing:        { label: 'Κτίρια & κατοικία',         accent: '#a06a3e' },
-  municipality:   { label: 'Αποτελεσματικότερος δήμος', accent: '#6e5a8a' },
+  mobility:       { label: 'Μετακίνηση',        accent: '#4a7a8c' },
+  'public-space': { label: 'Δημόσιος Χώρος',     accent: '#5a8c5a' },
+  housing:        { label: 'Κατοικία',           accent: '#ab8540' },
+  identity:       { label: 'Ταυτότητα',          accent: '#af4d44' },
+  municipality:   { label: 'Αποτελεσματικότητα', accent: '#6e5a8a' },
 };
+
+// Font families as named inside the SVG. SERIF = EB Garamond, MONO = Cousine.
+const SERIF = 'EB Garamond';
+const MONO = 'Cousine';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const fontDir = join(__dirname, 'og-fonts');
+const FONT_FILES = [
+  'EBGaramond-Regular.ttf',
+  'EBGaramond-Italic.ttf',
+  'EBGaramond-Bold.ttf',
+  'Cousine-Regular.ttf',
+  'Cousine-Bold.ttf',
+].map((f) => join(fontDir, f));
 
 const proposalDir = 'proposals';
 const publicDir = 'public';
@@ -39,6 +65,16 @@ if (!existsSync(publicDir)) mkdirSync(publicDir, { recursive: true });
 
 function escapeXml(s) {
   return String(s).replace(/[<>&'"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' }[c]));
+}
+
+// Rasterize an SVG string to a JPEG file. resvg shapes text with the bundled
+// fonts (no system-font dependency); sharp encodes the JPEG.
+async function renderJpeg(svg, outFile) {
+  const png = new Resvg(svg, {
+    font: { fontFiles: FONT_FILES, loadSystemFonts: false, defaultFontFamily: SERIF },
+  }).render().asPng();
+  await sharp(png).jpeg({ quality: 88 }).toFile(join(publicDir, outFile));
+  console.log(`Generated public/${outFile}`);
 }
 
 // Greek all-caps drops the tonos (acute accent). Decompose, strip combining
@@ -74,52 +110,57 @@ async function generateCoverOG() {
   const accents = Object.values(THEMES).map((t) => t.accent);
   const chipLabels = Object.values(THEMES).map((t) => t.label);
 
-  // Distribute chips horizontally
+  // Distribute chips horizontally. Spacing is derived from the count and the
+  // widest label so the (left-anchored) last chip never runs off the canvas.
   const chipY = 540;
-  const chipSpacing = 240;
-  const chipStartX = 100;
+  const chipFont = 22;
+  const chipStartX = 90;
+  const estWidth = (s) => s.length * chipFont * 0.52; // rough serif-italic advance
+  const maxLabelW = Math.max(...chipLabels.map(estWidth));
+  const chipSpacing = Math.floor((W - chipStartX - maxLabelW - 20) / Math.max(1, chipLabels.length - 1));
+
+  // Left-bar gradient: a short ink intro, then one solid band per theme accent.
+  const inkEnd = 14; // %
+  const bandSpan = 100 - inkEnd;
+  const bandStops = accents.map((c, i) => {
+    const start = inkEnd + (bandSpan * i) / accents.length;
+    const end = inkEnd + (bandSpan * (i + 1)) / accents.length;
+    return `<stop offset="${start.toFixed(2)}%" stop-color="${c}"/><stop offset="${end.toFixed(2)}%" stop-color="${c}"/>`;
+  }).join('\n      ');
 
   const svg = `
 <svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="leftBar" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="${COLORS.ink}"/>
-      <stop offset="14%" stop-color="${COLORS.ink}"/>
-      <stop offset="24%" stop-color="${accents[0]}"/>
-      <stop offset="40%" stop-color="${accents[0]}"/>
-      <stop offset="50%" stop-color="${accents[1]}"/>
-      <stop offset="64%" stop-color="${accents[1]}"/>
-      <stop offset="74%" stop-color="${accents[2]}"/>
-      <stop offset="84%" stop-color="${accents[2]}"/>
-      <stop offset="92%" stop-color="${accents[3]}"/>
-      <stop offset="100%" stop-color="${accents[3]}"/>
+      <stop offset="${inkEnd}%" stop-color="${COLORS.ink}"/>
+      ${bandStops}
     </linearGradient>
   </defs>
   <rect width="100%" height="100%" fill="${COLORS.bg}"/>
   <rect x="0" y="0" width="16" height="${H}" fill="url(#leftBar)"/>
 
-  <text x="100" y="130" font-family="monospace" font-size="22" letter-spacing="6" fill="${COLORS.faint}">
+  <text x="100" y="130" font-family="${MONO}" font-size="22" letter-spacing="6" fill="${COLORS.faint}">
     ASTYLAB · ΜΑΪΟΣ 2026
   </text>
 
-  <text x="100" y="340" font-family="serif" font-size="200" font-weight="700" fill="${COLORS.ink}" letter-spacing="-5">
+  <text x="100" y="340" font-family="${SERIF}" font-style="italic" font-size="200" fill="${COLORS.ink}" letter-spacing="-5">
     Plan A
   </text>
 
-  <text x="100" y="420" font-family="serif" font-size="56" font-style="italic" fill="${COLORS.mid}">
+  <text x="100" y="420" font-family="${SERIF}" font-size="56" font-style="italic" fill="${COLORS.mid}">
     20 προτάσεις για την Αθήνα
   </text>
 
   ${chipLabels.map((label, i) => `
     <g transform="translate(${chipStartX + i * chipSpacing}, ${chipY})">
       <rect x="0" y="0" width="48" height="3" fill="${accents[i]}"/>
-      <text x="0" y="30" font-family="serif" font-size="22" font-style="italic" fill="${accents[i]}">${escapeXml(label)}</text>
+      <text x="0" y="30" font-family="${SERIF}" font-size="${chipFont}" font-style="italic" fill="${accents[i]}">${escapeXml(label)}</text>
     </g>
   `).join('')}
 </svg>`;
 
-  await sharp(Buffer.from(svg)).jpeg({ quality: 88 }).toFile(join(publicDir, 'og-cover.jpg'));
-  console.log('Generated public/og-cover.jpg');
+  await renderJpeg(svg, 'og-cover.jpg');
 }
 
 // ── Proposal OG ─────────────────────────────────────────────────────────────
@@ -153,38 +194,37 @@ async function generateProposalOG(data) {
   <rect x="0" y="0" width="20" height="${H}" fill="${theme.accent}"/>
 
   <!-- TOP LEFT: branding kicker -->
-  <text x="100" y="100" font-family="monospace" font-size="18" letter-spacing="5" fill="${COLORS.faint}">
+  <text x="100" y="100" font-family="${MONO}" font-size="18" letter-spacing="5" fill="${COLORS.faint}">
     PLAN A · ASTYLAB · ΜΑΪΟΣ 2026
   </text>
 
   <!-- RIGHT COLUMN: ΠΡΟΤΑΣΗ eyebrow + huge number + theme label -->
-  <text x="${numberX}" y="160" text-anchor="end" font-family="monospace" font-size="22" letter-spacing="6" font-weight="700" fill="${theme.accent}">
+  <text x="${numberX}" y="160" text-anchor="end" font-family="${MONO}" font-size="22" letter-spacing="6" font-weight="700" fill="${theme.accent}">
     ΠΡΟΤΑΣΗ
   </text>
-  <text x="${numberX}" y="${numberY}" text-anchor="end" font-family="serif" font-size="${numberSize}" font-weight="700" fill="${theme.accent}" letter-spacing="-12">
+  <text x="${numberX}" y="${numberY}" text-anchor="end" font-family="${SERIF}" font-size="${numberSize}" font-weight="700" fill="${theme.accent}" letter-spacing="-12">
     ${n}
   </text>
   ${themeLabelUpper ? `
-  <text x="${numberX}" y="475" text-anchor="end" font-family="monospace" font-size="20" letter-spacing="5" font-weight="700" fill="${theme.accent}">
+  <text x="${numberX}" y="475" text-anchor="end" font-family="${MONO}" font-size="20" letter-spacing="5" font-weight="700" fill="${theme.accent}">
     ${escapeXml(themeLabelUpper)}
   </text>
   ` : ''}
 
   <!-- LEFT COLUMN: title (capped to x ≤ 720 by the 18-char wrap above) -->
   ${titleLines.map((line, i) => `
-    <text x="100" y="${titleStartY + i * titleLineHeight}" font-family="serif" font-size="${titleFontSize}" font-weight="700" fill="${COLORS.ink}" letter-spacing="-1.5">
+    <text x="100" y="${titleStartY + i * titleLineHeight}" font-family="${SERIF}" font-size="${titleFontSize}" font-weight="700" fill="${COLORS.ink}" letter-spacing="-1.5">
       ${escapeXml(line)}
     </text>
   `).join('')}
 
   <!-- BOTTOM LEFT: footer kicker -->
-  <text x="100" y="590" font-family="monospace" font-size="16" letter-spacing="4" fill="${COLORS.faint}">
+  <text x="100" y="590" font-family="${MONO}" font-size="16" letter-spacing="4" fill="${COLORS.faint}">
     20 ΠΡΟΤΑΣΕΙΣ ΓΙΑ ΤΗΝ ΑΘΗΝΑ
   </text>
 </svg>`;
 
-  await sharp(Buffer.from(svg)).jpeg({ quality: 88 }).toFile(join(publicDir, `og-${data.number}.jpg`));
-  console.log(`Generated public/og-${data.number}.jpg`);
+  await renderJpeg(svg, `og-${data.number}.jpg`);
 }
 
 // ── Static page OG ──────────────────────────────────────────────────────────
@@ -202,29 +242,28 @@ async function generateStaticOG(slug, { title, description, kicker = 'PLAN A · 
   <rect width="100%" height="100%" fill="${COLORS.bg}"/>
   <rect x="0" y="0" width="16" height="${H}" fill="${COLORS.ink}"/>
 
-  <text x="100" y="130" font-family="monospace" font-size="22" letter-spacing="6" fill="${COLORS.faint}">
+  <text x="100" y="130" font-family="${MONO}" font-size="22" letter-spacing="6" fill="${COLORS.faint}">
     ${escapeXml(kicker)}
   </text>
 
   ${titleLines.map((line, i) => `
-    <text x="100" y="${titleStartY + i * titleLineHeight}" font-family="serif" font-size="${titleFontSize}" font-weight="700" fill="${COLORS.ink}" letter-spacing="-2.5">
+    <text x="100" y="${titleStartY + i * titleLineHeight}" font-family="${SERIF}" font-size="${titleFontSize}" font-weight="700" fill="${COLORS.ink}" letter-spacing="-2.5">
       ${escapeXml(line)}
     </text>
   `).join('')}
 
   ${descLines.map((line, i) => `
-    <text x="100" y="${descStartY + i * 32}" font-family="serif" font-size="24" font-style="italic" fill="${COLORS.light}">
+    <text x="100" y="${descStartY + i * 32}" font-family="${SERIF}" font-size="24" font-style="italic" fill="${COLORS.light}">
       ${escapeXml(line)}
     </text>
   `).join('')}
 
-  <text x="100" y="590" font-family="monospace" font-size="16" letter-spacing="4" fill="${COLORS.faint}">
+  <text x="100" y="590" font-family="${MONO}" font-size="16" letter-spacing="4" fill="${COLORS.faint}">
     PLAN A · 20 ΠΡΟΤΑΣΕΙΣ ΓΙΑ ΤΗΝ ΑΘΗΝΑ
   </text>
 </svg>`;
 
-  await sharp(Buffer.from(svg)).jpeg({ quality: 88 }).toFile(join(publicDir, `og-${slug}.jpg`));
-  console.log(`Generated public/og-${slug}.jpg`);
+  await renderJpeg(svg, `og-${slug}.jpg`);
 }
 
 // ── Run ─────────────────────────────────────────────────────────────────────
@@ -251,10 +290,6 @@ await generateStaticOG('methodologia', {
 await generateStaticOG('eucharisties', {
   title: 'Ευχαριστίες',
   description: 'Όσοι συνέβαλαν στο Plan A: συντάκτες, ειδικοί και χρηματοδότες.',
-});
-await generateStaticOG('kales-praktikes', {
-  title: 'Καλές πρακτικές',
-  description: 'Διεθνή παραδείγματα που τροφοδότησαν τις 20 προτάσεις, ανά πρόταση.',
 });
 await generateStaticOG('parapombes', {
   title: 'Παραπομπές',

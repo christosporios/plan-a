@@ -1,4 +1,5 @@
-import { C, THEMES, THEME_ORDER, EYEBROW } from '../lib/theme';
+import { C, THEMES, THEME_ORDER, EYEBROW, WORDMARK } from '../lib/theme';
+import { SITE } from '../lib/site';
 import { useIsMobile } from '../hooks/use-is-mobile';
 import { ScrollLine } from './scroll-line';
 import { SiteFooter } from './site-footer';
@@ -48,16 +49,14 @@ export const PlanACover = ({ proposals, navigate }) => {
             </span>
           </a>
           <h1 style={{
-            fontFamily: C.serif,
+            ...WORDMARK,
             fontSize: mobile ? 72 : 120,
-            fontWeight: 700,
             letterSpacing: '-0.03em',
             lineHeight: 0.95,
             margin: 0,
-            color: C.ink,
             ...enter(80),
           }}>
-            Plan A
+            {SITE.wordmark}
           </h1>
           <p style={{
             fontFamily: C.serif,
@@ -70,41 +69,29 @@ export const PlanACover = ({ proposals, navigate }) => {
             lineHeight: 1.25,
             ...enter(160),
           }}>
-            20 προτάσεις για την Αθήνα
+            {SITE.tagline}
           </p>
 
           {/* Theme chips (clickable, scroll to TOC bucket).
-              Desktop: one line, no wrap. Mobile: horizontal scroll if needed. */}
-          <div style={{
-            ...EYEBROW,
-            fontSize: 10,
-            letterSpacing: '0.18em',
-            marginTop: mobile ? 22 : 28,
-            marginBottom: 6,
-            ...enter(220),
-          }}>
-            Θεματικές ενότητες ↓
-          </div>
+              Desktop: one dotted line. Mobile: wraps onto multiple rows; the
+              dot separators are dropped so no wrapped line ever starts with one. */}
           <div style={{
             display: 'flex',
             alignItems: 'baseline',
-            flexWrap: 'nowrap',
-            gap: mobile ? 10 : 14,
-            overflowX: mobile ? 'auto' : 'visible',
-            whiteSpace: 'nowrap',
-            WebkitOverflowScrolling: 'touch',
-            // Hide scrollbar on mobile (it appears only when scrolling)
-            scrollbarWidth: 'none',
+            flexWrap: mobile ? 'wrap' : 'nowrap',
+            columnGap: mobile ? 16 : 14,
+            rowGap: mobile ? 10 : 0,
+            marginTop: mobile ? 22 : 28,
             ...enter(260),
           }}>
             {THEME_ORDER.map((t, i) => {
               const tinfo = THEMES[t];
               return (
-                <span key={t} style={{ display: 'inline-flex', alignItems: 'baseline', gap: mobile ? 10 : 14, flexShrink: 0 }}>
-                  {i > 0 && (
+                <span key={t} style={{ display: 'inline-flex', alignItems: 'baseline', gap: 14, flexShrink: 0 }}>
+                  {!mobile && i > 0 && (
                     <span style={{
                       color: C.mid,
-                      fontSize: mobile ? 18 : 20,
+                      fontSize: 20,
                       lineHeight: 1,
                       fontWeight: 600,
                     }}>·</span>
@@ -121,7 +108,7 @@ export const PlanACover = ({ proposals, navigate }) => {
                       fontFamily: C.serif,
                       fontStyle: 'italic',
                       fontWeight: 500,
-                      fontSize: mobile ? 14 : 17,
+                      fontSize: mobile ? 15 : 17,
                       color: tinfo.accent,
                       lineHeight: 1.2,
                       whiteSpace: 'nowrap',
@@ -154,20 +141,11 @@ export const PlanACover = ({ proposals, navigate }) => {
             alignItems: 'end',
             ...enter(360),
           }}>
-            <StatLabel mobile={mobile}>Πολίτες στη διαβούλευση</StatLabel>
-            <StatLabel mobile={mobile}>Ψήφοι</StatLabel>
-            <StatLabel mobile={mobile}>Ειδικοί</StatLabel>
-            <StatValue mobile={mobile}>2.077</StatValue>
-            <StatValue mobile={mobile}>126.819</StatValue>
-            <StatValue mobile={mobile}>29</StatValue>
-          </div>
-          <div style={{ ...EYEBROW, fontSize: 9, color: C.faint, marginBottom: 28, ...enter(400) }}>
-            Από τη διαβούλευση Pol.is και την έρευνα της Astylab, Απρ–Μάι 2026
+            {SITE.metrics.map((m) => <StatLabel key={m.label} mobile={mobile}>{m.label}</StatLabel>)}
+            {SITE.metrics.map((m) => <StatValue key={m.label} mobile={mobile}>{m.value}</StatValue>)}
           </div>
           <p style={{ fontSize: 16, lineHeight: 1.85, color: C.mid, marginTop: 0, marginBottom: 22, ...enter(440) }}>
-            Το Plan A διατυπώνει είκοσι συγκεκριμένες προτάσεις για την Αθήνα. Δεν λύνουν τα
-            πάντα — αλλά είναι επιλεγμένες ώστε, με το μικρότερο κόστος εφαρμογής, να φέρουν
-            το μεγαλύτερο όφελος στους περισσότερους.{' '}
+            {SITE.intro}{' '}
             <a
               href="/methodologia"
               onClick={(e) => { e.preventDefault(); navigate('/methodologia'); }}
@@ -219,7 +197,7 @@ export const PlanACover = ({ proposals, navigate }) => {
                 color: C.light, textUnderlineOffset: 4,
               }}
             >
-              ή μία τυχαία πρόταση ↻
+              ή από μια τυχαία πρόταση ↻
             </a>
           </div>
         </div>
@@ -244,12 +222,25 @@ export const PlanACover = ({ proposals, navigate }) => {
                     fontFamily: C.serif,
                     fontSize: mobile ? 26 : 32,
                     fontStyle: 'italic',
-                    fontWeight: 500,
+                    fontWeight: 600,
                     color: tinfo.accent,
-                    marginBottom: 14,
+                    marginBottom: tinfo.subtitle ? 3 : 14,
                     letterSpacing: '-0.01em',
                   }}>
                     {tinfo.label}
+                  </div>
+                )}
+                {tinfo?.subtitle && (
+                  <div style={{
+                    fontFamily: C.serif,
+                    fontStyle: 'italic',
+                    fontWeight: 500,
+                    fontSize: mobile ? 16 : 18,
+                    color: C.light,
+                    marginBottom: 16,
+                    lineHeight: 1.4,
+                  }}>
+                    {tinfo.subtitle}
                   </div>
                 )}
                 {bucket.map(p => (

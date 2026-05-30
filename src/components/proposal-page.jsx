@@ -1,13 +1,10 @@
 import { useEffect } from 'react';
-import { C, themeOf, EYEBROW } from '../lib/theme';
+import { C, themeOf, EYEBROW, WORDMARK } from '../lib/theme';
 import { useIsMobile } from '../hooks/use-is-mobile';
 import { Body } from '../lib/format-text';
 import { CalloutBox } from './callout-box';
 import { PolisStatement } from './polis-statement';
-import { PhaseList } from './phase-list';
 import { LimitationQA } from './limitation-qa';
-import { GoodPractice } from './good-practice';
-import { BudgetTable } from './budget-line';
 import { FootnotesSection } from './footnotes-section';
 import { ProposalSection } from './proposal-section';
 import { SolidLine } from './scroll-line';
@@ -55,7 +52,6 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
     d.implementation && { id: 'implementation', label: 'Υλοποίηση' },
     d.limitations?.length && { id: 'limitations', label: 'Περιορισμοί' },
     d.benefits?.length && { id: 'benefits', label: 'Οφέλη' },
-    d.good_practices?.length && { id: 'good-practices', label: 'Καλές πρακτικές' },
     d.polis?.length && { id: 'polis', label: 'Από το Pol.is' },
     d.references?.length && { id: 'references', label: 'Παραπομπές' },
   ].filter(Boolean);
@@ -90,9 +86,10 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
                   onClick={(e) => { e.preventDefault(); navigate(`/${prev.data.number}-${prev.data.slug || prev.slug}`); }}
                   data-hover-underline
                   title={prev.data.title}
-                  style={topNavLink}
+                  style={{ ...topNavLink, justifyContent: 'flex-start' }}
                 >
-                  ← {prev.data.title}
+                  <span style={{ flexShrink: 0 }}>←</span>
+                  <span style={navTitleEllipsis}>{prev.data.title}</span>
                 </a>
               )}
             </div>
@@ -112,9 +109,10 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
                   onClick={(e) => { e.preventDefault(); navigate(`/${next.data.number}-${next.data.slug || next.slug}`); }}
                   data-hover-underline
                   title={next.data.title}
-                  style={topNavLink}
+                  style={{ ...topNavLink, justifyContent: 'flex-end' }}
                 >
-                  {next.data.title} →
+                  <span style={navTitleEllipsis}>{next.data.title}</span>
+                  <span style={{ flexShrink: 0 }}>→</span>
                 </a>
               )}
             </div>
@@ -179,19 +177,9 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
             </ProposalSection>
           )}
 
-          {d.implementation && (
+          {d.implementation?.body && (
             <ProposalSection id="implementation" title="Υλοποίηση" accent={theme.accent}>
-              {d.implementation.body && <Body text={d.implementation.body} onRefClick={onRefClick} />}
-              {d.implementation.phases?.length > 0 && (
-                <PhaseList phases={d.implementation.phases} onRefClick={onRefClick} />
-              )}
-              {d.implementation.budget && (
-                <BudgetTable
-                  items={d.implementation.budget.items}
-                  total={d.implementation.budget.total}
-                  period={d.implementation.budget.period}
-                />
-              )}
+              <Body text={d.implementation.body} onRefClick={onRefClick} />
             </ProposalSection>
           )}
 
@@ -212,14 +200,6 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
                   </div>
                   <Body text={b.body} onRefClick={onRefClick} style={{ marginBottom: 0, fontSize: 14.5 }} />
                 </div>
-              ))}
-            </ProposalSection>
-          )}
-
-          {d.good_practices?.length > 0 && (
-            <ProposalSection id="good-practices" title="Καλές πρακτικές" accent={theme.accent}>
-              {d.good_practices.map((gp, i) => (
-                <GoodPractice key={i} city={gp.city} period={gp.period} body={gp.body} onRefClick={onRefClick} />
               ))}
             </ProposalSection>
           )}
@@ -262,8 +242,8 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
                 onClick={(e) => { e.preventDefault(); navigate(`/${prev.data.number}-${prev.data.slug || prev.slug}`); }}
                 style={navLinkStyle}
               >
-                <div style={{ ...EYEBROW, fontSize: 9, marginBottom: 4 }}>← Προηγούμενη</div>
-                <div style={{ fontSize: 14, color: C.ink, fontFamily: C.serif }}>{prev.data.title}</div>
+                <div style={{ ...EYEBROW, fontSize: 10, marginBottom: 4 }}>← Προηγούμενη</div>
+                <div style={{ fontSize: 15, color: C.ink, fontFamily: C.serif }}>{prev.data.title}</div>
               </a>
             )}
           </div>
@@ -274,8 +254,8 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
                 onClick={(e) => { e.preventDefault(); navigate(`/${next.data.number}-${next.data.slug || next.slug}`); }}
                 style={navLinkStyle}
               >
-                <div style={{ ...EYEBROW, fontSize: 9, marginBottom: 4 }}>Επόμενη →</div>
-                <div style={{ fontSize: 14, color: C.ink, fontFamily: C.serif }}>{next.data.title}</div>
+                <div style={{ ...EYEBROW, fontSize: 10, marginBottom: 4 }}>Επόμενη →</div>
+                <div style={{ fontSize: 15, color: C.ink, fontFamily: C.serif }}>{next.data.title}</div>
               </a>
             )}
           </div>
@@ -286,20 +266,28 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
   );
 };
 
-const backLinkStyle = { ...EYEBROW, fontSize: 11, letterSpacing: '0.15em', fontWeight: 400, textDecoration: 'none' };
+const backLinkStyle = { ...WORDMARK, fontSize: 18, letterSpacing: '0.01em', textDecoration: 'none' };
 const navLinkStyle = { display: 'inline-block', textDecoration: 'none' };
 
-// Inline prev/next link at the top of a proposal — italic serif, ellipsis on overflow.
+// Inline prev/next link at the top of a proposal — italic serif. Laid out as a
+// flex row so the directional arrow can sit OUTSIDE the truncating title span,
+// keeping the arrow visible even when the title is ellipsized (e.g. on mobile).
 const topNavLink = {
   fontFamily: C.serif,
   fontStyle: 'italic',
-  fontSize: 14,
+  fontSize: 15,
   color: C.light,
   textDecoration: 'none',
-  display: 'inline-block',
+  display: 'flex',
+  alignItems: 'baseline',
+  gap: 6,
   maxWidth: '100%',
+  minWidth: 0,
+};
+// The title half of a prev/next link — shrinks and ellipsizes; the arrow doesn't.
+const navTitleEllipsis = {
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',
-  verticalAlign: 'bottom',
+  minWidth: 0,
 };

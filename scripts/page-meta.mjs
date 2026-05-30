@@ -30,11 +30,6 @@ const STATIC_PAGES = {
     description: 'Όσοι συνέβαλαν στο Plan A: συντάκτες, ειδικοί, και φορείς χρηματοδότησης.',
     image: '/og-eucharisties.jpg',
   },
-  '/kales-praktikes': {
-    title: 'Καλές πρακτικές — Plan A',
-    description: 'Διεθνή παραδείγματα που τροφοδότησαν τις 20 προτάσεις, ανά πρόταση.',
-    image: '/og-kales-praktikes.jpg',
-  },
   '/parapombes': {
     title: 'Παραπομπές — Plan A',
     description: 'Όλες οι ακαδημαϊκές και θεσμικές παραπομπές του Plan A.',

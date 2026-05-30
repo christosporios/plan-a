@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { C, EYEBROW } from '../lib/theme';
 import { useIsMobile } from '../hooks/use-is-mobile';
 import { proposals } from '../lib/proposals';
+import { POLIS_GROUPS } from '../lib/polis-groups';
 import { PolisStatement } from './polis-statement';
 import { SiteFooter } from './site-footer';
 import { SolidLine } from './scroll-line';
@@ -60,11 +61,40 @@ export const PolisPage = ({ navigate }) => {
           }}>
             Από τη διαβούλευση
           </h1>
-          <p style={{ fontSize: 14.5, color: C.light, marginTop: 0, marginBottom: 32, lineHeight: 1.7 }}>
+          <p style={{ fontSize: 14.5, color: C.light, marginTop: 0, marginBottom: 24, lineHeight: 1.7 }}>
             {grouped.length} statements από τη διαβούλευση Pol.is που τροφοδότησαν τις
             προτάσεις του Plan A. Κάθε statement συνοδεύεται από τις προτάσεις που
             το χρησιμοποιούν ως υποστηρικτικό στοιχείο.
           </p>
+
+          {/* Opinion groups explainer */}
+          <div style={{ borderTop: `1px solid ${C.rule}`, borderBottom: `1px solid ${C.rule}`, padding: '20px 0', marginBottom: 36 }}>
+            <p style={{ fontSize: 14.5, color: C.mid, marginTop: 0, marginBottom: 18, lineHeight: 1.65 }}>
+              Ο αλγόριθμος του Pol.is ομαδοποίησε τους συμμετέχοντες σε <strong>τρεις ομάδες απόψεων</strong>,
+              με βάση τα μοτίβα ψήφου τους. Αυτό που μετράει για το Plan A είναι το <strong>κοινό έδαφος</strong>:
+              τα statements όπου συμφωνούν και οι τρεις.
+            </p>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: mobile ? '1fr' : 'repeat(3, 1fr)',
+              gap: mobile ? 16 : 24,
+            }}>
+              {POLIS_GROUPS.map((g) => (
+                <div key={g.label}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 6 }}>
+                    <g.icon size={20} color={g.color} strokeWidth={1.75} aria-hidden />
+                    <span style={{ fontWeight: 700, fontSize: 14.5, color: C.ink }}>
+                      <span style={{ color: g.color }}>{g.label}</span> · {g.title}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 13, color: C.light, lineHeight: 1.5 }}>
+                    <span style={{ ...EYEBROW, fontSize: 10, color: C.faint, marginRight: 6 }}>~{g.size.toLocaleString('el')}</span>
+                    {g.desc}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {grouped.length === 0 && (
             <p style={{ color: C.light }}>Σύντομα κοντά σας.</p>

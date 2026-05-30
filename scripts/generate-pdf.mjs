@@ -1,0 +1,428 @@
+// Generate the complete Plan A report as a real PDF *document* (not a screenshot
+// or a print of the web page). Runs in Node at build time, reading the raw data
+// — proposal YAMLs + the shared config modules — and laying it out with
+// @react-pdf/renderer. Output: public/plan-a.pdf (served + committed) and, when
+// present, dist/plan-a.pdf for the deploy.
+
+import React from 'react';
+import { Document, Page, View, Text, Image, Font, Svg, Path, Circle, Line, Polyline, Polygon, Rect, Ellipse, renderToFile, renderToBuffer } from '@react-pdf/renderer';
+import yaml from 'js-yaml';
+import qrcode from 'qrcode-generator';
+import sharp from 'sharp';
+import { Car, Landmark } from 'lucide';
+import { treesForest } from '@lucide/lab';
+import { readFileSync, readdirSync, existsSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+import { C, THEMES, THEME_ORDER, themeOf } from '../src/lib/theme.js';
+import { SITE } from '../src/lib/site.js';
+import { methodologia } from '../src/lib/methodology.js';
+import { POLIS_GROUPS_DATA } from '../src/lib/polis-groups-data.js';
+
+const h = React.createElement;
+const fontDir = join(dirname(fileURLToPath(import.meta.url)), 'og-fonts');
+const F = (f) => join(fontDir, f);
+
+// ── Fonts (the site's faces, embedded) ───────────────────────────────────────
+Font.register({ family: 'Commissioner', fonts: [
+  { src: F('Commissioner-Regular.ttf') },
+  { src: F('Commissioner-SemiBold.ttf'), fontWeight: 600 },
+  { src: F('Commissioner-Bold.ttf'), fontWeight: 700 },
+] });
+Font.register({ family: 'EBGaramond', fonts: [
+  { src: F('EBGaramond-Regular.ttf') },
+  { src: F('EBGaramond-Bold.ttf'), fontWeight: 700 },
+  { src: F('EBGaramond-Italic.ttf'), fontStyle: 'italic' },
+] });
+Font.register({ family: 'Cousine', fonts: [
+  { src: F('Cousine-Regular.ttf') },
+  { src: F('Cousine-Bold.ttf'), fontWeight: 700 },
+] });
+// Greek shouldn't be hyphenated mid-word.
+Font.registerHyphenationCallback((word) => [word]);
+
+const SERIF = 'EBGaramond';
+const MONO = 'Cousine';
+
+// ── Read raw data ────────────────────────────────────────────────────────────
+const proposals = readdirSync('proposals')
+  .filter((f) => /^\d.*\.yaml$/.test(f))
+  .map((f) => yaml.load(readFileSync(join('proposals', f), 'utf8')))
+  .filter((d) => d && d.number && d.title)
+  .sort((a, b) => a.number - b.number);
+
+const ack = yaml.load(readFileSync('src/data/eucharisties.yaml', 'utf8'));
+// Re-encode the logo to a clean PNG buffer (@react-pdf's decoder rejects the raw file).
+const LOGO = { data: await sharp('public/astylab-logo.png').resize({ width: 96 }).png().toBuffer(), format: 'png' };
+
+// ── Lucide icons → @react-pdf <Svg> ──────────────────────────────────────────
+// Lucide icon nodes are arrays of [tag, attrs]; render them with the same
+// stroke style Lucide uses (fill none, 24-unit viewBox, round caps/joins).
+const SVG_TAGS = { path: Path, circle: Circle, line: Line, polyline: Polyline, polygon: Polygon, rect: Rect, ellipse: Ellipse };
+const ICON_BY_LABEL = { A: Car, B: Landmark, C: treesForest };
+const GROUP_COLOR = Object.fromEntries(POLIS_GROUPS_DATA.map((g) => [g.label, g.color]));
+
+// Two-pass page numbering: an invisible marker records the page each section
+// lands on (filled during the first render), so the contents page and the
+// running footer can reference real page numbers on the second render.
+// Greek all-caps drops the tonos (acute accent) but keeps the dialytika.
+const greekUpper = (s) => String(s).normalize('NFD').replace(/[̀-̇̉-ͯ]/g, '').normalize('NFC').toUpperCase();
+
+// Public URL for the cover QR (kept in env; falls back to the known domain).
+const SITE_URL = (process.env.VITE_SITE_URL || 'https://planathens.gr').replace(/\/$/, '');
+const SITE_HOST = SITE_URL.replace(/^https?:\/\//, '');
+
+// QR code → @react-pdf <Svg> (one Path of unit squares for the dark modules).
+function qrSvg(value, size, color = C.ink) {
+  const qr = qrcode(0, 'M');
+  qr.addData(value);
+  qr.make();
+  const n = qr.getModuleCount();
+  let d = '';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) d += `M${c} ${r}h1v1h-1z`;
+  return h(Svg, { width: size, height: size, viewBox: `0 0 ${n} ${n}` }, [h(Path, { key: 'p', d, fill: color })]);
+}
+
+const pageOf = {};
+let areaByPage = {};
+const marker = (id) => h(Text, {
+  key: `mk-${id}`,
+  render: ({ pageNumber }) => { pageOf[id] = pageNumber; return ''; },
+  style: { height: 0 },
+});
+function iconSvg(node, color, size, key) {
+  if (!node) return null;
+  return h(Svg, { key, width: size, height: size, viewBox: '0 0 24 24' },
+    node.map(([tag, attrs], i) => {
+      const Comp = SVG_TAGS[tag];
+      return Comp ? h(Comp, { ...attrs, key: i, fill: 'none', stroke: color, strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }) : null;
+    }).filter(Boolean));
+}
+
+// ── Inline markdown-ish parser → array of <Text> spans ───────────────────────
+// Supports **bold**, *italic* / _italic_, and ^N / ^[N] footnote refs.
+function inline(text, keyPrefix = '') {
+  if (text == null) return [];
+  const out = [];
+  let k = 0;
+  const fnRe = /\^\[(\d+)\]|\^(\d+)/g;
+  let last = 0; let m;
+  const chunks = [];
+  while ((m = fnRe.exec(text)) !== null) {
+    if (m.index > last) chunks.push({ t: 'txt', v: text.slice(last, m.index) });
+    chunks.push({ t: 'fn', v: m[1] || m[2] });
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) chunks.push({ t: 'txt', v: text.slice(last) });
+
+  for (const c of chunks) {
+    if (c.t === 'fn') {
+      out.push(h(Text, { key: `${keyPrefix}fn${k++}`, style: { fontFamily: MONO, fontSize: 6.5, color: C.light } }, ` ${c.v}`));
+      continue;
+    }
+    // bold then italic within text
+    let lb = 0; let bm; const boldRe = /\*\*([^*]+)\*\*/g;
+    const pushItalic = (s) => {
+      let li = 0; let im; const itRe = /(?:\*([^*]+)\*|_([^_]+)_)/g;
+      while ((im = itRe.exec(s)) !== null) {
+        if (im.index > li) out.push(h(Text, { key: `${keyPrefix}s${k++}` }, s.slice(li, im.index)));
+        // Commissioner has no static italic — use the serif italic for emphasis.
+        out.push(h(Text, { key: `${keyPrefix}i${k++}`, style: { fontFamily: SERIF, fontStyle: 'italic' } }, im[1] || im[2]));
+        li = im.index + im[0].length;
+      }
+      if (li < s.length) out.push(h(Text, { key: `${keyPrefix}s${k++}` }, s.slice(li)));
+    };
+    while ((bm = boldRe.exec(c.v)) !== null) {
+      if (bm.index > lb) pushItalic(c.v.slice(lb, bm.index));
+      out.push(h(Text, { key: `${keyPrefix}b${k++}`, style: { fontWeight: 700, color: C.ink } }, bm[1]));
+      lb = bm.index + bm[0].length;
+    }
+    if (lb < c.v.length) pushItalic(c.v.slice(lb));
+  }
+  return out;
+}
+
+// Render a markdown-ish body string into paragraph/heading/list <View>s.
+function body(text, keyPrefix = '', base = {}) {
+  if (!text) return [];
+  return text.trim().split(/\n{2,}/).map((block, i) => {
+    const t = block.trim();
+    if (t.startsWith('### ')) {
+      return h(Text, { key: `${keyPrefix}h3${i}`, minPresenceAhead: 36, style: { fontFamily: MONO, fontSize: 7, color: C.mid, marginTop: 11, marginBottom: 5, textTransform: 'uppercase', letterSpacing: 1 } }, inline(t.slice(4), `${keyPrefix}h3${i}-`));
+    }
+    if (t.startsWith('## ')) {
+      return h(Text, { key: `${keyPrefix}h2${i}`, minPresenceAhead: 48, style: { fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 11.5, color: C.ink, marginTop: 13, marginBottom: 6 } }, inline(t.slice(3), `${keyPrefix}h2${i}-`));
+    }
+    const lines = t.split(/\n/);
+    if (lines.every((l) => l.trim().startsWith('- '))) {
+      return h(View, { key: `${keyPrefix}ul${i}`, style: { marginTop: 4, marginBottom: 7 } },
+        lines.map((l, j) => h(View, { key: j, style: { flexDirection: 'row', marginBottom: 2 } }, [
+          h(Text, { key: 'b', style: { color: C.faint, width: 9 } }, '·'),
+          h(Text, { key: 't', style: { flex: 1, fontSize: 9, color: C.mid, lineHeight: 1.5 } }, inline(l.trim().slice(2), `${keyPrefix}li${i}-${j}-`)),
+        ])));
+    }
+    return h(Text, { key: `${keyPrefix}p${i}`, style: { fontSize: 9.5, color: C.mid, lineHeight: 1.5, marginBottom: 8, ...base } }, inline(t.replace(/\n/g, ' '), `${keyPrefix}p${i}-`));
+  });
+}
+
+// ── Pol.is widget ────────────────────────────────────────────────────────────
+function bar(label, d, key) {
+  const tot = Math.max(1, d.agree + d.disagree + d.pass);
+  const seg = (w, color) => h(View, { key: color, style: { width: `${(w / tot) * 100}%`, backgroundColor: color } });
+  const icon = ICON_BY_LABEL[label];
+  return h(View, { key, style: { marginBottom: 8 } }, [
+    h(View, { key: 'l', style: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 } }, [
+      h(View, { key: 'lab', style: { flexDirection: 'row', alignItems: 'center', gap: 4 } }, [
+        icon && iconSvg(icon, GROUP_COLOR[label] || C.ink, 9, 'ic'),
+        h(Text, { key: 'a', style: { fontFamily: MONO, fontSize: 7.5, fontWeight: 700, color: C.ink, letterSpacing: 1 } }, label),
+      ]),
+      h(Text, { key: 'c', style: { fontFamily: MONO, fontSize: 7.5, fontWeight: 700, color: C.ink } }, String(d.count)),
+    ]),
+    h(View, { key: 'bar', style: { flexDirection: 'row', height: 5, backgroundColor: C.rule, borderRadius: 1, overflow: 'hidden' } }, [
+      seg(d.agree, C.agree), seg(d.disagree, C.disagree), seg(d.pass, C.pass),
+    ]),
+    h(Text, { key: 'p', style: { fontFamily: MONO, fontSize: 7, color: C.mid, marginTop: 3 } },
+      `${d.agree}% ΝΑΙ   ${d.disagree}% ΟΧΙ   ${d.pass}% ΠΑΣΟ`),
+  ]);
+}
+
+function polisCard(p, key) {
+  return h(View, { key, wrap: false, style: { backgroundColor: C.card, borderWidth: 1, borderColor: C.rule, borderRadius: 3, padding: 12, marginBottom: 10 } }, [
+    h(View, { key: 's', style: { flexDirection: 'row', marginBottom: 10, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: C.rule } }, [
+      p.statement_id != null && h(Text, { key: 'n', style: { fontFamily: SERIF, fontStyle: 'italic', fontSize: 12, color: C.faint, marginRight: 8 } }, `#${p.statement_id}`),
+      h(Text, { key: 't', style: { flex: 1, fontSize: 9, color: C.ink, lineHeight: 1.45 } }, p.statement),
+    ]),
+    bar('OVERALL', p.overall, 'ov'),
+    h(View, { key: 'g', style: { flexDirection: 'row', gap: 14, marginTop: 2 } },
+      (p.groups || []).map((g, i) => h(View, { key: i, style: { flex: 1 } }, bar(g.label, g, `g${i}`)))),
+  ]);
+}
+
+// ── Building blocks ──────────────────────────────────────────────────────────
+const eyebrow = (text, style, key) => h(Text, { key, style: { fontFamily: MONO, fontSize: 8, fontWeight: 700, letterSpacing: 1.5, color: C.faint, ...style } }, text);
+
+function proposalSection(title, accent, children, key) {
+  return h(View, { key, minPresenceAhead: 56, style: { marginBottom: 15 } }, [
+    // Accent bar spans only the title row, not the body below it.
+    h(View, { key: 'tr', minPresenceAhead: 40, style: { flexDirection: 'row', alignItems: 'stretch', marginBottom: 7 } }, [
+      h(View, { key: 'bar', style: { width: 3, backgroundColor: accent, marginRight: 11 } }),
+      h(Text, { key: 'h', style: { flex: 1, fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 11.5, color: C.ink } }, title),
+    ]),
+    h(View, { key: 'c', style: { paddingLeft: 14 } }, children),
+  ]);
+}
+
+// Full-bleed cover page: brand colour rail down the left, big wordmark, and a
+// metrics + QR band anchored at the foot.
+function CoverPage() {
+  return h(View, { key: 'cover', style: { flexGrow: 1, position: 'relative', backgroundColor: C.bg } }, [
+    // Left rail — one band per thematic area, full height.
+    h(View, { key: 'rail', style: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 12, flexDirection: 'column' } },
+      THEME_ORDER.map((t) => h(View, { key: t, style: { flexGrow: 1, backgroundColor: THEMES[t].accent } }))),
+
+    h(View, { key: 'content', style: { flexGrow: 1, justifyContent: 'space-between', paddingTop: 56, paddingBottom: 48, paddingLeft: 64, paddingRight: 56 } }, [
+      // Top — publisher.
+      h(View, { key: 'top', style: { flexDirection: 'row', alignItems: 'center' } }, [
+        h(Image, { key: 'lg', src: LOGO, style: { width: 16, height: 16, marginRight: 9 } }),
+        h(Text, { key: 'n', style: { fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: 2.5, color: C.mid } }, 'ASTYLAB'),
+        h(Text, { key: 'd', style: { fontFamily: MONO, fontSize: 9, color: C.faint, letterSpacing: 2.5 } }, '  ·  ΜΑΪΟΣ 2026'),
+      ]),
+
+      // Middle — wordmark, tagline, thematic areas.
+      h(View, { key: 'mid', style: { marginTop: 'auto', marginBottom: 'auto', paddingVertical: 40 } }, [
+        h(Text, { key: 'w', style: { fontFamily: SERIF, fontStyle: 'italic', fontSize: 96, color: C.ink, letterSpacing: -2, lineHeight: 1 } }, SITE.wordmark),
+        h(Text, { key: 't', style: { fontFamily: SERIF, fontStyle: 'italic', fontSize: 22, color: C.mid, marginTop: 10 } }, SITE.tagline),
+        h(View, { key: 'areas', style: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', marginTop: 22 } },
+          THEME_ORDER.flatMap((t, i) => [
+            i > 0 ? h(Text, { key: `s${i}`, style: { color: C.rule, fontFamily: SERIF, fontSize: 12 } }, '    ·    ') : null,
+            h(Text, { key: t, style: { fontFamily: SERIF, fontStyle: 'italic', fontSize: 13, color: THEMES[t].accent } }, THEMES[t].label),
+          ]).filter(Boolean)),
+      ]),
+
+      // Foot — metrics + QR, divided by a hairline.
+      h(View, { key: 'foot', style: { borderTopWidth: 1, borderTopColor: C.rule, paddingTop: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' } }, [
+        h(View, { key: 'metrics', style: { flexDirection: 'row', gap: 36 } },
+          SITE.metrics.map((m, i) => h(View, { key: i }, [
+            h(Text, { key: 'v', style: { fontFamily: SERIF, fontWeight: 700, fontSize: 24, color: C.ink } }, m.value),
+            h(Text, { key: 'l', style: { fontFamily: MONO, fontSize: 6.5, color: C.faint, marginTop: 5, textTransform: 'uppercase', letterSpacing: 0.8 } }, m.label),
+          ]))),
+        h(View, { key: 'qr', style: { alignItems: 'center' } }, [
+          h(View, { key: 'b', style: { backgroundColor: '#fff', padding: 5, borderWidth: 1, borderColor: C.rule, borderRadius: 4 } }, qrSvg(SITE_URL, 64)),
+          h(Text, { key: 'c', style: { fontFamily: MONO, fontSize: 7, color: C.light, marginTop: 6, letterSpacing: 1 } }, SITE_HOST),
+        ]),
+      ]),
+    ]),
+  ]);
+}
+
+function MethodologySection() {
+  const m = methodologia;
+  return h(View, { key: 'method', break: true }, [
+    marker('methodology'),
+    h(Text, { key: 'h', style: { fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 19, color: C.ink, marginBottom: 12 } }, m.title),
+    h(Text, { key: 'lead', style: { fontFamily: SERIF, fontStyle: 'italic', fontSize: 11.5, color: C.ink, lineHeight: 1.5, marginBottom: 18 } }, m.lead),
+    ...m.principles.map((p, i) => h(View, { key: `pr${i}`, wrap: false, style: { marginBottom: 12 } }, [
+      h(Text, { key: 't', style: { fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 11.5, color: C.ink, marginBottom: 4 } }, p.title),
+      h(Text, { key: 'b', style: { fontSize: 9, color: C.mid, lineHeight: 1.5 } }, p.body),
+    ])),
+    ...m.sections.map((s, i) => h(View, { key: `sec${i}`, minPresenceAhead: 56, style: { marginTop: 16 } }, [
+      h(Text, { key: 't', minPresenceAhead: 40, style: { fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 13, color: C.ink, marginBottom: 8 } }, s.title),
+      ...body(s.body, `sec${i}-`),
+    ])),
+    // Pol.is opinion groups
+    h(View, { key: 'pg', style: { marginTop: 18 }, wrap: false }, [
+      h(Text, { key: 't', style: { fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 13, color: C.ink, marginBottom: 10 } }, 'Οι τρεις ομάδες απόψεων'),
+      h(View, { key: 'g', style: { flexDirection: 'row', gap: 18 } },
+        POLIS_GROUPS_DATA.map((g, i) => h(View, { key: i, style: { flex: 1 } }, [
+          h(View, { key: 'row', style: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 4 } }, [
+            iconSvg(ICON_BY_LABEL[g.label], g.color, 12, 'ic'),
+            h(Text, { key: 'l', style: { fontSize: 9, fontWeight: 700, color: C.ink } }, [
+              h(Text, { key: 'lab', style: { color: g.color } }, g.label), ` · ${g.title}`,
+            ]),
+          ]),
+          h(Text, { key: 'd', style: { fontSize: 8, color: C.light, lineHeight: 1.45 } }, [
+            h(Text, { key: 'n', style: { fontFamily: MONO, fontSize: 6.5, color: C.faint } }, `~${g.size.toLocaleString('el')}  `),
+            g.desc,
+          ]),
+        ]))),
+    ]),
+  ]);
+}
+
+function ProposalSectionBlock(d) {
+  const theme = themeOf(d.theme);
+  const kids = [];
+  kids.push(marker(`prop-${d.number}`));
+  kids.push(h(View, { key: 'head', wrap: false, style: { marginBottom: 16 } }, [
+    h(Text, { key: 'eye', style: { fontFamily: MONO, fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: theme.accent } },
+      `ΠΡΟΤΑΣΗ ${String(d.number).padStart(2, '0')}${theme.label ? `  ·  ${theme.label.toUpperCase()}` : ''}`),
+    h(Text, { key: 'tt', style: { fontFamily: SERIF, fontWeight: 700, fontSize: 19, color: C.ink, marginTop: 8, lineHeight: 1.15 } }, d.title),
+    d.one_line && h(Text, { key: 'ol', style: { fontSize: 10.5, color: C.mid, lineHeight: 1.45, marginTop: 8 } }, d.one_line.trim().replace(/\n/g, ' ')),
+  ]));
+  if (d.problem) kids.push(proposalSection('Το πρόβλημα', theme.accent, [...body(d.problem.body, `p${d.number}pr-`), ...(d.problem.callouts || []).map((c, i) => calloutBox(c, `p${d.number}pc${i}`))], `s-prob`));
+  if (d.proposal) kids.push(proposalSection('Η πρόταση', theme.accent, [...body(d.proposal.body, `p${d.number}pp-`), ...(d.proposal.callouts || []).map((c, i) => calloutBox(c, `p${d.number}ppc${i}`))], `s-prop`));
+  if (d.implementation?.body) kids.push(proposalSection('Υλοποίηση', theme.accent, body(d.implementation.body, `p${d.number}im-`), `s-impl`));
+  if (d.limitations?.length) kids.push(proposalSection('Περιορισμοί & τρόποι αντιμετώπισης', theme.accent, d.limitations.map((l, i) => h(View, { key: i, minPresenceAhead: 40, style: { marginBottom: 9 } }, [
+    h(Text, { key: 'q', style: { fontSize: 9.5, fontWeight: 600, color: C.ink, lineHeight: 1.45, marginBottom: 3 } }, inline(l.q, `p${d.number}lq${i}-`)),
+    h(Text, { key: 'a', style: { fontSize: 9, color: C.mid, lineHeight: 1.5 } }, inline(l.a, `p${d.number}la${i}-`)),
+  ])), `s-lim`));
+  if (d.benefits?.length) kids.push(proposalSection('Επιπρόσθετα οφέλη', theme.accent, d.benefits.map((b, i) => h(View, { key: i, minPresenceAhead: 40, style: { marginBottom: 9 } }, [
+    h(Text, { key: 't', style: { fontSize: 9.5, fontWeight: 600, color: C.ink, marginBottom: 3 } }, b.title),
+    ...body(b.body, `p${d.number}bf${i}-`),
+  ])), `s-ben`));
+  if (d.polis?.length) kids.push(proposalSection('Από το Pol.is', theme.accent, d.polis.map((p, i) => polisCard(p, `p${d.number}po${i}`)), `s-polis`));
+  if (d.references?.length) kids.push(referencesBlock(d.references, `p${d.number}`));
+  return h(View, { key: `prop-${d.number}`, break: true }, kids);
+}
+
+function calloutBox(text, key) {
+  return h(View, { key, wrap: false, style: { borderWidth: 1, borderColor: C.rule, borderRadius: 3, padding: 10, marginTop: 4, marginBottom: 10, backgroundColor: C.card } },
+    body(text, `${key}-`, { marginBottom: 0, fontSize: 9.5, color: C.mid }));
+}
+
+function referencesBlock(refs, keyPrefix) {
+  return h(View, { key: `${keyPrefix}refs`, style: { marginTop: 8 } }, [
+    eyebrow('Παραπομπές', { fontSize: 8, color: C.faint, marginBottom: 8 }, 'eyb'),
+    ...refs.map((r, i) => {
+      const text = r.text
+        ? r.text
+        : [r.author, r.title, r.year].filter(Boolean).join(', ') + (r.publication ? `. ${r.publication}` : '');
+      return h(View, { key: i, wrap: false, style: { flexDirection: 'row', marginBottom: 5 } }, [
+        h(Text, { key: 'n', style: { fontFamily: MONO, fontSize: 7, color: C.faint, width: 15 } }, `${r.n}.`),
+        h(Text, { key: 't', style: { flex: 1, fontSize: 8.5, color: C.light, lineHeight: 1.45 } }, [
+          text, r.url ? h(Text, { key: 'u', style: { color: C.light } }, `  ${r.url}`) : null,
+        ]),
+      ]);
+    }),
+  ]);
+}
+
+function AckSection() {
+  return h(View, { key: 'ack', break: true }, [
+    marker('ack'),
+    h(Text, { key: 'h', style: { fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 19, color: C.ink, marginBottom: 12 } }, 'Ευχαριστίες'),
+    h(Text, { key: 'f', style: { fontSize: 9.5, color: C.mid, lineHeight: 1.6, marginBottom: 14 } }, inline(ack.funding, 'fund-')),
+    h(Text, { key: 'a', style: { fontSize: 9.5, color: C.mid, marginBottom: 16 } }, [
+      h(Text, { key: 'l', style: { fontFamily: MONO, fontSize: 7, color: C.faint } }, 'ΣΥΝΤΑΞΗ  '),
+      ack.authors.join(' · '),
+    ]),
+    eyebrow(`${ack.experts.length} ΕΙΔΙΚΟΙ`, { fontSize: 7.5, marginBottom: 8 }, 'eyb'),
+    h(View, { key: 'ex', style: { flexDirection: 'row', flexWrap: 'wrap' } },
+      ack.experts.map((n, i) => h(Text, { key: i, style: { width: '33%', fontSize: 9, color: C.ink, lineHeight: 1.4, marginBottom: 5, paddingRight: 8 } }, n))),
+  ]);
+}
+
+function TableOfContents() {
+  const tocRow = (label, page, { indent = 0, bold = false } = {}) => h(View, {
+    key: `t-${label}`,
+    style: { flexDirection: 'row', alignItems: 'baseline', marginBottom: 5, paddingLeft: indent },
+  }, [
+    h(Text, { key: 'l', style: { flex: 1, fontSize: 10, color: C.ink, fontWeight: bold ? 700 : 400 } }, label),
+    h(Text, { key: 'p', style: { fontFamily: MONO, fontSize: 8.5, color: C.faint, marginLeft: 10 } }, page ? String(page) : ''),
+  ]);
+
+  const rows = [
+    h(Text, { key: 'h', style: { fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 19, color: C.ink, marginBottom: 18 } }, 'Περιεχόμενα'),
+    tocRow('Μεθοδολογία', pageOf.methodology, { bold: true }),
+  ];
+  for (const t of THEME_ORDER) {
+    const items = proposals.filter((p) => p.theme === t).sort((a, b) => a.number - b.number);
+    if (!items.length) continue;
+    rows.push(h(Text, { key: `area-${t}`, style: { fontFamily: SERIF, fontStyle: 'italic', fontWeight: 600, fontSize: 11, color: THEMES[t].accent, marginTop: 12, marginBottom: 7 } }, THEMES[t].label));
+    for (const d of items) {
+      rows.push(tocRow(`${String(d.number).padStart(2, '0')}   ${d.title}`, pageOf[`prop-${d.number}`], { indent: 4 }));
+    }
+  }
+  rows.push(h(View, { key: 'sp', style: { marginTop: 12 } }, [tocRow('Ευχαριστίες', pageOf.ack, { bold: true })]));
+  return h(View, { key: 'toc' }, rows);
+}
+
+const FOOT = { fontFamily: MONO, fontSize: 7, color: C.faint, letterSpacing: 1 };
+function Footer() {
+  // Book-style running foot: page number on the outer edge, the running area on
+  // the inner edge — sides swap on odd/even pages.
+  return h(View, {
+    key: 'foot', fixed: true,
+    style: { position: 'absolute', bottom: 24, left: 54, right: 54, flexDirection: 'row', justifyContent: 'space-between' },
+  }, [
+    h(Text, { key: 'l', style: FOOT, render: ({ pageNumber, totalPages }) => { pageOf.__total = totalPages; return pageNumber % 2 === 1 ? (areaByPage[pageNumber] || 'PLAN A') : String(pageNumber); } }),
+    h(Text, { key: 'r', style: FOOT, render: ({ pageNumber }) => (pageNumber % 2 === 1 ? String(pageNumber) : (areaByPage[pageNumber] || 'PLAN A')) }),
+  ]);
+}
+
+// ── Document ─────────────────────────────────────────────────────────────────
+const buildDoc = () => h(Document, { title: 'Plan A — 20 προτάσεις για την Αθήνα', author: 'Astylab' }, [
+  h(Page, { key: 'cover', size: 'A4', style: { backgroundColor: C.bg } }, CoverPage()),
+  h(Page, {
+    key: 'body',
+    size: 'A4',
+    style: { backgroundColor: C.bg, color: C.mid, fontFamily: 'Commissioner', fontSize: 9.5, paddingTop: 48, paddingBottom: 52, paddingHorizontal: 54 },
+  }, [
+    Footer(),
+    TableOfContents(),
+    MethodologySection(),
+    ...proposals.map((d) => ProposalSectionBlock(d)),
+    AckSection(),
+  ]),
+]);
+
+// Pass 1 fills pageOf + total via the markers/footer; then map pages → running area.
+await renderToBuffer(buildDoc());
+const total = pageOf.__total || 0;
+const sections = [];
+if (pageOf.methodology) sections.push({ page: pageOf.methodology, label: 'Μεθοδολογία' });
+for (const d of proposals) { if (pageOf[`prop-${d.number}`]) sections.push({ page: pageOf[`prop-${d.number}`], label: themeOf(d.theme).label || '' }); }
+if (pageOf.ack) sections.push({ page: pageOf.ack, label: 'Ευχαριστίες' });
+sections.sort((a, b) => a.page - b.page);
+areaByPage = {};
+sections.forEach((s, i) => {
+  const end = i + 1 < sections.length ? sections[i + 1].page - 1 : total;
+  for (let p = s.page; p <= end; p++) areaByPage[p] = greekUpper(s.label);
+});
+
+const targets = ['public/plan-a.pdf', existsSync('dist') ? 'dist/plan-a.pdf' : null].filter(Boolean);
+for (const out of targets) {
+  await renderToFile(buildDoc(), out);
+  console.log(`Generated ${out}`);
+}

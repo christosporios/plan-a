@@ -3,22 +3,25 @@ export const C = {
   rule: '#d4d4d4', bg: '#f7f6f4', card: '#ffffff', hover: '#f0efed',
   serif: "'EB Garamond', 'GFS Didot', Georgia, serif",
   mono: "'Courier New', Courier, monospace",
-  sans: "'DM Sans', system-ui, sans-serif",
+  sans: "'Commissioner', system-ui, sans-serif",
   // Pol.is agreement-bar colors — match Pol.is convention (green/red/grey)
   agree: '#5a9f5a',
   disagree: '#c75555',
   pass: '#c8c8c8',
 };
 
-// Theme accent colors by proposal grouping. Ordered as they appear on the cover.
+// Theme accent colors by proposal grouping. Object order matches THEME_ORDER
+// (the order they appear on the cover). `subtitle` is the one-line framing shown
+// under each category heading in the landing-page table of contents.
 export const THEMES = {
-  'public-space': { label: 'Δημόσιος χώρος',           accent: '#5a8c5a' },
-  mobility:       { label: 'Κίνηση',                   accent: '#4a7a8c' },
-  housing:        { label: 'Κτίρια & κατοικία',         accent: '#a06a3e' },
-  municipality:   { label: 'Αποτελεσματικότερος δήμος', accent: '#6e5a8a' },
+  mobility:       { label: 'Μετακίνηση',       accent: '#4a7a8c', subtitle: 'Η μετακίνηση στην πόλη είναι δύσκολη' },
+  'public-space': { label: 'Δημόσιος Χώρος',    accent: '#5a8c5a', subtitle: 'Ο δημόσιος χώρος είναι παραμελημένος' },
+  housing:        { label: 'Κατοικία',          accent: '#ab8540', subtitle: 'Τα σπίτια είναι ακριβά και η κατάσταση των κτηρίων υποβαθμισμένη' },
+  identity:       { label: 'Ταυτότητα',         accent: '#af4d44', subtitle: 'Η ταυτότητα της πόλης των μεικτών χρήσεων χάνεται' },
+  municipality:   { label: 'Αποτελεσματικότητα', accent: '#6e5a8a', subtitle: 'Ο δήμος συχνά δεν εκπληρώνει τις πλήρεις δυνατότητες του' },
 };
 
-export const THEME_ORDER = ['public-space', 'mobility', 'housing', 'municipality'];
+export const THEME_ORDER = ['mobility', 'public-space', 'housing', 'identity', 'municipality'];
 
 export function themeOf(slugOrTheme) {
   return THEMES[slugOrTheme] || { label: '', accent: C.ink };
@@ -40,6 +43,16 @@ export const EYEBROW = {
   color: C.faint,
   lineHeight: 1.3,
   fontVariantNumeric: 'tabular-nums',
+};
+
+// Brand wordmark "Plan A": cursive (italic serif), regular weight, ink. Shared
+// by the cover hero and the proposal-page nav so it reads identically everywhere
+// — each caller layers on its own fontSize / spacing.
+export const WORDMARK = {
+  fontFamily: C.serif,
+  fontStyle: 'italic',
+  fontWeight: 400,
+  color: C.ink,
 };
 
 // Italic serif heading used for proposal sections + cover theme buckets.

@@ -1,4 +1,5 @@
 import { C, EYEBROW } from '../lib/theme';
+import { polisGroupByLabel } from '../lib/polis-groups';
 
 // The signature Plan A widget: a Pol.is statement with agreement bars
 // for OVERALL + group A + B + C.
@@ -6,7 +7,7 @@ import { C, EYEBROW } from '../lib/theme';
 // Card layout: statement spans full width on top; below, a row of 4 mini-bar
 // cards (OVERALL · A · B · C). Wraps to 2 columns on narrow viewports.
 
-function Bar({ agree, disagree, pass }) {
+function Bar({ agree, disagree, pass, large }) {
   // Normalize in case numbers don't sum to exactly 100 (rounding in source PDF).
   const total = Math.max(1, agree + disagree + pass);
   const a = (agree / total) * 100;
@@ -14,7 +15,7 @@ function Bar({ agree, disagree, pass }) {
   const p = (pass / total) * 100;
   return (
     <div style={{
-      display: 'flex', height: 8, width: '100%',
+      display: 'flex', height: large ? 12 : 8, width: '100%',
       background: C.rule, borderRadius: 1, overflow: 'hidden',
     }}>
       <div style={{ width: `${a}%`, background: C.agree }} />
@@ -24,20 +25,25 @@ function Bar({ agree, disagree, pass }) {
   );
 }
 
-function GroupBlock({ label, data }) {
+function GroupBlock({ label, data, large }) {
+  const group = polisGroupByLabel[label];
+  const Ico = group?.icon;
   return (
     <div>
       <div style={{
-        ...EYEBROW, fontSize: 10, letterSpacing: '0.15em', marginBottom: 8,
+        ...EYEBROW, fontSize: large ? 13 : 10, letterSpacing: '0.15em', marginBottom: large ? 10 : 8,
         fontWeight: 700,
-        display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
-        <span>{label}</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: large ? 8 : 6 }}>
+          {Ico && <Ico size={large ? 18 : 14} color={group.color} strokeWidth={1.75} aria-hidden />}
+          <span>{label}</span>
+        </span>
         <span style={{ color: C.ink, fontWeight: 700 }}>{data.count}</span>
       </div>
-      <Bar agree={data.agree} disagree={data.disagree} pass={data.pass} />
+      <Bar agree={data.agree} disagree={data.disagree} pass={data.pass} large={large} />
       <div style={{
-        fontFamily: C.mono, fontSize: 11, color: C.mid, marginTop: 8,
+        fontFamily: C.mono, fontSize: large ? 15 : 11, color: C.mid, marginTop: large ? 10 : 8,
         letterSpacing: '0.02em', lineHeight: 1.3,
         fontVariantNumeric: 'tabular-nums',
         display: 'flex', justifyContent: 'space-between', gap: '0 8px',
@@ -59,14 +65,14 @@ function GroupBlock({ label, data }) {
   );
 }
 
-export const PolisStatement = ({ statement, overall, groups = [], statementId, mobile = false }) => {
+export const PolisStatement = ({ statement, overall, groups = [], statementId, mobile = false, large = false }) => {
   return (
     <div style={{
       background: C.card,
       border: `1px solid ${C.rule}`,
       borderRadius: 4,
-      padding: mobile ? '18px 18px 20px' : '22px 24px 24px',
-      margin: '14px 0',
+      padding: large ? '26px 30px 30px' : (mobile ? '18px 18px 20px' : '22px 24px 24px'),
+      margin: large ? '18px 0' : '14px 0',
     }}>
       {/* Statement + # inline; the serif numeral acts as a hanging indent so
           the prompt text aligns with the cap-height of the number, not its
@@ -78,7 +84,7 @@ export const PolisStatement = ({ statement, overall, groups = [], statementId, m
         {statementId != null && (
           <div style={{
             fontFamily: C.serif,
-            fontSize: mobile ? 22 : 26,
+            fontSize: large ? 34 : (mobile ? 22 : 26),
             fontWeight: 600,
             fontStyle: 'italic',
             color: C.faint,
@@ -92,13 +98,13 @@ export const PolisStatement = ({ statement, overall, groups = [], statementId, m
             #{statementId}
           </div>
         )}
-        <div style={{ fontSize: mobile ? 14 : 15, color: C.ink, lineHeight: 1.5, paddingTop: 2 }}>
+        <div style={{ fontSize: large ? 21 : (mobile ? 14 : 15), color: C.ink, lineHeight: 1.5, paddingTop: 2 }}>
           {statement}
         </div>
       </div>
       {/* OVERALL — full width */}
       <div style={{ marginBottom: 18 }}>
-        <GroupBlock label="OVERALL" data={overall} />
+        <GroupBlock label="OVERALL" data={overall} large={large} />
       </div>
       {/* Groups A · B · C — 3 columns on desktop, stacked on mobile */}
       <div style={{
@@ -107,7 +113,7 @@ export const PolisStatement = ({ statement, overall, groups = [], statementId, m
         gap: mobile ? '14px 0' : '0 22px',
       }}>
         {groups.map((g, i) => (
-          <GroupBlock key={i} label={g.label} data={g} />
+          <GroupBlock key={i} label={g.label} data={g} large={large} />
         ))}
       </div>
     </div>
