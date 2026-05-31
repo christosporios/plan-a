@@ -255,12 +255,13 @@ function CoverPage() {
           ]).filter(Boolean)),
       ]),
 
-      // Foot — metrics + QR, divided by a hairline.
-      h(View, { key: 'foot', style: { borderTopWidth: 1, borderTopColor: C.rule, paddingTop: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' } }, [
-        h(View, { key: 'metrics', style: { flexDirection: 'row', gap: 36 } },
+      // Foot — metrics + QR, divided by a hairline. Metrics align to a shared
+      // baseline; the QR is vertically centred against them.
+      h(View, { key: 'foot', style: { borderTopWidth: 1, borderTopColor: C.rule, paddingTop: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' } }, [
+        h(View, { key: 'metrics', style: { flexDirection: 'row', alignItems: 'flex-end', gap: 40 } },
           SITE.metrics.map((m, i) => h(View, { key: i }, [
-            h(Text, { key: 'v', style: { fontFamily: SERIF, fontWeight: 700, fontSize: 24, color: C.ink } }, m.value),
-            h(Text, { key: 'l', style: { fontFamily: MONO, fontSize: 6.5, color: C.faint, marginTop: 5, textTransform: 'uppercase', letterSpacing: 0.8 } }, m.label),
+            h(Text, { key: 'v', style: { fontFamily: SERIF, fontWeight: 700, fontSize: 24, color: C.ink, lineHeight: 1 } }, m.value),
+            h(Text, { key: 'l', style: { fontFamily: MONO, fontSize: 6.5, color: C.faint, marginTop: 6, textTransform: 'uppercase', letterSpacing: 0.8 } }, m.label),
           ]))),
         h(View, { key: 'qr', style: { alignItems: 'center' } }, [
           h(View, { key: 'b', style: { backgroundColor: '#fff', padding: 5, borderWidth: 1, borderColor: C.rule, borderRadius: 4 } }, qrSvg(SITE_URL, 64)),
@@ -425,6 +426,22 @@ function AckSection() {
   ]);
 }
 
+// Full-bleed graphic page: one vertical stripe per proposal, each revealing the
+// slice of that proposal's image at the stripe's own position — a sliced
+// panorama across all the proposals. Missing images fall back to the theme colour.
+function StripesPage() {
+  const items = [...proposals].sort((a, b) => a.number - b.number);
+  const n = items.length;
+  const W = 595.28; const H = 841.89;
+  const sw = W / n;
+  return h(Page, { key: 'stripes', size: 'A4', style: { flexDirection: 'row', backgroundColor: C.ink } },
+    items.map((p, i) => {
+      const data = proposalImageData(p.number);
+      return h(View, { key: i, style: { width: sw, height: H, flexGrow: 0, flexShrink: 0, overflow: 'hidden', position: 'relative', backgroundColor: themeOf(p.theme).accent } },
+        data ? h(Image, { key: 'i', src: data, style: { position: 'absolute', top: 0, left: -i * sw, width: W, height: H, objectFit: 'cover', objectPosition: 'center' } }) : null);
+    }));
+}
+
 function TableOfContents() {
   const tocRow = (label, page, { indent = 0, bold = false } = {}) => h(View, {
     key: `t-${label}`,
@@ -469,6 +486,7 @@ function Footer() {
 // ── Document ─────────────────────────────────────────────────────────────────
 const buildDoc = () => h(Document, { title: 'Plan A — 20 προτάσεις για την Αθήνα', author: 'Astylab' }, [
   h(Page, { key: 'cover', size: 'A4', style: { backgroundColor: C.bg } }, CoverPage()),
+  StripesPage(),
   h(Page, { key: 'foreword', size: 'A4', style: { backgroundColor: C.bg, paddingHorizontal: 92, paddingVertical: 72 } }, ForewordPage()),
   // Front matter: contents + methodology.
   h(Page, { key: 'front', size: 'A4', style: bodyPageStyle }, [
