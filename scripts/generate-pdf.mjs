@@ -437,24 +437,22 @@ function StripesPage() {
   const all = [...proposals].sort((a, b) => a.number - b.number);
   const W = 595.28; const H = 841.89; const Hh = H / 2; const ANGLE = 22;
   const th = ANGLE * Math.PI / 180;
-  // Container sized to exactly cover a half after rotation, so the N stripes stay
-  // evenly spaced and bleed to every edge (no corner gaps).
-  const CW = W * Math.cos(th) + Hh * Math.sin(th) + 20;
-  const CH = W * Math.sin(th) + Hh * Math.cos(th) + 40;
-  const halfBand = (items, top, angle, key) => {
-    const sw = CW / Math.max(items.length, 1);
-    return h(View, { key, style: { position: 'absolute', top, left: 0, width: W, height: Hh, overflow: 'hidden', backgroundColor: C.ink } },
+  const SLOTS = 10;                                       // ten even stripes per half
+  const CW = W * Math.cos(th);                            // ten stripes span the width exactly; corners fall to the page bg
+  const CH = W * Math.sin(th) + Hh * Math.cos(th) + 60;   // covers the half's height
+  const sw = CW / SLOTS;                                  // fixed stripe width on BOTH halves → the chevron lines up
+  const halfBand = (items, top, angle, key) =>
+    h(View, { key, style: { position: 'absolute', top, left: 0, width: W, height: Hh, overflow: 'hidden', backgroundColor: C.bg } },
       h(View, { key: 'rot', style: { position: 'absolute', left: (W - CW) / 2, top: (Hh - CH) / 2, width: CW, height: CH, flexDirection: 'row', transform: `rotate(${angle}deg)` } },
         items.map((p, i) => {
           const data = proposalImageData(p.number);
-          // The stripe (clip window) is rotated with the container; counter-rotate
-          // the image by the same angle so it reads upright through the angled cut.
+          // Counter-rotate the image so it reads upright through the angled cut.
           return h(View, { key: i, style: { width: sw, height: CH, overflow: 'hidden', position: 'relative', backgroundColor: themeOf(p.theme).accent } },
             data ? h(Image, { key: 'i', src: data, style: { position: 'absolute', top: 0, left: (sw - CH) / 2, width: CH, height: CH, objectFit: 'cover', objectPosition: 'center', transform: `rotate(${-angle}deg)` } }) : null);
         })));
-  };
-  // Mirrored diagonals — top leans one way, bottom the other (a chevron at the split).
-  return h(Page, { key: 'stripes', size: 'A4', style: { backgroundColor: C.ink } }, [
+  // Mirrored diagonals leaning opposite ways (a chevron at the split). A shared stripe
+  // width keeps the chevron aligned; any missing proposal and the corners fall to the page bg.
+  return h(Page, { key: 'stripes', size: 'A4', style: { backgroundColor: C.bg } }, [
     halfBand(all.slice(0, 10), 0, -ANGLE, 'top'),
     halfBand(all.slice(10), Hh, ANGLE, 'bottom'),
   ]);
