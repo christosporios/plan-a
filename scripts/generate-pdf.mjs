@@ -57,6 +57,21 @@ const foreword = yaml.load(readFileSync('src/data/foreword.yaml', 'utf8')).text;
 // Re-encode the logo to a clean PNG buffer (@react-pdf's decoder rejects the raw file).
 const LOGO = { data: await sharp('public/astylab-logo.png').resize({ width: 96 }).png().toBuffer(), format: 'png' };
 
+// Proposal hero images (src/assets/proposals/NN.jpg) → buffers for @react-pdf.
+// Returns null where no image exists yet (the UI falls back to a themed band).
+const PROP_IMG_DIR = 'src/assets/proposals';
+function proposalImageData(number) {
+  const p = join(PROP_IMG_DIR, `${String(number).padStart(2, '0')}.jpg`);
+  return existsSync(p) ? { data: readFileSync(p), format: 'jpg' } : null;
+}
+
+// A4 geometry + body-page padding. The proposal hero bleeds to the page edge via
+// negative margins that cancel this padding; PROP_IMG_H is the top third.
+const A4_H = 841.89;
+const PAGE = { top: 48, bottom: 52, x: 54 };
+const PROP_IMG_H = Math.round(A4_H / 3);
+const bodyPageStyle = { backgroundColor: C.bg, color: C.mid, fontFamily: 'Commissioner', fontSize: 9.5, paddingTop: PAGE.top, paddingBottom: PAGE.bottom, paddingHorizontal: PAGE.x };
+
 // ── Lucide icons → @react-pdf <Svg> ──────────────────────────────────────────
 // Lucide icon nodes are arrays of [tag, attrs]; render them with the same
 // stroke style Lucide uses (fill none, 24-unit viewBox, round caps/joins).
@@ -301,9 +316,19 @@ function MethodologySection() {
   ]);
 }
 
-function ProposalSectionBlock(d) {
+// Full-bleed image band (top third of the page); the image escapes the page
+// padding via negative margins. No darkening — just the photo, cover-cropped.
+function proposalTopImage(d) {
+  const data = proposalImageData(d.number);
+  const box = { marginTop: -PAGE.top, marginLeft: -PAGE.x, marginRight: -PAGE.x, height: PROP_IMG_H, marginBottom: 24, overflow: 'hidden' };
+  return h(View, { key: 'topimg', style: data ? box : { ...box, backgroundColor: themeOf(d.theme).accent } },
+    data ? h(Image, { key: 'i', src: data, style: { width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' } }) : null);
+}
+
+function ProposalPage(d) {
   const theme = themeOf(d.theme);
   const kids = [];
+  kids.push(proposalTopImage(d));
   kids.push(marker(`prop-${d.number}`));
   kids.push(h(View, { key: 'head', wrap: false, style: { marginBottom: 16 } }, [
     h(Text, { key: 'eye', style: { fontFamily: MONO, fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: theme.accent } },
@@ -324,7 +349,30 @@ function ProposalSectionBlock(d) {
   ])), `s-ben`));
   if (d.polis?.length) kids.push(proposalSection('Από το Pol.is', theme.accent, d.polis.map((p, i) => polisCard(p, `p${d.number}po${i}`)), `s-polis`));
   if (d.references?.length) kids.push(referencesBlock(d.references, `p${d.number}`));
-  return h(View, { key: `prop-${d.number}`, break: true }, kids);
+  return h(Page, { key: `prop-${d.number}`, size: 'A4', style: bodyPageStyle }, [Footer(), ...kids]);
+}
+
+// Section (goal) cover: the whole page is the area's proposal images, split into
+// equal horizontal bands, each cover-cropped; the goal name sits on a centred plate.
+function SectionCoverPage(t) {
+  const theme = THEMES[t];
+  const items = proposals.filter((p) => p.theme === t).sort((a, b) => a.number - b.number);
+  // Explicit per-band height — react-pdf doesn't distribute flexGrow heights for
+  // images, so each band gets an exact slice of the page.
+  const bandH = Math.floor(A4_H / items.length);
+  const bands = items.map((d, i) => {
+    const data = proposalImageData(d.number);
+    return h(View, { key: `b${i}`, style: { height: bandH, overflow: 'hidden', backgroundColor: themeOf(d.theme).accent } },
+      data ? h(Image, { key: 'i', src: data, style: { width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' } }) : null);
+  });
+  const overlay = h(View, { key: 'ov', style: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' } }, [
+    marker(`area-${t}`),
+    h(View, { key: 'plate', style: { backgroundColor: 'rgba(20,20,20,0.5)', paddingVertical: 30, paddingHorizontal: 44, alignItems: 'center', maxWidth: 470 } }, [
+      h(Text, { key: 'k', style: { fontFamily: MONO, fontSize: 11, letterSpacing: 3, color: '#fff', marginBottom: 14 } }, `ΣΤΟΧΟΣ ${THEME_ORDER.indexOf(t) + 1}`),
+      h(Text, { key: 'l', style: { fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 30, color: '#fff', textAlign: 'center', lineHeight: 1.1 } }, theme.label),
+    ]),
+  ]);
+  return h(Page, { key: `area-${t}`, size: 'A4', style: { flexDirection: 'column', backgroundColor: C.ink } }, [...bands, overlay]);
 }
 
 function calloutBox(text, key) {
@@ -350,7 +398,7 @@ function referencesBlock(refs, keyPrefix) {
 }
 
 function AckSection() {
-  return h(View, { key: 'ack', break: true }, [
+  return h(View, { key: 'ack' }, [
     marker('ack'),
     h(Text, { key: 'h', style: { fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 19, color: C.ink, marginBottom: 12 } }, 'Ευχαριστίες'),
     h(Text, { key: 'f', style: { fontSize: 9.5, color: C.mid, lineHeight: 1.6, marginBottom: 14 } }, inline(ack.funding, 'fund-')),
@@ -380,7 +428,10 @@ function TableOfContents() {
   for (const t of THEME_ORDER) {
     const items = proposals.filter((p) => p.theme === t).sort((a, b) => a.number - b.number);
     if (!items.length) continue;
-    rows.push(h(Text, { key: `area-${t}`, style: { fontFamily: SERIF, fontStyle: 'italic', fontWeight: 600, fontSize: 11, color: THEMES[t].accent, marginTop: 12, marginBottom: 7 } }, THEMES[t].label));
+    rows.push(h(View, { key: `area-${t}`, style: { flexDirection: 'row', alignItems: 'baseline', marginTop: 12, marginBottom: 7 } }, [
+      h(Text, { key: 'l', style: { flex: 1, fontFamily: SERIF, fontStyle: 'italic', fontWeight: 600, fontSize: 11, color: THEMES[t].accent } }, THEMES[t].label),
+      h(Text, { key: 'p', style: { fontFamily: MONO, fontSize: 8.5, color: C.faint, marginLeft: 10 } }, pageOf[`area-${t}`] ? String(pageOf[`area-${t}`]) : ''),
+    ]));
     for (const d of items) {
       rows.push(tocRow(`${String(d.number).padStart(2, '0')}   ${d.title}`, pageOf[`prop-${d.number}`], { indent: 4 }));
     }
@@ -406,17 +457,19 @@ function Footer() {
 const buildDoc = () => h(Document, { title: 'Plan A — 20 προτάσεις για την Αθήνα', author: 'Astylab' }, [
   h(Page, { key: 'cover', size: 'A4', style: { backgroundColor: C.bg } }, CoverPage()),
   h(Page, { key: 'foreword', size: 'A4', style: { backgroundColor: C.bg, paddingHorizontal: 92, paddingVertical: 72 } }, ForewordPage()),
-  h(Page, {
-    key: 'body',
-    size: 'A4',
-    style: { backgroundColor: C.bg, color: C.mid, fontFamily: 'Commissioner', fontSize: 9.5, paddingTop: 48, paddingBottom: 52, paddingHorizontal: 54 },
-  }, [
+  // Front matter: contents + methodology.
+  h(Page, { key: 'front', size: 'A4', style: bodyPageStyle }, [
     Footer(),
     TableOfContents(),
     MethodologySection(),
-    ...proposals.map((d) => ProposalSectionBlock(d)),
-    AckSection(),
   ]),
+  // Each goal: a full-bleed section cover, then one page per proposal.
+  ...THEME_ORDER.flatMap((t) => {
+    const items = proposals.filter((p) => p.theme === t).sort((a, b) => a.number - b.number);
+    if (!items.length) return [];
+    return [SectionCoverPage(t), ...items.map((d) => ProposalPage(d))];
+  }),
+  h(Page, { key: 'ack', size: 'A4', style: bodyPageStyle }, [Footer(), AckSection()]),
 ]);
 
 // Pass 1 fills pageOf + total via the markers/footer; then map pages → running area.
