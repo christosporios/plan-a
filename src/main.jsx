@@ -20,6 +20,17 @@ globalStyle.textContent = `
     to { opacity: 1; }
   }
 
+  /* Easter egg: the "A" in the Plan A wordmark pulls away from "Plan", springs
+     back, then pops — paired with a colour flash driven from JS. */
+  @keyframes plan-a-dance {
+    0%   { transform: translateX(0) scale(1); }
+    26%  { transform: translateX(0.2em) scale(1); }
+    50%  { transform: translateX(0.2em) scale(1); }
+    70%  { transform: translateX(0) scale(1); }
+    84%  { transform: translateX(0) scale(1.34); }
+    100% { transform: translateX(0) scale(1); }
+  }
+
   /* Smooth scroll for in-page anchors (footnote jumps, theme chips). */
   html { scroll-behavior: smooth; }
 

@@ -1,8 +1,9 @@
 import { useContext } from 'react';
-import { C, EYEBROW, WORDMARK } from '../lib/theme';
+import { C, EYEBROW } from '../lib/theme';
 import { SITE } from '../lib/site';
 import { useIsMobile } from '../hooks/use-is-mobile';
 import { PresentationContext } from '../lib/presentation-context';
+import { PlanAMark } from './plan-a-mark';
 
 // Shared bottom-of-page footer with site nav.
 // Appears on the cover, proposal pages, static pages, and aggregated lists.
@@ -28,11 +29,9 @@ export const SiteFooter = ({ navigate }) => {
           gap: mobile ? 28 : 24,
           textAlign: mobile ? 'center' : 'left',
         }}>
-          {/* Left — the wordmark, written the signature way. */}
+          {/* Left — the wordmark, written the signature way (click it for a dance). */}
           <div>
-            <div style={{ ...WORDMARK, fontSize: mobile ? 34 : 40, letterSpacing: '-0.02em', lineHeight: 1 }}>
-              {SITE.wordmark}
-            </div>
+            <PlanAMark label={SITE.wordmark} style={{ fontSize: mobile ? 34 : 40, letterSpacing: '-0.02em', lineHeight: 1 }} />
             <div style={{
               fontFamily: C.serif, fontStyle: 'italic', fontSize: mobile ? 15 : 17,
               color: C.mid, marginTop: 8, lineHeight: 1.3,

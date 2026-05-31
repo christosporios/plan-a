@@ -1,4 +1,5 @@
-import { C, THEMES, THEME_ORDER, EYEBROW, WORDMARK } from '../lib/theme';
+import { C, THEMES, THEME_ORDER, EYEBROW } from '../lib/theme';
+import { PlanAMark } from './plan-a-mark';
 import { SITE } from '../lib/site';
 import { foreword } from '../lib/foreword';
 import { useIsMobile } from '../hooks/use-is-mobile';
@@ -49,15 +50,11 @@ export const PlanACover = ({ proposals, navigate }) => {
               Astylab
             </span>
           </a>
-          <h1 style={{
-            ...WORDMARK,
-            fontSize: mobile ? 72 : 120,
-            letterSpacing: '-0.03em',
-            lineHeight: 0.95,
-            margin: 0,
-            ...enter(80),
-          }}>
-            {SITE.wordmark}
+          <h1 style={{ margin: 0, ...enter(80) }}>
+            <PlanAMark
+              label={SITE.wordmark}
+              style={{ fontSize: mobile ? 72 : 120, letterSpacing: '-0.03em', lineHeight: 0.95 }}
+            />
           </h1>
           <p style={{
             fontFamily: C.serif,
