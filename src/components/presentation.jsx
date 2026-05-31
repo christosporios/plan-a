@@ -23,21 +23,9 @@ import { PolisStatement } from './polis-statement';
 const SITE_URL = (import.meta.env.VITE_SITE_URL || 'https://planathens.gr').replace(/\/$/, '');
 const SITE_HOST = SITE_URL.replace(/^https?:\/\//, '');
 
-// Hard-banded gradient of every subject-area accent — same idea as the
-// methodology page's principle bars.
-const accentGradient = `linear-gradient(180deg, ${THEME_ORDER
-  .map((t, i, a) => {
-    const c = THEMES[t].accent;
-    return `${c} ${((i / a.length) * 100).toFixed(2)}%, ${c} ${(((i + 1) / a.length) * 100).toFixed(2)}%`;
-  })
-  .join(', ')})`;
-
 function buildSlides() {
   const slides = [{ type: 'title' }];
-  const P = pages.methodologia.principles;
-  slides.push({ type: 'methodology', principles: P.slice(0, 2), lead: pages.methodologia.lead });
-  slides.push({ type: 'methodology', principles: P.slice(2, 4) });
-  slides.push({ type: 'methodology', principles: P.slice(4, 6) });
+  slides.push({ type: 'methodology' });
   slides.push({ type: 'polis' });
   for (const themeKey of THEME_ORDER) {
     const inArea = proposals
@@ -151,40 +139,40 @@ function TitleSlide({ mobile }) {
   );
 }
 
-function MethodologySlide({ slide, mobile }) {
+// Methodology overview — the lead, then just the principle titles (the full
+// bodies live on the methodology page / PDF). Reads as the deck's "our basis".
+function MethodologySlide({ mobile }) {
+  const P = pages.methodologia.principles;
   return (
     <div>
-      <div style={{ ...EYEBROW, fontSize: mobile ? 12 : 14, color: C.faint, marginBottom: slide.lead ? 16 : 24 }}>
+      <div style={{ ...EYEBROW, fontSize: mobile ? 12 : 14, color: C.faint, marginBottom: 16 }}>
         {pages.methodologia.title}
       </div>
-      {slide.lead && (
-        <p style={{
-          fontFamily: C.serif, fontStyle: 'italic', fontSize: mobile ? 22 : 30,
-          color: C.ink, lineHeight: 1.45, marginTop: 0, marginBottom: mobile ? 28 : 40,
-        }}>
-          {slide.lead}
-        </p>
-      )}
-      {slide.principles.map((p, i) => (
-        <div key={i} style={{
-          display: 'grid', gridTemplateColumns: mobile ? '5px 1fr' : '6px 1fr', gap: mobile ? 16 : 24,
-          marginBottom: i === slide.principles.length - 1 ? 0 : (mobile ? 24 : 34),
-        }}>
-          <div style={{ background: accentGradient, borderRadius: 3 }} />
-          <div>
-            <h3 style={{
+      <p style={{
+        fontFamily: C.serif, fontStyle: 'italic', fontSize: mobile ? 22 : 30,
+        color: C.ink, lineHeight: 1.4, marginTop: 0, marginBottom: mobile ? 28 : 40,
+      }}>
+        {pages.methodologia.lead}
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: mobile ? 14 : 18 }}>
+        {P.map((p, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'baseline', gap: mobile ? 14 : 20 }}>
+            <span style={{
+              ...EYEBROW, fontSize: mobile ? 13 : 16, fontVariantNumeric: 'tabular-nums',
+              color: THEMES[THEME_ORDER[i % THEME_ORDER.length]].accent,
+              width: mobile ? 22 : 30, flexShrink: 0,
+            }}>
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <span style={{
               fontFamily: C.serif, fontStyle: 'italic', fontWeight: 600,
-              fontSize: mobile ? 22 : 28, color: C.ink, margin: 0, marginBottom: 10,
-              letterSpacing: '-0.01em', lineHeight: 1.25,
+              fontSize: mobile ? 20 : 27, color: C.ink, lineHeight: 1.25, letterSpacing: '-0.01em',
             }}>
               {p.title}
-            </h3>
-            <p style={{ fontSize: mobile ? 16 : 20, color: C.mid, lineHeight: 1.6, margin: 0 }}>
-              {p.body}
-            </p>
+            </span>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
@@ -371,7 +359,7 @@ function QuestionsSlide({ mobile }) {
 
 function Slide({ slide, mobile }) {
   if (slide.type === 'title') return <TitleSlide mobile={mobile} />;
-  if (slide.type === 'methodology') return <MethodologySlide slide={slide} mobile={mobile} />;
+  if (slide.type === 'methodology') return <MethodologySlide mobile={mobile} />;
   if (slide.type === 'polis') return <PolisExplainerSlide mobile={mobile} />;
   if (slide.type === 'area') return <AreaSlide themeKey={slide.themeKey} mobile={mobile} />;
   if (slide.type === 'proposal') return <ProposalSlide entry={slide.entry} themeKey={slide.themeKey} mobile={mobile} />;
