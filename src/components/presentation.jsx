@@ -4,6 +4,7 @@ import { C, THEMES, THEME_ORDER, EYEBROW, WORDMARK } from '../lib/theme';
 import { SITE } from '../lib/site';
 import { pages } from '../lib/pages';
 import { proposals, proposalPath } from '../lib/proposals';
+import { proposalImage } from '../lib/proposal-images';
 import { acknowledgments } from '../lib/acknowledgments';
 import { POLIS_GROUPS } from '../lib/polis-groups';
 import { useIsMobile } from '../hooks/use-is-mobile';
@@ -135,6 +136,20 @@ function TitleSlide({ mobile }) {
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: mobile ? 40 : 60 }}>
         <QRBlock value={SITE_URL} color={C.ink} size={mobile ? 120 : 156} mobile={mobile} />
       </div>
+      {/* A sliver of every proposal's image — a mosaic of the city. */}
+      <div style={{
+        display: 'flex', gap: 2, marginTop: mobile ? 40 : 60, borderRadius: 10, overflow: 'hidden',
+        maxWidth: mobile ? 460 : 820, marginLeft: 'auto', marginRight: 'auto',
+      }}>
+        {proposals.map((p) => {
+          const img = proposalImage(p.data.number);
+          return (
+            <div key={p.slug} style={{ flex: 1, height: mobile ? 66 : 96, backgroundColor: THEMES[p.data.theme]?.accent || C.ink }}>
+              {img && <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -182,7 +197,7 @@ function MethodologySlide({ mobile }) {
 // Plan A builds — is visibly the darkest. That's the whole point of Pol.is.
 function PolisVenn({ mobile }) {
   const [A, B, Cg] = POLIS_GROUPS;
-  const w = mobile ? 250 : 300;
+  const w = mobile ? 270 : 340;
   const circle = (cx, cy, fill) => (
     <circle cx={cx} cy={cy} r="76" fill={fill} opacity="0.55" style={{ mixBlendMode: 'multiply' }} />
   );
@@ -209,35 +224,36 @@ function PolisExplainerSlide({ mobile }) {
       <div style={{ ...EYEBROW, fontSize: mobile ? 12 : 14, color: C.faint, marginBottom: 16 }}>
         Πώς διαβάζουμε το Pol.is
       </div>
-      <p style={{ fontFamily: C.serif, fontStyle: 'italic', fontSize: mobile ? 20 : 27, color: C.ink, lineHeight: 1.4, margin: '0 0 10px' }}>
-        Στη διαβούλευση οι συμμετέχοντες ψήφισαν «συμφωνώ / διαφωνώ / πάσο» σε σύντομες προτάσεις και πρόσθεσαν δικές τους.
+      <p style={{ fontFamily: C.serif, fontStyle: 'italic', fontSize: mobile ? 20 : 28, color: C.ink, lineHeight: 1.4, margin: 0 }}>
+        Ένας αλγόριθμος ομαδοποίησε τους 2.077 συμμετέχοντες σε τρεις ομάδες απόψεων, με βάση τα μοτίβα ψήφου τους.
       </p>
-      <p style={{ fontSize: mobile ? 16 : 19, color: C.mid, lineHeight: 1.6, margin: 0 }}>
-        Ένας αλγόριθμος ομαδοποιεί τους συμμετέχοντες με βάση τα μοτίβα ψήφου τους. Εδώ προέκυψαν τρεις ομάδες απόψεων:
-      </p>
-      <div style={{
-        display: 'flex', flexDirection: mobile ? 'column' : 'row',
-        alignItems: mobile ? 'center' : 'flex-start', gap: mobile ? 24 : 48, margin: mobile ? '26px 0' : '34px 0',
-      }}>
-        <div style={{ flexShrink: 0 }}><PolisVenn mobile={mobile} /></div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: mobile ? 16 : 22 }}>
-          {POLIS_GROUPS.map((g) => (
-            <div key={g.label} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-              <g.icon size={mobile ? 24 : 30} color={g.color} strokeWidth={1.75} style={{ flexShrink: 0, marginTop: mobile ? 2 : 4 }} aria-hidden />
-              <div>
-                <div style={{ fontSize: mobile ? 16 : 20, color: C.ink, fontWeight: 700 }}>
-                  <span style={{ color: g.color }}>{g.label}</span> · {g.title}{' '}
-                  <span style={{ ...EYEBROW, fontSize: mobile ? 11 : 12, color: C.faint, fontWeight: 500 }}>~{g.size.toLocaleString('el')}</span>
-                </div>
-                <div style={{ fontSize: mobile ? 15 : 18, color: C.mid, lineHeight: 1.5, marginTop: 4 }}>{g.desc}</div>
+
+      {/* The diagram — three groups, one shared centre. */}
+      <div style={{ display: 'flex', justifyContent: 'center', margin: mobile ? '24px 0' : '34px 0' }}>
+        <PolisVenn mobile={mobile} />
+      </div>
+
+      {/* The three groups, side by side, each under its colour. */}
+      <div style={{ display: 'flex', flexDirection: mobile ? 'column' : 'row', gap: mobile ? 18 : 24 }}>
+        {POLIS_GROUPS.map((g) => (
+          <div key={g.label} style={{ flex: 1, borderTop: `3px solid ${g.color}`, paddingTop: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 7 }}>
+              <g.icon size={mobile ? 22 : 26} color={g.color} strokeWidth={1.75} aria-hidden />
+              <div style={{ fontSize: mobile ? 16 : 19, fontWeight: 700, color: C.ink, lineHeight: 1.2 }}>
+                <span style={{ color: g.color }}>{g.label}</span> · {g.title}
               </div>
             </div>
-          ))}
-        </div>
+            <div style={{ ...EYEBROW, fontSize: mobile ? 10 : 11, color: C.faint, marginBottom: 7 }}>
+              ~{g.size.toLocaleString('el')} ψηφοφόροι
+            </div>
+            <div style={{ fontSize: mobile ? 14 : 17, color: C.mid, lineHeight: 1.5 }}>{g.desc}</div>
+          </div>
+        ))}
       </div>
-      <div style={{ borderLeft: `4px solid ${C.ink}`, paddingLeft: mobile ? 16 : 20, fontSize: mobile ? 16 : 20, color: C.ink, lineHeight: 1.55 }}>
-        Αυτό που μετράει δεν είναι οι διαφωνίες, αλλά το <strong>κοινό έδαφος</strong>: τα statements όπου συμφωνούν και οι τρεις ομάδες — π.χ. καλύτερα ΜΜΜ, περισσότερο πράσινο, ανοιχτά δημοτικά δεδομένα. Εκεί χτίζει το Plan A.
-      </div>
+
+      <p style={{ fontSize: mobile ? 16 : 21, color: C.ink, lineHeight: 1.5, marginTop: mobile ? 26 : 34, marginBottom: 0, textAlign: 'center' }}>
+        Δεν μας ενδιαφέρουν οι διαφωνίες, αλλά το <strong>κοινό έδαφος</strong> — εκεί όπου συμφωνούν και οι τρεις ομάδες. Εκεί χτίζει το Plan A.
+      </p>
     </div>
   );
 }
