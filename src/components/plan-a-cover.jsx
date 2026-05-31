@@ -73,51 +73,41 @@ export const PlanACover = ({ proposals, navigate }) => {
             {SITE.tagline}
           </p>
 
-          {/* Theme chips (clickable, scroll to TOC bucket).
-              Desktop: one dotted line. Mobile: wraps onto multiple rows; the
-              dot separators are dropped so no wrapped line ever starts with one. */}
+          {/* Theme links (clickable, scroll to TOC bucket). Always wrap so the
+              labels never exceed the page width; each label stays intact. */}
           <div style={{
             display: 'flex',
             alignItems: 'baseline',
-            flexWrap: mobile ? 'wrap' : 'nowrap',
-            columnGap: mobile ? 16 : 14,
-            rowGap: mobile ? 10 : 0,
+            flexWrap: 'wrap',
+            columnGap: mobile ? 16 : 22,
+            rowGap: mobile ? 10 : 12,
             marginTop: mobile ? 22 : 28,
             ...enter(260),
           }}>
-            {THEME_ORDER.map((t, i) => {
+            {THEME_ORDER.map((t) => {
               const tinfo = THEMES[t];
               return (
-                <span key={t} style={{ display: 'inline-flex', alignItems: 'baseline', gap: 14, flexShrink: 0 }}>
-                  {!mobile && i > 0 && (
-                    <span style={{
-                      color: C.mid,
-                      fontSize: 20,
-                      lineHeight: 1,
-                      fontWeight: 600,
-                    }}>·</span>
-                  )}
-                  <a
-                    data-hover-underline
-                    href={`#theme-${t}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      const el = document.getElementById(`theme-${t}`);
-                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }}
-                    style={{
-                      fontFamily: C.serif,
-                      fontStyle: 'italic',
-                      fontWeight: 500,
-                      fontSize: mobile ? 15 : 17,
-                      color: tinfo.accent,
-                      lineHeight: 1.2,
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {tinfo.label}
-                  </a>
-                </span>
+                <a
+                  key={t}
+                  data-hover-underline
+                  href={`#theme-${t}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const el = document.getElementById(`theme-${t}`);
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
+                  style={{
+                    fontFamily: C.serif,
+                    fontStyle: 'italic',
+                    fontWeight: 500,
+                    fontSize: mobile ? 17 : 19,
+                    color: tinfo.accent,
+                    lineHeight: 1.2,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {tinfo.label}
+                </a>
               );
             })}
           </div>
