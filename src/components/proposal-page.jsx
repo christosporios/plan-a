@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { C, themeOf, EYEBROW, WORDMARK } from '../lib/theme';
+import { proposalImage } from '../lib/proposal-images';
 import { useIsMobile } from '../hooks/use-is-mobile';
 import { Body } from '../lib/format-text';
 import { CalloutBox } from './callout-box';
@@ -43,6 +44,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
   }
 
   const theme = themeOf(d.theme);
+  const img = proposalImage(d.number);
   const px = mobile ? 20 : 40;
 
   // Section anchors for the right-side rail (desktop only).
@@ -64,13 +66,29 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
     }}>
       <SolidLine color={theme.accent} showProgress />
       {!mobile && <SectionRail sections={sectionList} accent={theme.accent} />}
-      {/* Header */}
+      {/* Header — darkened image (or themed placeholder) behind white text */}
       <header style={{
-        padding: mobile ? '40px 0 24px' : '64px 0 36px',
-        borderBottom: `1px solid ${C.rule}`,
-        background: C.bg,
+        position: 'relative',
+        overflow: 'hidden',
+        padding: mobile ? '36px 0 40px' : '56px 0 56px',
+        background: C.ink,
       }}>
-        <div style={{ maxWidth: 720, margin: '0 auto', padding: `0 ${px}px` }}>
+        {img ? (
+          <img src={img} alt="" style={{
+            position: 'absolute', inset: 0, width: '100%', height: '100%',
+            objectFit: 'cover', objectPosition: 'center',
+          }} />
+        ) : (
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: `linear-gradient(135deg, ${theme.accent} 0%, #1a1a1a 130%)`,
+          }} />
+        )}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.52) 45%, rgba(0,0,0,0.7) 100%)',
+        }} />
+        <div style={{ position: 'relative', maxWidth: 720, margin: '0 auto', padding: `0 ${px}px` }}>
           {/* Top nav: ← prev title | Plan A | next title → */}
           <nav style={{
             display: 'grid',
@@ -86,7 +104,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
                   onClick={(e) => { e.preventDefault(); navigate(`/${prev.data.number}-${prev.data.slug || prev.slug}`); }}
                   data-hover-underline
                   title={prev.data.title}
-                  style={{ ...topNavLink, justifyContent: 'flex-start' }}
+                  style={{ ...topNavLink, justifyContent: 'flex-start', color: 'rgba(255,255,255,0.82)' }}
                 >
                   <span style={{ flexShrink: 0 }}>←</span>
                   <span style={navTitleEllipsis}>{prev.data.title}</span>
@@ -97,8 +115,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
               href="/"
               onClick={(e) => { e.preventDefault(); navigate('/'); }}
               data-hover-underline
-              data-hover-darken
-              style={backLinkStyle}
+              style={{ ...backLinkStyle, color: '#fff' }}
             >
               Plan A
             </a>
@@ -109,7 +126,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
                   onClick={(e) => { e.preventDefault(); navigate(`/${next.data.number}-${next.data.slug || next.slug}`); }}
                   data-hover-underline
                   title={next.data.title}
-                  style={{ ...topNavLink, justifyContent: 'flex-end' }}
+                  style={{ ...topNavLink, justifyContent: 'flex-end', color: 'rgba(255,255,255,0.82)' }}
                 >
                   <span style={navTitleEllipsis}>{next.data.title}</span>
                   <span style={{ flexShrink: 0 }}>→</span>
@@ -118,11 +135,11 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
             </div>
           </nav>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, marginTop: 28, marginBottom: 8 }}>
-            <span style={{ ...EYEBROW, fontSize: 12, letterSpacing: '0.12em', color: theme.accent, fontWeight: 700 }}>
+            <span style={{ ...EYEBROW, fontSize: 12, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.92)', fontWeight: 700 }}>
               Πρόταση {String(d.number).padStart(2, '0')}
             </span>
             {theme.label && (
-              <span style={{ ...EYEBROW, fontSize: 12, letterSpacing: '0.12em', color: theme.accent, fontWeight: 700 }}>
+              <span style={{ ...EYEBROW, fontSize: 12, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.92)', fontWeight: 700 }}>
                 · {theme.label}
               </span>
             )}
@@ -134,8 +151,9 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
             lineHeight: 1.15,
             letterSpacing: '-0.02em',
             margin: 0,
-            color: C.ink,
+            color: '#fff',
             textWrap: 'balance',
+            textShadow: '0 1px 16px rgba(0,0,0,0.45)',
           }}>
             {d.title}
           </h1>
@@ -144,10 +162,11 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
               fontFamily: C.serif,
               fontSize: mobile ? 17 : 19,
               fontWeight: 400,
-              color: C.mid,
+              color: 'rgba(255,255,255,0.86)',
               marginTop: 16,
               marginBottom: 0,
               lineHeight: 1.5,
+              textShadow: '0 1px 12px rgba(0,0,0,0.4)',
             }}>
               {d.one_line.trim().replace(/\n/g, ' ')}
             </p>

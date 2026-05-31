@@ -1,6 +1,7 @@
 import { C, THEMES, THEME_ORDER, EYEBROW, WORDMARK } from '../lib/theme';
 import { SITE } from '../lib/site';
 import { foreword } from '../lib/foreword';
+import { proposalImage } from '../lib/proposal-images';
 import { useIsMobile } from '../hooks/use-is-mobile';
 import { ScrollLine } from './scroll-line';
 import { SiteFooter } from './site-footer';
@@ -243,72 +244,105 @@ export const PlanACover = ({ proposals, navigate }) => {
                     </div>
                   </>
                 )}
-                {bucket.map(p => (
+                {bucket.map(p => {
+                  const img = proposalImage(p.data.number);
+                  return (
                   <a
                     key={p.slug}
                     href={`/${p.data.number}-${p.data.slug || p.slug}`}
                     onClick={(e) => { e.preventDefault(); navigate(`/${p.data.number}-${p.data.slug || p.slug}`); }}
                     style={{
-                      display: 'grid',
-                      gridTemplateColumns: mobile ? '56px 1fr' : '72px 1fr',
-                      gap: 16,
-                      padding: '18px 0',
-                      borderTop: `1px solid ${C.rule}`,
+                      position: 'relative',
+                      display: 'block',
+                      overflow: 'hidden',
+                      minHeight: mobile ? 150 : 190,
+                      background: C.ink,
                       textDecoration: 'none',
-                      color: 'inherit',
-                      transition: 'background 200ms cubic-bezier(0.16, 1, 0.3, 1)',
-                      alignItems: 'start',
+                      color: '#fff',
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = C.hover;
+                      const i = e.currentTarget.querySelector('[data-img]');
                       const num = e.currentTarget.querySelector('[data-num]');
                       const body = e.currentTarget.querySelector('[data-body]');
+                      if (i) i.style.transform = 'scale(1.06)';
                       if (num) num.style.color = tinfo.accent;
                       if (body) body.style.transform = 'translateX(6px)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
+                      const i = e.currentTarget.querySelector('[data-img]');
                       const num = e.currentTarget.querySelector('[data-num]');
                       const body = e.currentTarget.querySelector('[data-body]');
-                      if (num) num.style.color = C.faint;
+                      if (i) i.style.transform = 'scale(1)';
+                      if (num) num.style.color = 'rgba(255,255,255,0.6)';
                       if (body) body.style.transform = 'translateX(0)';
                     }}
                   >
-                    <span data-num style={{
-                      fontFamily: C.serif,
-                      fontSize: mobile ? 30 : 38,
-                      fontWeight: 400,
-                      color: C.faint,
-                      lineHeight: 0.95,
-                      letterSpacing: '-0.02em',
-                      paddingTop: mobile ? 3 : 4,
-                      transition: 'color 240ms cubic-bezier(0.16, 1, 0.3, 1)',
+                    {/* Full-bleed background (incl. the number): cropped image or themed placeholder */}
+                    {img ? (
+                      <img data-img src={img} alt="" loading="lazy" style={{
+                        position: 'absolute', inset: 0, width: '100%', height: '100%',
+                        objectFit: 'cover', objectPosition: 'center',
+                        transition: 'transform 600ms cubic-bezier(0.16, 1, 0.3, 1)',
+                      }} />
+                    ) : (
+                      <div data-img style={{
+                        position: 'absolute', inset: 0,
+                        background: `linear-gradient(135deg, ${tinfo.accent} 0%, #1a1a1a 130%)`,
+                        transition: 'transform 600ms cubic-bezier(0.16, 1, 0.3, 1)',
+                      }} />
+                    )}
+                    <div style={{
+                      position: 'absolute', inset: 0,
+                      background: 'linear-gradient(180deg, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.5) 48%, rgba(0,0,0,0.68) 100%)',
+                    }} />
+                    {/* Content */}
+                    <div style={{
+                      position: 'relative',
+                      display: 'grid',
+                      gridTemplateColumns: mobile ? '50px 1fr' : '72px 1fr',
+                      gap: mobile ? 14 : 20,
+                      padding: mobile ? '24px 22px' : '32px 38px',
+                      alignItems: 'start',
                     }}>
-                      {String(p.data.number).padStart(2, '0')}
-                    </span>
-                    <div data-body style={{ transition: 'transform 280ms cubic-bezier(0.16, 1, 0.3, 1)' }}>
-                      <div style={{
+                      <span data-num style={{
                         fontFamily: C.serif,
-                        fontSize: mobile ? 17 : 20,
-                        fontWeight: 600,
-                        color: C.ink,
-                        lineHeight: 1.3,
+                        fontSize: mobile ? 32 : 42,
+                        fontWeight: 400,
+                        color: 'rgba(255,255,255,0.6)',
+                        lineHeight: 0.95,
+                        letterSpacing: '-0.02em',
+                        paddingTop: mobile ? 2 : 4,
+                        transition: 'color 240ms cubic-bezier(0.16, 1, 0.3, 1)',
                       }}>
-                        {p.data.title}
-                      </div>
-                      {p.data.one_line && (
+                        {String(p.data.number).padStart(2, '0')}
+                      </span>
+                      <div data-body style={{ transition: 'transform 280ms cubic-bezier(0.16, 1, 0.3, 1)' }}>
                         <div style={{
-                          fontSize: 13.5,
-                          color: C.light,
-                          marginTop: 4,
-                          lineHeight: 1.5,
+                          fontFamily: C.serif,
+                          fontSize: mobile ? 19 : 23,
+                          fontWeight: 600,
+                          color: '#fff',
+                          lineHeight: 1.25,
+                          textShadow: '0 1px 14px rgba(0,0,0,0.4)',
                         }}>
-                          {p.data.one_line.trim().replace(/\n/g, ' ')}
+                          {p.data.title}
                         </div>
-                      )}
+                        {p.data.one_line && (
+                          <div style={{
+                            fontSize: 13.5,
+                            color: 'rgba(255,255,255,0.9)',
+                            marginTop: 8,
+                            lineHeight: 1.55,
+                            textShadow: '0 1px 10px rgba(0,0,0,0.35)',
+                          }}>
+                            {p.data.one_line.trim().replace(/\n/g, ' ')}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </a>
-                ))}
+                  );
+                })}
               </div>
             );
           })}
