@@ -1,5 +1,6 @@
 import { C, THEMES, THEME_ORDER, EYEBROW, WORDMARK } from '../lib/theme';
 import { SITE } from '../lib/site';
+import { foreword } from '../lib/foreword';
 import { useIsMobile } from '../hooks/use-is-mobile';
 import { ScrollLine } from './scroll-line';
 import { SiteFooter } from './site-footer';
@@ -145,7 +146,7 @@ export const PlanACover = ({ proposals, navigate }) => {
             {SITE.metrics.map((m) => <StatValue key={m.label} mobile={mobile}>{m.value}</StatValue>)}
           </div>
           <p style={{ fontSize: 16, lineHeight: 1.85, color: C.mid, marginTop: 0, marginBottom: 22, ...enter(440) }}>
-            {SITE.intro}{' '}
+            {foreword}{' '}
             <a
               href="/methodologia"
               onClick={(e) => { e.preventDefault(); navigate('/methodologia'); }}
@@ -218,30 +219,29 @@ export const PlanACover = ({ proposals, navigate }) => {
             return (
               <div key={t} id={`theme-${t}`} style={{ marginBottom: 56, scrollMarginTop: 24 }}>
                 {tinfo?.label && (
-                  <div style={{
-                    fontFamily: C.serif,
-                    fontSize: mobile ? 26 : 32,
-                    fontStyle: 'italic',
-                    fontWeight: 600,
-                    color: tinfo.accent,
-                    marginBottom: tinfo.subtitle ? 3 : 14,
-                    letterSpacing: '-0.01em',
-                  }}>
-                    {tinfo.label}
-                  </div>
-                )}
-                {tinfo?.subtitle && (
-                  <div style={{
-                    fontFamily: C.serif,
-                    fontStyle: 'italic',
-                    fontWeight: 500,
-                    fontSize: mobile ? 16 : 18,
-                    color: C.light,
-                    marginBottom: 16,
-                    lineHeight: 1.4,
-                  }}>
-                    {tinfo.subtitle}
-                  </div>
+                  <>
+                    {THEME_ORDER.indexOf(t) >= 0 && (
+                      <div style={{
+                        ...EYEBROW,
+                        fontSize: mobile ? 11 : 12,
+                        color: tinfo.accent,
+                        marginBottom: 8,
+                      }}>
+                        {`ΣΤΟΧΟΣ ${THEME_ORDER.indexOf(t) + 1}`}
+                      </div>
+                    )}
+                    <div style={{
+                      fontFamily: C.serif,
+                      fontSize: mobile ? 26 : 32,
+                      fontStyle: 'italic',
+                      fontWeight: 600,
+                      color: tinfo.accent,
+                      marginBottom: 14,
+                      letterSpacing: '-0.01em',
+                    }}>
+                      {tinfo.label}
+                    </div>
+                  </>
                 )}
                 {bucket.map(p => (
                   <a

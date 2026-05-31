@@ -11,14 +11,15 @@ export const C = {
 };
 
 // Theme accent colors by proposal grouping. Object order matches THEME_ORDER
-// (the order they appear on the cover). `subtitle` is the one-line framing shown
-// under each category heading in the landing-page table of contents.
+// (the order they appear on the cover). Each area reads as a goal — surfaced as
+// "ΣΤΟΧΟΣ N" (N = position in THEME_ORDER) above the label on the landing page
+// and the presentation's area slide.
 export const THEMES = {
-  mobility:       { label: 'Μετακίνηση',       accent: '#4a7a8c', subtitle: 'Η μετακίνηση στην πόλη είναι δύσκολη' },
-  'public-space': { label: 'Δημόσιος Χώρος',    accent: '#5a8c5a', subtitle: 'Ο δημόσιος χώρος είναι παραμελημένος' },
-  housing:        { label: 'Κατοικία',          accent: '#ab8540', subtitle: 'Τα σπίτια είναι ακριβά και η κατάσταση των κτηρίων υποβαθμισμένη' },
-  identity:       { label: 'Ταυτότητα',         accent: '#af4d44', subtitle: 'Η ταυτότητα της πόλης των μεικτών χρήσεων χάνεται' },
-  municipality:   { label: 'Αποτελεσματικότητα', accent: '#6e5a8a', subtitle: 'Ο δήμος συχνά δεν εκπληρώνει τις πλήρεις δυνατότητες του' },
+  mobility:       { label: 'Εύκολη μετακίνηση',                 accent: '#4a7a8c' },
+  'public-space': { label: 'Ευχάριστος δημόσιος χώρος',         accent: '#5a8c5a' },
+  housing:        { label: 'Προσιτή κατοικία & ποιοτικά κτίρια', accent: '#ab8540' },
+  identity:       { label: 'Ζωντανή ταυτότητα',                 accent: '#af4d44' },
+  municipality:   { label: 'Αποτελεσματικός δήμος',            accent: '#6e5a8a' },
 };
 
 export const THEME_ORDER = ['mobility', 'public-space', 'housing', 'identity', 'municipality'];

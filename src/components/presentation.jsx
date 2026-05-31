@@ -258,21 +258,14 @@ function AreaSlide({ themeKey, mobile }) {
   const t = THEMES[themeKey];
   return (
     <div style={{ textAlign: 'center' }}>
-      <div style={{ ...EYEBROW, fontSize: mobile ? 12 : 14, color: C.faint, marginBottom: 20 }}>
-        Θεματική ενότητα
+      <div style={{ ...EYEBROW, fontSize: mobile ? 14 : 18, color: t.accent, marginBottom: 20, letterSpacing: '0.2em' }}>
+        {`ΣΤΟΧΟΣ ${THEME_ORDER.indexOf(themeKey) + 1}`}
       </div>
       <div style={{
         fontFamily: C.serif, fontStyle: 'italic', fontWeight: 600,
         fontSize: mobile ? 50 : 84, color: t.accent, lineHeight: 1.05, letterSpacing: '-0.02em',
       }}>
         {t.label}
-      </div>
-      <div style={{
-        fontFamily: C.serif, fontStyle: 'italic', fontWeight: 500,
-        fontSize: mobile ? 20 : 30, color: C.light, marginTop: 18, lineHeight: 1.4,
-        maxWidth: 760, marginLeft: 'auto', marginRight: 'auto',
-      }}>
-        {t.subtitle}
       </div>
     </div>
   );

@@ -53,6 +53,7 @@ const proposals = readdirSync('proposals')
   .sort((a, b) => a.number - b.number);
 
 const ack = yaml.load(readFileSync('src/data/eucharisties.yaml', 'utf8'));
+const foreword = yaml.load(readFileSync('src/data/foreword.yaml', 'utf8')).text;
 // Re-encode the logo to a clean PNG buffer (@react-pdf's decoder rejects the raw file).
 const LOGO = { data: await sharp('public/astylab-logo.png').resize({ width: 96 }).png().toBuffer(), format: 'png' };
 
@@ -256,6 +257,16 @@ function CoverPage() {
   ]);
 }
 
+// Foreword — its own page, vertically centred, set in the serif italic used for
+// leads elsewhere. Front matter, so no running footer or page number.
+function ForewordPage() {
+  return h(View, { key: 'fw', style: { flexGrow: 1, justifyContent: 'center' } }, [
+    h(Text, { key: 'eye', style: { fontFamily: MONO, fontSize: 8.5, fontWeight: 700, letterSpacing: 3, color: C.faint, textAlign: 'center', marginBottom: 18 } }, greekUpper('Πρόλογος')),
+    h(View, { key: 'rule', style: { width: 28, height: 2, backgroundColor: C.ink, alignSelf: 'center', marginBottom: 28 } }),
+    h(Text, { key: 'body', style: { fontFamily: SERIF, fontStyle: 'italic', fontSize: 15, color: C.ink, lineHeight: 1.7, textAlign: 'center' } }, inline(foreword, 'fw-')),
+  ]);
+}
+
 function MethodologySection() {
   const m = methodologia;
   return h(View, { key: 'method', break: true }, [
@@ -394,6 +405,7 @@ function Footer() {
 // ── Document ─────────────────────────────────────────────────────────────────
 const buildDoc = () => h(Document, { title: 'Plan A — 20 προτάσεις για την Αθήνα', author: 'Astylab' }, [
   h(Page, { key: 'cover', size: 'A4', style: { backgroundColor: C.bg } }, CoverPage()),
+  h(Page, { key: 'foreword', size: 'A4', style: { backgroundColor: C.bg, paddingHorizontal: 92, paddingVertical: 72 } }, ForewordPage()),
   h(Page, {
     key: 'body',
     size: 'A4',

@@ -3,8 +3,7 @@
 export const SITE = {
   wordmark: 'Plan A',
   tagline: '20 προτάσεις για την Αθήνα',
-  // Lead paragraph shown on the cover and the PDF report.
-  intro: 'Το Plan A διατυπώνει είκοσι συγκεκριμένες προτάσεις για την Αθήνα. Δεν λύνουν τα πάντα — αλλά είναι επιλεγμένες ώστε, με το μικρότερο κόστος εφαρμογής, να φέρουν το μεγαλύτερο όφελος στους περισσότερους.',
+  // The foreword (πρόλογος) lives in src/data/foreword.yaml — see src/lib/foreword.js.
   metrics: [
     { value: '2.077',   label: 'Πολίτες στη διαβούλευση' },
     { value: '126.819', label: 'Ψήφοι' },
