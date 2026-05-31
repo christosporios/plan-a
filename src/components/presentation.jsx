@@ -25,7 +25,7 @@ const SITE_URL = (import.meta.env.VITE_SITE_URL || 'https://planathens.gr').repl
 const SITE_HOST = SITE_URL.replace(/^https?:\/\//, '');
 
 function buildSlides() {
-  const slides = [{ type: 'title' }];
+  const slides = [{ type: 'cover' }, { type: 'title' }];
   slides.push({ type: 'methodology' });
   slides.push({ type: 'polis' });
   for (const themeKey of THEME_ORDER) {
@@ -136,19 +136,38 @@ function TitleSlide({ mobile }) {
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: mobile ? 40 : 60 }}>
         <QRBlock value={SITE_URL} color={C.ink} size={mobile ? 120 : 156} mobile={mobile} />
       </div>
-      {/* A sliver of every proposal's image — a mosaic of the city. */}
+    </div>
+  );
+}
+
+// Opening splash: full-bleed proposal images that cross-fade every 20s, with the
+// wordmark in white, centred. The only thing it says is "Plan A".
+function CoverSplash({ mobile, onAdvance }) {
+  const imgs = useMemo(() => proposals.map((p) => proposalImage(p.data.number)).filter(Boolean), []);
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (imgs.length < 2) return undefined;
+    const t = setInterval(() => setI((n) => (n + 1) % imgs.length), 20000);
+    return () => clearInterval(t);
+  }, [imgs.length]);
+  return (
+    <div
+      onClick={onAdvance}
+      style={{ flex: 1, position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.ink, cursor: 'pointer' }}
+    >
+      {imgs.map((src, n) => (
+        <img key={n} src={src} alt="" style={{
+          position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center',
+          opacity: n === i ? 1 : 0, transition: 'opacity 1500ms ease-in-out',
+        }} />
+      ))}
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
       <div style={{
-        display: 'flex', gap: 2, marginTop: mobile ? 40 : 60, borderRadius: 10, overflow: 'hidden',
-        maxWidth: mobile ? 460 : 820, marginLeft: 'auto', marginRight: 'auto',
+        ...WORDMARK, position: 'relative', color: '#fff',
+        fontSize: mobile ? 76 : 150, letterSpacing: '-0.03em', lineHeight: 1,
+        textShadow: '0 2px 40px rgba(0,0,0,0.5)',
       }}>
-        {proposals.map((p) => {
-          const img = proposalImage(p.data.number);
-          return (
-            <div key={p.slug} style={{ flex: 1, height: mobile ? 66 : 96, backgroundColor: THEMES[p.data.theme]?.accent || C.ink }}>
-              {img && <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
-            </div>
-          );
-        })}
+        Plan A
       </div>
     </div>
   );
@@ -459,17 +478,22 @@ export default function Presentation({ onExit }) {
           animation: 'fade-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both',
         }}
       >
-        <div style={{
-          margin: 'auto', width: '100%', maxWidth: 880, boxSizing: 'border-box',
-          padding: `${mobile ? 40 : 56}px ${px}px ${mobile ? 48 : 64}px`,
-        }}>
-          <Slide slide={slides[index]} mobile={mobile} />
-        </div>
+        {slides[index].type === 'cover' ? (
+          <CoverSplash mobile={mobile} onAdvance={() => go(1)} />
+        ) : (
+          <div style={{
+            margin: 'auto', width: '100%', maxWidth: 880, boxSizing: 'border-box',
+            padding: `${mobile ? 40 : 56}px ${px}px ${mobile ? 48 : 64}px`,
+          }}>
+            <Slide slide={slides[index]} mobile={mobile} />
+          </div>
+        )}
       </div>
 
       {/* Bottom chrome: slide counter + a per-slide progress strip — one rounded
           bar per slide, colored by its theme accent (black for neutral slides).
-          Thick enough to read on a projector. */}
+          Thick enough to read on a projector. Hidden on the opening splash. */}
+      {slides[index].type !== 'cover' && (
       <div style={{ flexShrink: 0, padding: `${mobile ? 10 : 12}px ${mobile ? 16 : 24}px calc(${mobile ? 12 : 14}px + env(safe-area-inset-bottom, 0px))` }}>
         <div style={{ marginBottom: mobile ? 8 : 10 }}>
           <span style={{ ...EYEBROW, fontSize: mobile ? 11 : 12, color: C.light, fontVariantNumeric: 'tabular-nums' }}>
@@ -492,6 +516,7 @@ export default function Presentation({ onExit }) {
           ))}
         </div>
       </div>
+      )}
     </div>
   );
 }
