@@ -367,19 +367,25 @@ function SectionCoverPage(t) {
   // Explicit per-band height — react-pdf doesn't distribute flexGrow heights for
   // images, so each band gets an exact slice of the page.
   const bandH = Math.floor(A4_H / items.length);
+  // The goal label sits on the second image — the only band we darken (falls back
+  // to the first if the area has a single proposal).
+  const labelIdx = items.length > 1 ? 1 : 0;
   const bands = items.map((d, i) => {
     const data = proposalImageData(d.number);
-    return h(View, { key: `b${i}`, style: { height: bandH, overflow: 'hidden', backgroundColor: themeOf(d.theme).accent } },
-      data ? h(Image, { key: 'i', src: data, style: { width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' } }) : null);
+    const labelled = i === labelIdx;
+    return h(View, { key: `b${i}`, style: { height: bandH, overflow: 'hidden', position: 'relative', backgroundColor: themeOf(d.theme).accent } }, [
+      data ? h(Image, { key: 'i', src: data, style: { width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' } }) : null,
+      labelled ? h(View, { key: 'sc', style: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)' } }) : null,
+      labelled ? h(View, { key: 'lab', style: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', paddingLeft: 54, paddingRight: 54 } }, [
+        marker(`area-${t}`),
+        h(Text, { key: 'k', style: { fontFamily: MONO, fontSize: 11, letterSpacing: 3, color: 'rgba(255,255,255,0.92)', marginBottom: 12 } }, `ΣΤΟΧΟΣ ${THEME_ORDER.indexOf(t) + 1}`),
+        h(Text, { key: 'l', style: { fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 28, color: '#fff', lineHeight: 1.1 } }, theme.label),
+      ]) : null,
+    ]);
   });
-  const overlay = h(View, { key: 'ov', style: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' } }, [
-    marker(`area-${t}`),
-    h(View, { key: 'plate', style: { backgroundColor: 'rgba(20,20,20,0.5)', paddingVertical: 30, paddingHorizontal: 44, alignItems: 'center', maxWidth: 470 } }, [
-      h(Text, { key: 'k', style: { fontFamily: MONO, fontSize: 11, letterSpacing: 3, color: '#fff', marginBottom: 14 } }, `ΣΤΟΧΟΣ ${THEME_ORDER.indexOf(t) + 1}`),
-      h(Text, { key: 'l', style: { fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 30, color: '#fff', textAlign: 'center', lineHeight: 1.1 } }, theme.label),
-    ]),
-  ]);
-  return h(Page, { key: `area-${t}`, size: 'A4', style: { flexDirection: 'column', backgroundColor: C.ink } }, [...bands, overlay]);
+  // Theme-colour rail down the left edge (as on the cover).
+  const leftBar = h(View, { key: 'bar', style: { position: 'absolute', top: 0, left: 0, bottom: 0, width: 12, backgroundColor: theme.accent } });
+  return h(Page, { key: `area-${t}`, size: 'A4', style: { flexDirection: 'column', backgroundColor: C.ink } }, [...bands, leftBar]);
 }
 
 function calloutBox(text, key) {
