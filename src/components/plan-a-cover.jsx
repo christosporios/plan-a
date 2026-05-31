@@ -255,7 +255,8 @@ export const PlanACover = ({ proposals, navigate }) => {
                       position: 'relative',
                       display: 'block',
                       overflow: 'hidden',
-                      minHeight: mobile ? 150 : 190,
+                      minHeight: mobile ? 188 : 248,
+                      marginBottom: mobile ? 14 : 20,
                       background: C.ink,
                       textDecoration: 'none',
                       color: '#fff',
@@ -293,7 +294,7 @@ export const PlanACover = ({ proposals, navigate }) => {
                     )}
                     <div style={{
                       position: 'absolute', inset: 0,
-                      background: 'linear-gradient(180deg, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.5) 48%, rgba(0,0,0,0.68) 100%)',
+                      background: 'linear-gradient(180deg, rgba(0,0,0,0.56) 0%, rgba(0,0,0,0.62) 48%, rgba(0,0,0,0.78) 100%)',
                     }} />
                     {/* Content */}
                     <div style={{
@@ -301,7 +302,7 @@ export const PlanACover = ({ proposals, navigate }) => {
                       display: 'grid',
                       gridTemplateColumns: mobile ? '50px 1fr' : '72px 1fr',
                       gap: mobile ? 14 : 20,
-                      padding: mobile ? '24px 22px' : '32px 38px',
+                      padding: mobile ? '34px 22px' : '48px 38px',
                       alignItems: 'start',
                     }}>
                       <span data-num style={{
