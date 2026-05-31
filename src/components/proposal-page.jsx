@@ -70,6 +70,9 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
       <header style={{
         position: 'relative',
         overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: mobile ? 340 : 460,
         padding: mobile ? '36px 0 40px' : '56px 0 56px',
         background: C.ink,
       }}>
@@ -88,7 +91,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
           position: 'absolute', inset: 0,
           background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.52) 45%, rgba(0,0,0,0.7) 100%)',
         }} />
-        <div style={{ position: 'relative', maxWidth: 720, margin: '0 auto', padding: `0 ${px}px` }}>
+        <div style={{ position: 'relative', width: '100%', maxWidth: 720, margin: '0 auto', padding: `0 ${px}px`, flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           {/* Top nav: ← prev title | Plan A | next title → */}
           <nav style={{
             display: 'grid',
@@ -134,29 +137,31 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
               )}
             </div>
           </nav>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, marginTop: 28, marginBottom: 8 }}>
-            <span style={{ ...EYEBROW, fontSize: 12, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.92)', fontWeight: 700 }}>
-              Πρόταση {String(d.number).padStart(2, '0')}
-            </span>
-            {theme.label && (
+          <div style={{ marginTop: mobile ? 28 : 36 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, marginBottom: 8 }}>
               <span style={{ ...EYEBROW, fontSize: 12, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.92)', fontWeight: 700 }}>
-                · {theme.label}
+                Πρόταση {String(d.number).padStart(2, '0')}
               </span>
-            )}
+              {theme.label && (
+                <span style={{ ...EYEBROW, fontSize: 12, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.92)', fontWeight: 700 }}>
+                  · {theme.label}
+                </span>
+              )}
+            </div>
+            <h1 style={{
+              fontFamily: C.serif,
+              fontSize: mobile ? 32 : 44,
+              fontWeight: 700,
+              lineHeight: 1.15,
+              letterSpacing: '-0.02em',
+              margin: 0,
+              color: '#fff',
+              textWrap: 'balance',
+              textShadow: '0 1px 16px rgba(0,0,0,0.45)',
+            }}>
+              {d.title}
+            </h1>
           </div>
-          <h1 style={{
-            fontFamily: C.serif,
-            fontSize: mobile ? 32 : 44,
-            fontWeight: 700,
-            lineHeight: 1.15,
-            letterSpacing: '-0.02em',
-            margin: 0,
-            color: '#fff',
-            textWrap: 'balance',
-            textShadow: '0 1px 16px rgba(0,0,0,0.45)',
-          }}>
-            {d.title}
-          </h1>
         </div>
       </header>
 
