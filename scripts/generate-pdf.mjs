@@ -71,6 +71,11 @@ const A4_H = 841.89;
 const PAGE = { top: 48, bottom: 52, x: 54 };
 const bodyPageStyle = { backgroundColor: C.bg, color: C.mid, fontFamily: 'Commissioner', fontSize: 9.5, paddingTop: PAGE.top, paddingBottom: PAGE.bottom, paddingHorizontal: PAGE.x };
 
+// hex → rgba string (react-pdf accepts rgba()).
+const hexToRgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`; };
+// hex → darker rgb (multiply channels), for legible white text on a flat accent.
+const darken = (hex, f) => { const n = parseInt(hex.slice(1), 16); return `rgb(${Math.round(((n >> 16) & 255) * f)}, ${Math.round(((n >> 8) & 255) * f)}, ${Math.round((n & 255) * f)})`; };
+
 // ── Lucide icons → @react-pdf <Svg> ──────────────────────────────────────────
 // Lucide icon nodes are arrays of [tag, attrs]; render them with the same
 // stroke style Lucide uses (fill none, 24-unit viewBox, round caps/joins).
@@ -248,11 +253,8 @@ function CoverPage() {
       h(View, { key: 'mid', style: { marginTop: 'auto', marginBottom: 'auto', paddingVertical: 40 } }, [
         h(Text, { key: 'w', style: { fontFamily: SERIF, fontStyle: 'italic', fontSize: 96, color: C.ink, letterSpacing: -2, lineHeight: 1 } }, SITE.wordmark),
         h(Text, { key: 't', style: { fontFamily: SERIF, fontStyle: 'italic', fontSize: 22, color: C.mid, marginTop: 10 } }, SITE.tagline),
-        h(View, { key: 'areas', style: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', marginTop: 22 } },
-          THEME_ORDER.flatMap((t, i) => [
-            i > 0 ? h(Text, { key: `s${i}`, style: { color: C.rule, fontFamily: SERIF, fontSize: 12 } }, '    ·    ') : null,
-            h(Text, { key: t, style: { fontFamily: SERIF, fontStyle: 'italic', fontSize: 13, color: THEMES[t].accent } }, THEMES[t].label),
-          ]).filter(Boolean)),
+        h(View, { key: 'areas', style: { marginTop: 24 } },
+          THEME_ORDER.map((t) => h(Text, { key: t, style: { fontFamily: SERIF, fontStyle: 'italic', fontSize: 16, color: THEMES[t].accent, lineHeight: 1.55 } }, THEMES[t].label))),
       ]),
 
       // Foot — metrics + QR, divided by a hairline. Metrics align to a shared
@@ -374,9 +376,11 @@ function SectionCoverPage(t) {
   const bands = items.map((d, i) => {
     const data = proposalImageData(d.number);
     const labelled = i === labelIdx;
-    return h(View, { key: `b${i}`, style: { height: bandH, overflow: 'hidden', position: 'relative', backgroundColor: themeOf(d.theme).accent } }, [
+    // Photo label band → theme-colour tint; placeholder label band → darker accent (so white text reads).
+    const bg = labelled && !data ? darken(theme.accent, 0.6) : themeOf(d.theme).accent;
+    return h(View, { key: `b${i}`, style: { height: bandH, overflow: 'hidden', position: 'relative', backgroundColor: bg } }, [
       data ? h(Image, { key: 'i', src: data, style: { width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' } }) : null,
-      labelled ? h(View, { key: 'sc', style: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)' } }) : null,
+      labelled && data ? h(View, { key: 'sc', style: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: hexToRgba(theme.accent, 0.5) } }) : null,
       labelled ? h(View, { key: 'lab', style: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', paddingLeft: 54, paddingRight: 54 } }, [
         marker(`area-${t}`),
         h(Text, { key: 'k', style: { fontFamily: MONO, fontSize: 11, letterSpacing: 3, color: 'rgba(255,255,255,0.92)', marginBottom: 12 } }, `ΣΤΟΧΟΣ ${THEME_ORDER.indexOf(t) + 1}`),
@@ -426,20 +430,34 @@ function AckSection() {
   ]);
 }
 
-// Full-bleed graphic page: one vertical stripe per proposal, each revealing the
-// slice of that proposal's image at the stripe's own position — a sliced
-// panorama across all the proposals. Missing images fall back to the theme colour.
+// Full-bleed graphic page: diagonal stripes, one per proposal. The page splits in
+// two — the first ten proposals fill the top half, the rest the bottom — each
+// stripe showing its proposal's image (theme colour where no image exists yet).
 function StripesPage() {
-  const items = [...proposals].sort((a, b) => a.number - b.number);
-  const n = items.length;
-  const W = 595.28; const H = 841.89;
-  const sw = W / n;
-  return h(Page, { key: 'stripes', size: 'A4', style: { flexDirection: 'row', backgroundColor: C.ink } },
-    items.map((p, i) => {
-      const data = proposalImageData(p.number);
-      return h(View, { key: i, style: { width: sw, height: H, flexGrow: 0, flexShrink: 0, overflow: 'hidden', position: 'relative', backgroundColor: themeOf(p.theme).accent } },
-        data ? h(Image, { key: 'i', src: data, style: { position: 'absolute', top: 0, left: -i * sw, width: W, height: H, objectFit: 'cover', objectPosition: 'center' } }) : null);
-    }));
+  const all = [...proposals].sort((a, b) => a.number - b.number);
+  const W = 595.28; const H = 841.89; const Hh = H / 2; const ANGLE = 22;
+  const th = ANGLE * Math.PI / 180;
+  // Container sized to exactly cover a half after rotation, so the N stripes stay
+  // evenly spaced and bleed to every edge (no corner gaps).
+  const CW = W * Math.cos(th) + Hh * Math.sin(th) + 20;
+  const CH = W * Math.sin(th) + Hh * Math.cos(th) + 40;
+  const halfBand = (items, top, angle, key) => {
+    const sw = CW / Math.max(items.length, 1);
+    return h(View, { key, style: { position: 'absolute', top, left: 0, width: W, height: Hh, overflow: 'hidden', backgroundColor: C.ink } },
+      h(View, { key: 'rot', style: { position: 'absolute', left: (W - CW) / 2, top: (Hh - CH) / 2, width: CW, height: CH, flexDirection: 'row', transform: `rotate(${angle}deg)` } },
+        items.map((p, i) => {
+          const data = proposalImageData(p.number);
+          // The stripe (clip window) is rotated with the container; counter-rotate
+          // the image by the same angle so it reads upright through the angled cut.
+          return h(View, { key: i, style: { width: sw, height: CH, overflow: 'hidden', position: 'relative', backgroundColor: themeOf(p.theme).accent } },
+            data ? h(Image, { key: 'i', src: data, style: { position: 'absolute', top: 0, left: (sw - CH) / 2, width: CH, height: CH, objectFit: 'cover', objectPosition: 'center', transform: `rotate(${-angle}deg)` } }) : null);
+        })));
+  };
+  // Mirrored diagonals — top leans one way, bottom the other (a chevron at the split).
+  return h(Page, { key: 'stripes', size: 'A4', style: { backgroundColor: C.ink } }, [
+    halfBand(all.slice(0, 10), 0, -ANGLE, 'top'),
+    halfBand(all.slice(10), Hh, ANGLE, 'bottom'),
+  ]);
 }
 
 function TableOfContents() {
