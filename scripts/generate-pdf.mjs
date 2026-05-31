@@ -65,11 +65,10 @@ function proposalImageData(number) {
   return existsSync(p) ? { data: readFileSync(p), format: 'jpg' } : null;
 }
 
-// A4 geometry + body-page padding. The proposal hero bleeds to the page edge via
-// negative margins that cancel this padding; PROP_IMG_H is the top third.
+// A4 geometry + body-page padding. Full-bleed image bands cancel this padding
+// with negative margins so they reach the paper edge.
 const A4_H = 841.89;
 const PAGE = { top: 48, bottom: 52, x: 54 };
-const PROP_IMG_H = Math.round(A4_H / 3);
 const bodyPageStyle = { backgroundColor: C.bg, color: C.mid, fontFamily: 'Commissioner', fontSize: 9.5, paddingTop: PAGE.top, paddingBottom: PAGE.bottom, paddingHorizontal: PAGE.x };
 
 // ── Lucide icons → @react-pdf <Svg> ──────────────────────────────────────────
@@ -316,39 +315,47 @@ function MethodologySection() {
   ]);
 }
 
-// Full-bleed image band (top third of the page); the image escapes the page
-// padding via negative margins. No darkening — just the photo, cover-cropped.
-function proposalTopImage(d) {
+// Proposal title cover: the photo backgrounds the eyebrow + title (white),
+// darkened a little overall with a heavier wash at the bottom for legibility.
+// The image bleeds to the page edge via negative margins.
+function proposalTitleCover(d, theme) {
   const data = proposalImageData(d.number);
-  const box = { marginTop: -PAGE.top, marginLeft: -PAGE.x, marginRight: -PAGE.x, height: PROP_IMG_H, marginBottom: 24, overflow: 'hidden' };
-  return h(View, { key: 'topimg', style: data ? box : { ...box, backgroundColor: themeOf(d.theme).accent } },
-    data ? h(Image, { key: 'i', src: data, style: { width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' } }) : null);
+  const box = { position: 'relative', overflow: 'hidden', marginTop: -PAGE.top, marginLeft: -PAGE.x, marginRight: -PAGE.x, height: 500, marginBottom: 26 };
+  const eyebrowText = `ΠΡΟΤΑΣΗ ${String(d.number).padStart(2, '0')}${theme.label ? `  ·  ${theme.label.toUpperCase()}` : ''}`;
+  return h(View, { key: 'cover', style: data ? box : { ...box, backgroundColor: theme.accent } }, [
+    data ? h(Image, { key: 'img', src: data, style: { width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' } }) : null,
+    // even, gentle darkening across the whole image so the white title reads
+    h(View, { key: 'scrim', style: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)' } }),
+    h(View, { key: 'tx', style: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingLeft: PAGE.x, paddingRight: PAGE.x, paddingBottom: 42 } }, [
+      h(Text, { key: 'eye', style: { fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: 1.6, color: 'rgba(255,255,255,0.92)', marginBottom: 12 } }, eyebrowText),
+      h(Text, { key: 'tt', style: { fontFamily: SERIF, fontWeight: 700, fontSize: 27, color: '#fff', lineHeight: 1.12 } }, d.title),
+    ]),
+  ]);
 }
 
 function ProposalPage(d) {
   const theme = themeOf(d.theme);
   const kids = [];
-  kids.push(proposalTopImage(d));
+  // Title page: image-backed header + just the summary, then a page break.
+  kids.push(proposalTitleCover(d, theme));
   kids.push(marker(`prop-${d.number}`));
-  kids.push(h(View, { key: 'head', wrap: false, style: { marginBottom: 16 } }, [
-    h(Text, { key: 'eye', style: { fontFamily: MONO, fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: theme.accent } },
-      `ΠΡΟΤΑΣΗ ${String(d.number).padStart(2, '0')}${theme.label ? `  ·  ${theme.label.toUpperCase()}` : ''}`),
-    h(Text, { key: 'tt', style: { fontFamily: SERIF, fontWeight: 700, fontSize: 19, color: C.ink, marginTop: 8, lineHeight: 1.15 } }, d.title),
-    d.one_line && h(Text, { key: 'ol', style: { fontSize: 10.5, color: C.mid, lineHeight: 1.45, marginTop: 8 } }, d.one_line.trim().replace(/\n/g, ' ')),
-  ]));
-  if (d.problem) kids.push(proposalSection('Το πρόβλημα', theme.accent, [...body(d.problem.body, `p${d.number}pr-`), ...(d.problem.callouts || []).map((c, i) => calloutBox(c, `p${d.number}pc${i}`))], `s-prob`));
-  if (d.proposal) kids.push(proposalSection('Η πρόταση', theme.accent, [...body(d.proposal.body, `p${d.number}pp-`), ...(d.proposal.callouts || []).map((c, i) => calloutBox(c, `p${d.number}ppc${i}`))], `s-prop`));
-  if (d.implementation?.body) kids.push(proposalSection('Υλοποίηση', theme.accent, body(d.implementation.body, `p${d.number}im-`), `s-impl`));
-  if (d.limitations?.length) kids.push(proposalSection('Περιορισμοί & τρόποι αντιμετώπισης', theme.accent, d.limitations.map((l, i) => h(View, { key: i, minPresenceAhead: 40, style: { marginBottom: 9 } }, [
+  if (d.one_line) kids.push(h(Text, { key: 'ol', style: { fontSize: 12, color: C.mid, lineHeight: 1.55 } }, d.one_line.trim().replace(/\n/g, ' ')));
+  // Body — starts on a fresh page.
+  const b = [];
+  if (d.problem) b.push(proposalSection('Το πρόβλημα', theme.accent, [...body(d.problem.body, `p${d.number}pr-`), ...(d.problem.callouts || []).map((c, i) => calloutBox(c, `p${d.number}pc${i}`))], `s-prob`));
+  if (d.proposal) b.push(proposalSection('Η πρόταση', theme.accent, [...body(d.proposal.body, `p${d.number}pp-`), ...(d.proposal.callouts || []).map((c, i) => calloutBox(c, `p${d.number}ppc${i}`))], `s-prop`));
+  if (d.implementation?.body) b.push(proposalSection('Υλοποίηση', theme.accent, body(d.implementation.body, `p${d.number}im-`), `s-impl`));
+  if (d.limitations?.length) b.push(proposalSection('Περιορισμοί & τρόποι αντιμετώπισης', theme.accent, d.limitations.map((l, i) => h(View, { key: i, minPresenceAhead: 40, style: { marginBottom: 9 } }, [
     h(Text, { key: 'q', style: { fontSize: 9.5, fontWeight: 600, color: C.ink, lineHeight: 1.45, marginBottom: 3 } }, inline(l.q, `p${d.number}lq${i}-`)),
     h(Text, { key: 'a', style: { fontSize: 9, color: C.mid, lineHeight: 1.5 } }, inline(l.a, `p${d.number}la${i}-`)),
   ])), `s-lim`));
-  if (d.benefits?.length) kids.push(proposalSection('Επιπρόσθετα οφέλη', theme.accent, d.benefits.map((b, i) => h(View, { key: i, minPresenceAhead: 40, style: { marginBottom: 9 } }, [
-    h(Text, { key: 't', style: { fontSize: 9.5, fontWeight: 600, color: C.ink, marginBottom: 3 } }, b.title),
-    ...body(b.body, `p${d.number}bf${i}-`),
+  if (d.benefits?.length) b.push(proposalSection('Επιπρόσθετα οφέλη', theme.accent, d.benefits.map((bf, i) => h(View, { key: i, minPresenceAhead: 40, style: { marginBottom: 9 } }, [
+    h(Text, { key: 't', style: { fontSize: 9.5, fontWeight: 600, color: C.ink, marginBottom: 3 } }, bf.title),
+    ...body(bf.body, `p${d.number}bf${i}-`),
   ])), `s-ben`));
-  if (d.polis?.length) kids.push(proposalSection('Από το Pol.is', theme.accent, d.polis.map((p, i) => polisCard(p, `p${d.number}po${i}`)), `s-polis`));
-  if (d.references?.length) kids.push(referencesBlock(d.references, `p${d.number}`));
+  if (d.polis?.length) b.push(proposalSection('Από το Pol.is', theme.accent, d.polis.map((p, i) => polisCard(p, `p${d.number}po${i}`)), `s-polis`));
+  if (d.references?.length) b.push(referencesBlock(d.references, `p${d.number}`));
+  if (b.length) kids.push(h(View, { key: 'body', break: true }, b));
   return h(Page, { key: `prop-${d.number}`, size: 'A4', style: bodyPageStyle }, [Footer(), ...kids]);
 }
 

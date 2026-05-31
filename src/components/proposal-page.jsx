@@ -157,26 +157,26 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
           }}>
             {d.title}
           </h1>
-          {d.one_line && (
-            <p style={{
-              fontFamily: C.serif,
-              fontSize: mobile ? 17 : 19,
-              fontWeight: 400,
-              color: 'rgba(255,255,255,0.86)',
-              marginTop: 16,
-              marginBottom: 0,
-              lineHeight: 1.5,
-              textShadow: '0 1px 12px rgba(0,0,0,0.4)',
-            }}>
-              {d.one_line.trim().replace(/\n/g, ' ')}
-            </p>
-          )}
         </div>
       </header>
 
       {/* Body */}
       <main style={{ padding: mobile ? '8px 0 40px' : '8px 0 56px' }}>
         <div style={{ maxWidth: 720, margin: '0 auto', padding: `0 ${px}px` }}>
+
+          {d.one_line && (
+            <p style={{
+              fontFamily: C.serif,
+              fontSize: mobile ? 18 : 21,
+              fontWeight: 400,
+              color: C.mid,
+              marginTop: mobile ? 24 : 32,
+              marginBottom: mobile ? 8 : 16,
+              lineHeight: 1.5,
+            }}>
+              {d.one_line.trim().replace(/\n/g, ' ')}
+            </p>
+          )}
 
           {d.problem && (
             <ProposalSection id="problem" title="Το πρόβλημα" accent={theme.accent}>
