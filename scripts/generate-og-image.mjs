@@ -105,14 +105,22 @@ function wrapText(text, maxChars) {
   return lines;
 }
 
+// Opening of the cover foreword, used as the OG card's blurb.
+const COVER_BLURB =
+  'Η Αθήνα δεν είναι χαμένη υπόθεση. Το Plan A διατυπώνει είκοσι συγκεκριμένες ' +
+  'προτάσεις για την πόλη. Δεν λύνουν τα πάντα αλλά είναι επιλεγμένες ώστε να ' +
+  'φέρουν αισθητό όφελος στους περισσότερους, με μικρό κόστος εφαρμογής, χωρίς ' +
+  'εκτεταμένες ρυθμιστικές αλλαγές.';
+
 // ── Cover OG ────────────────────────────────────────────────────────────────
 async function generateCoverOG() {
   const accents = Object.values(THEMES).map((t) => t.accent);
   const chipLabels = Object.values(THEMES).map((t) => t.label);
+  const blurbLines = wrapText(COVER_BLURB, 64);
 
   // Distribute chips horizontally. Spacing is derived from the count and the
   // widest label so the (left-anchored) last chip never runs off the canvas.
-  const chipY = 540;
+  const chipY = 556;
   const chipFont = 22;
   const chipStartX = 90;
   const estWidth = (s) => s.length * chipFont * 0.52; // rough serif-italic advance
@@ -140,17 +148,19 @@ async function generateCoverOG() {
   <rect width="100%" height="100%" fill="${COLORS.bg}"/>
   <rect x="0" y="0" width="16" height="${H}" fill="url(#leftBar)"/>
 
-  <text x="100" y="130" font-family="${MONO}" font-size="22" letter-spacing="6" fill="${COLORS.faint}">
-    ASTYLAB · ΜΑΪΟΣ 2026
-  </text>
-
-  <text x="100" y="340" font-family="${SERIF}" font-style="italic" font-size="200" fill="${COLORS.ink}" letter-spacing="-5">
+  <text x="100" y="215" font-family="${SERIF}" font-style="italic" font-size="168" fill="${COLORS.ink}" letter-spacing="-4">
     Plan A
   </text>
 
-  <text x="100" y="420" font-family="${SERIF}" font-size="56" font-style="italic" fill="${COLORS.mid}">
+  <text x="100" y="278" font-family="${SERIF}" font-size="42" font-style="italic" fill="${COLORS.mid}">
     20 προτάσεις για την Αθήνα
   </text>
+
+  ${blurbLines.map((line, i) => `
+    <text x="100" y="${352 + i * 38}" font-family="${SERIF}" font-size="26" fill="${COLORS.light}">
+      ${escapeXml(line)}
+    </text>
+  `).join('')}
 
   ${chipLabels.map((label, i) => `
     <g transform="translate(${chipStartX + i * chipSpacing}, ${chipY})">
