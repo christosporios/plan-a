@@ -7,6 +7,7 @@ import { AggregatedPage } from './components/aggregated-page';
 import { PolisPage } from './components/polis-page';
 import { MethodologyPage } from './components/methodology-page';
 import { PresentationContext } from './lib/presentation-context';
+import { track } from './lib/analytics';
 import { C } from './lib/theme';
 
 // Presentation mode lives in its own chunk. Referencing lazy() here does NOT
@@ -65,7 +66,10 @@ export default function App() {
     setRoute(parseRoute());
   }, []);
 
-  const present = useCallback(() => setPresentationOpen(true), []);
+  const present = useCallback(() => {
+    track('Presentation');
+    setPresentationOpen(true);
+  }, []);
 
   return (
     <PresentationContext.Provider value={present}>

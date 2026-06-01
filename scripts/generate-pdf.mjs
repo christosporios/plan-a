@@ -1,8 +1,8 @@
 // Generate the complete Plan A report as a real PDF *document* (not a screenshot
 // or a print of the web page). Runs in Node at build time, reading the raw data
 // — proposal YAMLs + the shared config modules — and laying it out with
-// @react-pdf/renderer. Output: public/plan-a.pdf (served + committed) and, when
-// present, dist/plan-a.pdf for the deploy.
+// @react-pdf/renderer. Output: public/plan-a.pdf (served locally; gitignored and
+// regenerated every build) and, when present, dist/plan-a.pdf for the deploy.
 
 import React from 'react';
 import { Document, Page, View, Text, Image, Font, Svg, Path, Circle, Line, Polyline, Polygon, Rect, Ellipse, renderToFile, renderToBuffer } from '@react-pdf/renderer';
@@ -16,8 +16,6 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 import { C, THEMES, THEME_ORDER, themeOf } from '../src/lib/theme.js';
-import { SITE } from '../src/lib/site.js';
-import { methodologia } from '../src/lib/methodology.js';
 import { POLIS_GROUPS_DATA } from '../src/lib/polis-groups-data.js';
 
 const h = React.createElement;
@@ -54,6 +52,8 @@ const proposals = readdirSync('proposals')
 
 const ack = yaml.load(readFileSync('src/data/eucharisties.yaml', 'utf8'));
 const foreword = yaml.load(readFileSync('src/data/foreword.yaml', 'utf8')).text;
+const methodologia = yaml.load(readFileSync('src/data/methodology.yaml', 'utf8'));
+const SITE = yaml.load(readFileSync('src/data/site.yaml', 'utf8'));
 // Re-encode the logo to a clean PNG buffer (@react-pdf's decoder rejects the raw file).
 const LOGO = { data: await sharp('public/astylab-logo.png').resize({ width: 96 }).png().toBuffer(), format: 'png' };
 

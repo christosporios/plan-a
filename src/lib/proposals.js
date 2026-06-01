@@ -1,21 +1,16 @@
-import yaml from 'js-yaml';
+import { isProposalFile, parseProposal, byNumber } from './proposal-schema.mjs';
 
-// One YAML per proposal: proposals/NN-slug.yaml. Files starting with _ are templates/notes.
+// One YAML per proposal: proposals/NN-slug.yaml. Files starting with _ are
+// templates/notes. Discovery is browser-specific (Vite inlines the raw YAML at
+// build time); the parsing, validation, slug derivation, and ordering are
+// shared with the Node build via proposal-schema.mjs so the two can't drift.
 const rawFiles = import.meta.glob('../../proposals/*.yaml', { eager: true, query: '?raw', import: 'default' });
 
 export const proposals = Object.entries(rawFiles)
-  .filter(([path]) => !path.split('/').pop().startsWith('_'))
-  .map(([path, raw]) => {
-    const filename = path.split('/').pop().replace(/\.yaml$/, '');
-    try {
-      const data = yaml.load(raw);
-      return { filename, slug: data?.slug || filename, raw, data, error: null };
-    } catch (e) {
-      return { filename, slug: filename, raw, data: null, error: e };
-    }
-  })
-  .filter(p => p.data)
-  .sort((a, b) => (a.data.number ?? 999) - (b.data.number ?? 999));
+  .filter(([path]) => isProposalFile(path))
+  .map(([path, raw]) => parseProposal(raw, path))
+  .filter(Boolean)
+  .sort(byNumber);
 
 export function getProposalByNumber(n) {
   const num = Number(n);

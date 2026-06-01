@@ -78,7 +78,7 @@ ${allRoutes.map((r) => `  <url>
     <loc>${SITE_URL}${r}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>${r === '/' ? '1.0' : r.startsWith('/p/') ? '0.8' : '0.6'}</priority>
+    <priority>${r === '/' ? '1.0' : STATIC_PAGES[r] ? '0.7' : '0.8'}</priority>
   </url>`).join('\n')}
 </urlset>
 `;

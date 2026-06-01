@@ -3,6 +3,7 @@ import { PlanAMark } from './plan-a-mark';
 import { SITE } from '../lib/site';
 import { foreword } from '../lib/foreword';
 import { useIsMobile } from '../hooks/use-is-mobile';
+import { track } from '../lib/analytics';
 import { ScrollLine } from './scroll-line';
 import { SiteFooter } from './site-footer';
 
@@ -177,7 +178,10 @@ export const PlanACover = ({ proposals, navigate }) => {
               onClick={(e) => {
                 e.preventDefault();
                 const p = proposals[Math.floor(Math.random() * proposals.length)];
-                if (p) navigate(`/${p.data.number}-${p.data.slug || p.slug}`);
+                if (p) {
+                  track('Random proposal');
+                  navigate(`/${p.data.number}-${p.data.slug || p.slug}`);
+                }
               }}
               data-hover-underline
               style={{

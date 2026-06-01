@@ -1,0 +1,12 @@
+# Site-level copy shared by the cover hero, the presentation deck's title slide
+# and the PDF report. Single source for all — edit a value here and it updates
+# everywhere. The foreword (πρόλογος) lives in src/data/foreword.yaml.
+wordmark: Plan A
+tagline: 20 προτάσεις για την Αθήνα
+metrics:
+  - value: '2.077'
+    label: Πολίτες στη διαβούλευση
+  - value: '126.819'
+    label: Ψήφοι
+  - value: '29'
+    label: Ειδικοί

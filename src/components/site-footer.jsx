@@ -3,6 +3,7 @@ import { C, EYEBROW } from '../lib/theme';
 import { SITE } from '../lib/site';
 import { useIsMobile } from '../hooks/use-is-mobile';
 import { PresentationContext } from '../lib/presentation-context';
+import { track } from '../lib/analytics';
 import { PlanAMark } from './plan-a-mark';
 
 // Shared bottom-of-page footer with site nav.
@@ -74,6 +75,7 @@ export const SiteFooter = ({ navigate }) => {
                 href="/plan-a.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => track('PDF download')}
                 style={{ ...presentButton, textDecoration: 'none', display: 'inline-block' }}
                 onMouseEnter={(e) => { e.currentTarget.style.color = C.ink; e.currentTarget.style.borderColor = C.light; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = C.light; e.currentTarget.style.borderColor = C.rule; }}
