@@ -19,6 +19,10 @@ problem:
     Use **bold** and *italic* sparingly. For footnote citations use ^N inline:
     "το 70% των πεζοδρομίων είναι εκτός προδιαγραφών^1" — N must match a
     references[] entry below.
+
+    Lists: a paragraph (blank line above and below) where every line is a
+    "- item" becomes a bulleted list (stylish arrow markers); every line as
+    "1. item" / "2. item" becomes a numbered list.
   callouts:                              # OPTIONAL — bordered call-out boxes
     - |
       Βάσει των προδιαγραφών που θέτει η νομοθεσία, το ελάχιστο πλάτος των

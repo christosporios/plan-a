@@ -89,9 +89,23 @@ function splitItalic(text, keyPrefix) {
     : node));
 }
 
+// Marker for an unordered-list item: a small stylish arrow in the accent color.
+function ArrowMarker({ accent }) {
+  return (
+    <span aria-hidden="true" style={{ color: accent, fontWeight: 700, flexShrink: 0, lineHeight: 1.6 }}>
+      →
+    </span>
+  );
+}
+
 // Render a multi-paragraph body string.
-// `## Heading` lines become h2; other paragraphs are <p>.
-export function Body({ text, onRefClick, style }) {
+// Block types (each separated by a blank line):
+//   `## Heading` / `### Heading`  → headings
+//   every line `- item`           → unordered list (stylish arrow markers)
+//   every line `N. item`          → ordered list (accent-colored numbers)
+//   anything else                 → paragraph
+// `accent` colors the list markers (defaults to ink; proposals pass their theme).
+export function Body({ text, onRefClick, style, accent = C.ink }) {
   if (!text) return null;
   const blocks = text.trim().split(/\n{2,}/);
   return (
@@ -112,17 +126,35 @@ export function Body({ text, onRefClick, style }) {
             </h2>
           );
         }
-        // Tight list: every line starting with "- " in this block.
-        const lines = trimmed.split(/\n/);
-        if (lines.every(l => l.trim().startsWith('- '))) {
+        // Lists: a block whose every line is a "- " bullet (unordered) or a
+        // "N. " item (ordered). Markers hang to the left so wrapped lines indent.
+        const lines = trimmed.split(/\n/).map(l => l.trim()).filter(Boolean);
+        const liStyle = { display: 'flex', gap: 10, fontSize: 15, color: C.mid, lineHeight: 1.6, marginBottom: 6 };
+        if (lines.length && lines.every(l => /^-\s+/.test(l))) {
           return (
-            <ul key={i} style={{ listStyle: 'none', padding: 0, margin: '8px 0 16px' }}>
+            <ul key={i} style={{ listStyle: 'none', padding: 0, margin: '10px 0 18px' }}>
               {lines.map((l, j) => (
-                <li key={j} style={{ fontSize: 15, color: C.mid, lineHeight: 1.6, marginBottom: 2 }}>
-                  {parseInline(l.trim().slice(2), onRefClick, `li${i}-${j}-`)}
+                <li key={j} style={liStyle}>
+                  <ArrowMarker accent={accent} />
+                  <span>{parseInline(l.replace(/^-\s+/, ''), onRefClick, `li${i}-${j}-`)}</span>
                 </li>
               ))}
             </ul>
+          );
+        }
+        const olItems = lines.map(l => l.match(/^(\d+)\.\s+(.*)$/));
+        if (lines.length && olItems.every(Boolean)) {
+          return (
+            <ol key={i} style={{ listStyle: 'none', padding: 0, margin: '10px 0 18px' }}>
+              {olItems.map((m, j) => (
+                <li key={j} style={liStyle}>
+                  <span aria-hidden="true" style={{ color: accent, fontWeight: 700, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+                    {m[1]}.
+                  </span>
+                  <span>{parseInline(m[2], onRefClick, `li${i}-${j}-`)}</span>
+                </li>
+              ))}
+            </ol>
           );
         }
         return (

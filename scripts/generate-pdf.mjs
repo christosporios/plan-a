@@ -164,7 +164,9 @@ function inline(text, keyPrefix = '') {
 }
 
 // Render a markdown-ish body string into paragraph/heading/list <View>s.
-function body(text, keyPrefix = '', base = {}) {
+// `accent` colors list markers (arrow for "- " bullets, number for "N." items),
+// matching the web renderer (src/lib/format-text.jsx).
+function body(text, keyPrefix = '', base = {}, accent = C.ink) {
   if (!text) return [];
   return text.trim().split(/\n{2,}/).map((block, i) => {
     const t = block.trim();
@@ -174,13 +176,19 @@ function body(text, keyPrefix = '', base = {}) {
     if (t.startsWith('## ')) {
       return h(Text, { key: `${keyPrefix}h2${i}`, minPresenceAhead: 48, style: { fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 11.5, color: C.ink, marginTop: 13, marginBottom: 6 } }, inline(t.slice(3), `${keyPrefix}h2${i}-`));
     }
-    const lines = t.split(/\n/);
-    if (lines.every((l) => l.trim().startsWith('- '))) {
+    const lines = t.split(/\n/).map((l) => l.trim()).filter(Boolean);
+    const listItem = (marker, content, j) => h(View, { key: j, style: { flexDirection: 'row', marginBottom: 3 } }, [
+      h(Text, { key: 'b', style: { color: accent, fontWeight: 700, width: 12 } }, marker),
+      h(Text, { key: 't', style: { flex: 1, fontSize: 9, color: C.mid, lineHeight: 1.5 } }, content),
+    ]);
+    if (lines.length && lines.every((l) => /^-\s+/.test(l))) {
       return h(View, { key: `${keyPrefix}ul${i}`, style: { marginTop: 4, marginBottom: 7 } },
-        lines.map((l, j) => h(View, { key: j, style: { flexDirection: 'row', marginBottom: 2 } }, [
-          h(Text, { key: 'b', style: { color: C.faint, width: 9 } }, '·'),
-          h(Text, { key: 't', style: { flex: 1, fontSize: 9, color: C.mid, lineHeight: 1.5 } }, inline(l.trim().slice(2), `${keyPrefix}li${i}-${j}-`)),
-        ])));
+        lines.map((l, j) => listItem('→', inline(l.replace(/^-\s+/, ''), `${keyPrefix}li${i}-${j}-`), j)));
+    }
+    const ol = lines.map((l) => l.match(/^(\d+)\.\s+(.*)$/));
+    if (lines.length && ol.every(Boolean)) {
+      return h(View, { key: `${keyPrefix}ol${i}`, style: { marginTop: 4, marginBottom: 7 } },
+        ol.map((m, j) => listItem(`${m[1]}.`, inline(m[2], `${keyPrefix}li${i}-${j}-`), j)));
     }
     return h(Text, { key: `${keyPrefix}p${i}`, style: { fontSize: 9.5, color: C.mid, lineHeight: 1.5, marginBottom: 8, ...base } }, inline(t.replace(/\n/g, ' '), `${keyPrefix}p${i}-`));
   });
@@ -345,16 +353,16 @@ function ProposalPage(d) {
   if (d.one_line) kids.push(h(Text, { key: 'ol', style: { fontSize: 12, color: C.mid, lineHeight: 1.55 } }, d.one_line.trim().replace(/\n/g, ' ')));
   // Body — starts on a fresh page.
   const b = [];
-  if (d.problem) b.push(proposalSection('Το πρόβλημα', theme.accent, [...body(d.problem.body, `p${d.number}pr-`), ...(d.problem.callouts || []).map((c, i) => calloutBox(c, `p${d.number}pc${i}`))], `s-prob`));
-  if (d.proposal) b.push(proposalSection('Η πρόταση', theme.accent, [...body(d.proposal.body, `p${d.number}pp-`), ...(d.proposal.callouts || []).map((c, i) => calloutBox(c, `p${d.number}ppc${i}`))], `s-prop`));
-  if (d.implementation?.body) b.push(proposalSection('Υλοποίηση', theme.accent, body(d.implementation.body, `p${d.number}im-`), `s-impl`));
+  if (d.problem) b.push(proposalSection('Το πρόβλημα', theme.accent, [...body(d.problem.body, `p${d.number}pr-`, {}, theme.accent), ...(d.problem.callouts || []).map((c, i) => calloutBox(c, `p${d.number}pc${i}`))], `s-prob`));
+  if (d.proposal) b.push(proposalSection('Η πρόταση', theme.accent, [...body(d.proposal.body, `p${d.number}pp-`, {}, theme.accent), ...(d.proposal.callouts || []).map((c, i) => calloutBox(c, `p${d.number}ppc${i}`))], `s-prop`));
+  if (d.implementation?.body) b.push(proposalSection('Υλοποίηση', theme.accent, body(d.implementation.body, `p${d.number}im-`, {}, theme.accent), `s-impl`));
   if (d.limitations?.length) b.push(proposalSection('Περιορισμοί & τρόποι αντιμετώπισης', theme.accent, d.limitations.map((l, i) => h(View, { key: i, minPresenceAhead: 40, style: { marginBottom: 9 } }, [
     h(Text, { key: 'q', style: { fontSize: 9.5, fontWeight: 600, color: C.ink, lineHeight: 1.45, marginBottom: 3 } }, inline(l.q, `p${d.number}lq${i}-`)),
     h(Text, { key: 'a', style: { fontSize: 9, color: C.mid, lineHeight: 1.5 } }, inline(l.a, `p${d.number}la${i}-`)),
   ])), `s-lim`));
   if (d.benefits?.length) b.push(proposalSection('Επιπρόσθετα οφέλη', theme.accent, d.benefits.map((bf, i) => h(View, { key: i, minPresenceAhead: 40, style: { marginBottom: 9 } }, [
     h(Text, { key: 't', style: { fontSize: 9.5, fontWeight: 600, color: C.ink, marginBottom: 3 } }, bf.title),
-    ...body(bf.body, `p${d.number}bf${i}-`),
+    ...body(bf.body, `p${d.number}bf${i}-`, {}, theme.accent),
   ])), `s-ben`));
   if (d.polis?.length) b.push(proposalSection('Από το Pol.is', theme.accent, d.polis.map((p, i) => polisCard(p, `p${d.number}po${i}`)), `s-polis`));
   if (d.references?.length) b.push(referencesBlock(d.references, `p${d.number}`));

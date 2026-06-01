@@ -185,7 +185,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
 
           {d.problem && (
             <ProposalSection id="problem" title="Το πρόβλημα" accent={theme.accent}>
-              <Body text={d.problem.body} onRefClick={onRefClick} />
+              <Body text={d.problem.body} onRefClick={onRefClick} accent={theme.accent} />
               {d.problem.callouts?.map((c, i) => (
                 <CalloutBox key={i} text={c} onRefClick={onRefClick} />
               ))}
@@ -194,7 +194,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
 
           {d.proposal && (
             <ProposalSection id="proposal" title="Η πρόταση" accent={theme.accent}>
-              <Body text={d.proposal.body} onRefClick={onRefClick} />
+              <Body text={d.proposal.body} onRefClick={onRefClick} accent={theme.accent} />
               {d.proposal.callouts?.map((c, i) => (
                 <CalloutBox key={i} text={c} onRefClick={onRefClick} />
               ))}
@@ -203,7 +203,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
 
           {d.implementation?.body && (
             <ProposalSection id="implementation" title="Υλοποίηση" accent={theme.accent}>
-              <Body text={d.implementation.body} onRefClick={onRefClick} />
+              <Body text={d.implementation.body} onRefClick={onRefClick} accent={theme.accent} />
             </ProposalSection>
           )}
 
@@ -222,7 +222,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
                   <div style={{ fontWeight: 600, color: C.ink, fontSize: 15, marginBottom: 6 }}>
                     {b.title}
                   </div>
-                  <Body text={b.body} onRefClick={onRefClick} style={{ marginBottom: 0, fontSize: 14.5 }} />
+                  <Body text={b.body} onRefClick={onRefClick} accent={theme.accent} style={{ marginBottom: 0, fontSize: 14.5 }} />
                 </div>
               ))}
             </ProposalSection>
