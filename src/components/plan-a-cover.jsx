@@ -319,6 +319,29 @@ export const PlanACover = ({ proposals, navigate }) => {
                     </div>
                   </>
                 )}
+                {/* Pre-release: each section shows summaries; point readers to the
+                    launch event for the full proposals. */}
+                {!RELEASED && (
+                  <p style={{
+                    fontSize: 13.5,
+                    lineHeight: 1.6,
+                    color: C.light,
+                    marginTop: -2,
+                    marginBottom: 18,
+                    maxWidth: 640,
+                  }}>
+                    Οι πλήρεις προτάσεις του Plan A θα είναι διαθέσιμες σε αυτή την σελίδα μετά την παρουσίαση της{' '}
+                    <a
+                      href={SITE.luma_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => track('Luma signup')}
+                      style={{ color: tinfo.accent, textDecoration: 'underline', textUnderlineOffset: 2 }}
+                    >
+                      Παρασκευής 5 Ιουνίου
+                    </a>. Μέχρι τότε, μπορείτε να διαβάσετε μια σύντομη σύνοψη.
+                  </p>
+                )}
                 {bucket.map(p => {
                   // Released: each row is a link into the proposal, with hover
                   // affordances + a "διαβάστε" cue. Pre-release: a static, plainly
