@@ -1,0 +1,46 @@
+number: 19
+slug: geitonies-protypa
+theme: municipality
+title: Γειτονιές πρότυπα
+one_line: >
+  Αντί για διάσπαρτες παρεμβάσεις, επιλέγονται με μετρήσιμους δείκτες
+  συγκεκριμένες γειτονιές που υστερούν και μετατρέπονται σε πρότυπα αστικής
+  αναζωογόνησης — με μέτρα που διασφαλίζουν ότι ωφελούνται πρώτα οι σημερινοί
+  κάτοικοι.
+
+# ── ΤΟ ΠΡΟΒΛΗΜΑ ──────────────────────────────────────────────────────────────
+problem:
+  body: |
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod
+    tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+    veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+    commodo consequat.
+
+    Duis aute irure dolor in reprehenderit in voluptate velit esse cillum
+    dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+    proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+# ── Η ΠΡΟΤΑΣΗ ───────────────────────────────────────────────────────────────
+proposal:
+  body: |
+    Αλλαγές γίνονται στην Αθήνα, αλλά συχνά σε τόσο μικρή κλίμακα και τόσο
+    διάσπαρτα που ο αντίκτυπός τους χάνεται – και οι κάτοικοι παραμένουν μετρίως
+    ικανοποιημένοι, χωρίς να νιώθουν ότι η πόλη τους αλλάζει πραγματικά. Για τις
+    προτάσεις του Plan A και ευρύτερα, αντί για πολλές μικρές παρεμβάσεις παντού,
+    μπορούν να επιλεγούν συγκεκριμένες γειτονιές που υστερούν ιδιαίτερα σε
+    ποιότητα ζωής βάσει μετρήσιμων δεικτών, και να εφαρμοστούν εκεί συγκεντρωτικά
+    οι παρεμβάσεις που απαιτούν χωρική εφαρμογή. Έτσι, γειτονιές που σήμερα
+    θεωρούνται δεύτερης κατηγορίας, μετατρέπονται σε τόπους πειραματισμού και
+    αστικής αναζωογόνησης, μέρη που οι άνθρωποι θέλουν να κατοικούν και να
+    επισκέπτονται. Με την προϋπόθεση ότι αυτή η αλλαγή γίνεται με επίγνωση του
+    κινδύνου εξευγενισμού και με μέτρα που διασφαλίζουν ότι ωφελούνται πρώτα οι
+    κάτοικοι που είναι ήδη εκεί.
+
+# ── ΥΛΟΠΟΙΗΣΗ ───────────────────────────────────────────────────────────────
+implementation:
+  body: |
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+    tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+    quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+    consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+    cillum dolore eu fugiat nulla pariatur.
