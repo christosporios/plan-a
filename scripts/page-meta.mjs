@@ -30,6 +30,11 @@ const STATIC_PAGES = {
     description: '6 αρχές, 29 ειδικοί, και 2.077 πολίτες σε δημόσια διαβούλευση Pol.is. Η μεθοδολογία πίσω από τις 20 προτάσεις.',
     image: '/og-methodologia.jpg',
   },
+  '/epomena-vimata': {
+    title: 'Επόμενα βήματα — Plan A',
+    description: 'Το Plan A δεν ολοκληρώνεται με τη δημοσίευσή του — αναζητούμε όσους θέλουν να βοηθήσουν να προχωρήσει.',
+    image: '/og-epomena-vimata.jpg',
+  },
   '/eucharisties': {
     title: 'Ευχαριστίες — Plan A',
     description: 'Όσοι συνέβαλαν στο Plan A: συντάκτες, ειδικοί, και φορείς χρηματοδότησης.',

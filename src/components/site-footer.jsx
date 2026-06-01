@@ -12,6 +12,7 @@ const LINKS = [
   { href: '/methodologia',    label: 'Μεθοδολογία' },
   { href: '/diavoulefsi',     label: 'Διαβούλευση' },
   { href: '/parapombes',      label: 'Παραπομπές' },
+  { href: '/epomena-vimata',  label: 'Επόμενα βήματα' },
   { href: '/eucharisties',    label: 'Ευχαριστίες' },
 ];
 

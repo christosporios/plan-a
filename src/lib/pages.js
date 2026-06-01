@@ -4,11 +4,16 @@
 // used by the presentation-mode "Ευχαριστίες" slide).
 // Μεθοδολογία has its own structured shape and dedicated page component.
 
+import yaml from 'js-yaml';
 import { acknowledgments } from './acknowledgments';
 import { methodologia } from './methodology';
+import epomenaVimataRaw from '../data/epomena-vimata.yaml?raw';
 
 export const pages = {
   methodologia,
+
+  // "Επόμενα βήματα" — content single-sourced from src/data/epomena-vimata.yaml.
+  'epomena-vimata': yaml.load(epomenaVimataRaw),
 
   eucharisties: {
     title: 'Ευχαριστίες',

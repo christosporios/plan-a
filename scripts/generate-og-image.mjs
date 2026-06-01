@@ -287,6 +287,10 @@ await generateStaticOG('methodologia', {
   title: 'Πώς φτιάχτηκε το Plan A',
   description: '6 αρχές, 29 ειδικοί, και 2.077 πολίτες σε δημόσια διαβούλευση Pol.is.',
 });
+await generateStaticOG('epomena-vimata', {
+  title: 'Επόμενα βήματα',
+  description: 'Το Plan A δεν ολοκληρώνεται με τη δημοσίευσή του — αναζητούμε όσους θέλουν να βοηθήσουν.',
+});
 await generateStaticOG('eucharisties', {
   title: 'Ευχαριστίες',
   description: 'Όσοι συνέβαλαν στο Plan A: συντάκτες, ειδικοί και χρηματοδότες.',

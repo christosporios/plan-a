@@ -24,6 +24,7 @@ function parseRoute() {
   const path = window.location.pathname.replace(/\/$/, '');
   // Static pages first — these are word slugs, not numbers, so no conflict.
   if (path === '/methodologia') return { kind: 'methodologia' };
+  if (path === '/epomena-vimata') return { kind: 'epomena-vimata' };
   if (path === '/eucharisties') return { kind: 'eucharisties' };
   if (path === '/parapombes') return { kind: 'parapombes' };
   if (path === '/diavoulefsi') return { kind: 'diavoulefsi' };
@@ -42,6 +43,7 @@ function renderRoute(route, navigate) {
     return <ProposalPage entry={entry} prev={prev} next={next} navigate={navigate} />;
   }
   if (route.kind === 'methodologia') return <MethodologyPage navigate={navigate} />;
+  if (route.kind === 'epomena-vimata') return <StaticPage slug="epomena-vimata" navigate={navigate} />;
   if (route.kind === 'eucharisties') return <StaticPage slug="eucharisties" navigate={navigate} />;
   if (route.kind === 'parapombes') return <AggregatedPage kind="references" navigate={navigate} />;
   if (route.kind === 'diavoulefsi') return <PolisPage navigate={navigate} />;
