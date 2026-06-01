@@ -205,7 +205,7 @@ async function generateProposalOG(data) {
 
   <!-- TOP LEFT: branding kicker -->
   <text x="100" y="100" font-family="${MONO}" font-size="18" letter-spacing="5" fill="${COLORS.faint}">
-    PLAN A · ASTYLAB · ΜΑΪΟΣ 2026
+    PLAN A
   </text>
 
   <!-- RIGHT COLUMN: ΠΡΟΤΑΣΗ eyebrow + huge number + theme label -->
@@ -238,7 +238,7 @@ async function generateProposalOG(data) {
 }
 
 // ── Static page OG ──────────────────────────────────────────────────────────
-async function generateStaticOG(slug, { title, description, kicker = 'PLAN A · ΑΣΤΥΛΑΒ' }) {
+async function generateStaticOG(slug, { title, description, kicker = 'PLAN A' }) {
   const titleLines = wrapText(title, 22).slice(0, 2);
   const titleFontSize = titleLines.length === 1 ? 110 : 88;
   const titleLineHeight = Math.round(titleFontSize * 1.05);
