@@ -339,7 +339,7 @@ export const PlanACover = ({ proposals, navigate }) => {
                       style={{ color: tinfo.accent, textDecoration: 'underline', textUnderlineOffset: 2 }}
                     >
                       Παρασκευής 5 Ιουνίου
-                    </a>. Μέχρι τότε, μπορείτε να διαβάσετε μια σύντομη σύνοψη.
+                    </a>. Μέχρι τότε, μπορείτε να διαβάσετε μια σύντομη σύνοψη για κάθε πρόταση:
                   </p>
                 )}
                 {bucket.map(p => {
