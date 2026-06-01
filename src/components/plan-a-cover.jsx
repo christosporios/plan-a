@@ -1,3 +1,4 @@
+import { useRef, useState, useLayoutEffect } from 'react';
 import { C, THEMES, THEME_ORDER, EYEBROW } from '../lib/theme';
 import { PlanAMark } from './plan-a-mark';
 import { SITE } from '../lib/site';
@@ -12,6 +13,75 @@ import { SiteFooter } from './site-footer';
 const enter = (delayMs) => ({
   animation: `fade-up 560ms cubic-bezier(0.16, 1, 0.3, 1) ${delayMs}ms both`,
 });
+
+// Description type metrics — the leader is lifted by exactly one line to sit on
+// the description's last line, and indented past the last word.
+const BLURB_FONT = 13.5;
+const BLURB_LINE_H = BLURB_FONT * 1.5;
+// Gap between the description's last word and the start of the inline leader.
+const LEADER_GAP = 8;
+
+// A proposal's short description, followed by a "read more" cue: a thin dotted
+// leader broken in the middle by an italic "διαβάστε" and ending in an arrow-
+// head, signalling the card is clickable. The cue continues on the description's
+// last line when at least 40% of that line is free; otherwise it drops to its
+// own line. Deciding that needs measuring where the last line ends, so this is
+// a JS-measured layout (re-measured on resize and after web fonts load).
+//
+// The cue is always a full-width flex row (its dotted segments flex-fill exactly
+// to the right edge — no brittle pixel widths). For the inline case we lift it
+// onto the last line with a negative top-margin and indent its content past the
+// measured last-line width, so it reads as continuing that line.
+function ProposalBlurb({ text, mobile }) {
+  const pRef = useRef(null);
+  const [layout, setLayout] = useState({ inline: false, padLeft: 0 });
+
+  useLayoutEffect(() => {
+    const el = pRef.current;
+    const textNode = el?.firstChild;
+    if (!textNode) return;
+    const measure = () => {
+      const range = document.createRange();
+      range.setStart(textNode, 0);
+      range.setEnd(textNode, textNode.textContent.length);
+      const rects = range.getClientRects();
+      if (!rects.length) return;
+      const containerW = el.clientWidth;
+      const lastW = rects[rects.length - 1].width;
+      if (containerW - lastW >= 0.4 * containerW) {
+        setLayout({ inline: true, padLeft: Math.ceil(lastW + LEADER_GAP) });
+      } else {
+        setLayout({ inline: false, padLeft: 0 });
+      }
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    let cancelled = false;
+    document.fonts?.ready.then(() => { if (!cancelled) measure(); });
+    return () => { cancelled = true; window.removeEventListener('resize', measure); };
+  }, [text, mobile]);
+
+  const dottedSeg = { flexGrow: 1, flexBasis: 0, minWidth: 6, borderTop: `1px dotted ${C.faint}` };
+  const wrapStyle = layout.inline
+    ? { display: 'flex', alignItems: 'center', height: BLURB_LINE_H, marginTop: -BLURB_LINE_H, paddingLeft: layout.padLeft, color: C.faint }
+    : { display: 'flex', alignItems: 'center', marginTop: 7, color: C.faint };
+
+  return (
+    <p ref={pRef} style={{ fontSize: BLURB_FONT, color: C.light, marginTop: 4, marginBottom: 0, lineHeight: 1.5 }}>
+      {text}
+      <span aria-hidden="true" style={wrapStyle}>
+        <span style={dottedSeg} />
+        <span style={{ fontFamily: C.serif, fontStyle: 'italic', fontSize: BLURB_FONT, lineHeight: 1, padding: '0 8px', whiteSpace: 'nowrap' }}>
+          διαβάστε
+        </span>
+        <span style={dottedSeg} />
+        {/* Arrowhead drawn in the same 1px stroke as the leader so the dotted
+            line appears to terminate in the arrow — one continuous mark. */}
+        <span style={{ width: 5, height: 5, marginLeft: -1, flexShrink: 0, borderTop: `1px solid ${C.faint}`, borderRight: `1px solid ${C.faint}`, transform: 'rotate(45deg)' }} />
+      </span>
+    </p>
+  );
+}
 
 export const PlanACover = ({ proposals, navigate }) => {
   const mobile = useIsMobile();
@@ -288,21 +358,7 @@ export const PlanACover = ({ proposals, navigate }) => {
                         {p.data.title}
                       </div>
                       {p.data.one_line && (
-                        <div style={{
-                          fontSize: 13.5,
-                          color: C.light,
-                          marginTop: 4,
-                          lineHeight: 1.5,
-                        }}>
-                          {p.data.one_line.trim().replace(/\n/g, ' ')}
-                          {/* Touch devices get no hover affordance — a bold ink
-                              arrow signals the row is tappable. */}
-                          {mobile && (
-                            <span style={{ color: C.ink, fontWeight: 700, whiteSpace: 'nowrap' }}>
-                              {' →'}
-                            </span>
-                          )}
-                        </div>
+                        <ProposalBlurb text={p.data.one_line.trim().replace(/\n/g, ' ')} mobile={mobile} />
                       )}
                     </div>
                   </a>
