@@ -6,7 +6,7 @@ import { resolveMeta, applyMeta } from './scripts/page-meta.mjs';
 // In dev mode, intercept HTML requests and inject the per-page meta tags so
 // social-preview tools and `view-source` show the right title / og:image /
 // description even before a production build runs.
-function planAMetaPlugin() {
+function planAMetaPlugin(released) {
   return {
     name: 'plan-a-page-meta',
     // Add middleware directly (not via the post-hook return) so it runs BEFORE
@@ -22,7 +22,7 @@ function planAMetaPlugin() {
         if (path.startsWith('/@') || path.startsWith('/src/') || path.startsWith('/node_modules/')) return next();
         if (/\.[a-z0-9]+$/i.test(path)) return next();
 
-        const meta = resolveMeta(path);
+        const meta = resolveMeta(path, { released });
         if (!meta) return next();
 
         let html;
@@ -61,7 +61,7 @@ export default defineConfig(({ mode }) => {
     : mode !== 'production';
 
   return {
-    plugins: [react(), planAMetaPlugin()],
+    plugins: [react(), planAMetaPlugin(released)],
     define: {
       'import.meta.env.RELEASED': JSON.stringify(released),
     },

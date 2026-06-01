@@ -22,6 +22,11 @@ const SITE_URL = (
 ).replace(/\/$/, '');
 console.log(`Using SITE_URL=${SITE_URL}`);
 
+// Match the build-time default in vite.config.js: pre-release unless RELEASED=true.
+// Pre-release, every route's meta describes the launch event.
+const RELEASED = process.env.RELEASED === 'true';
+console.log(`Using RELEASED=${RELEASED}`);
+
 const distHtml = readFileSync('dist/index.html', 'utf8');
 
 function writePage(relativePath, html) {
@@ -32,7 +37,7 @@ function writePage(relativePath, html) {
 }
 
 function buildHtml(path) {
-  const meta = resolveMeta(path);
+  const meta = resolveMeta(path, { released: RELEASED });
   if (!meta) return null;
   return applyMeta(distHtml, meta, { siteUrl: SITE_URL });
 }

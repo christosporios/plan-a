@@ -24,6 +24,15 @@ const HOMEPAGE = {
   path: '/',
 };
 
+// Pre-release (RELEASED=false) the whole site is a teaser for the launch event,
+// so every route shares this event-framed OG text. Keep in sync with the
+// SignupCard copy (src/components/signup-card.jsx).
+const EVENT = {
+  title: 'Plan A — Παρουσίαση, Παρασκευή 5 Ιουνίου',
+  description: 'Θα παρουσιάσουμε το Plan A, 20 προτάσεις για την Αθήνα, την Παρασκευή 5 Ιουνίου. Δηλώστε συμμετοχή στην παρουσίαση.',
+  image: '/og-cover.jpg',
+};
+
 const STATIC_PAGES = {
   '/about': {
     title: 'Τι είναι το Plan A — Plan A',
@@ -69,8 +78,12 @@ export function loadProposals() {
   return (_proposals = out.sort(byNumber));
 }
 
-export function resolveMeta(rawPath) {
+export function resolveMeta(rawPath, { released = true } = {}) {
   const path = rawPath.split('?')[0].replace(/\/$/, '') || '/';
+
+  // Pre-release: every route is the same launch-event teaser, so share the
+  // event OG text everywhere (real per-page meta returns once RELEASED).
+  if (!released) return { ...EVENT, path: path || '/', type: 'website' };
 
   if (path === '/' || path === '') return { ...HOMEPAGE, type: 'website' };
   if (STATIC_PAGES[path]) return { ...STATIC_PAGES[path], path, type: 'website' };
