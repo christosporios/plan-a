@@ -144,7 +144,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
               </span>
               {theme.label && (
                 <span style={{ ...EYEBROW, fontSize: 12, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.92)', fontWeight: 700 }}>
-                  · {theme.label}
+                  · ΣΤΟΧΟΣ: {theme.label}
                 </span>
               )}
             </div>
