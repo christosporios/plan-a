@@ -27,7 +27,7 @@ const HOMEPAGE = {
 const STATIC_PAGES = {
   '/methodologia': {
     title: 'Πώς φτιάχτηκε το Plan A — Plan A',
-    description: '6 αρχές, 29 ειδικοί, και 2.077 πολίτες σε δημόσια διαβούλευση Pol.is. Η μεθοδολογία πίσω από τις 20 προτάσεις.',
+    description: '6 αρχές, 29 ειδικοί, και 2.089 πολίτες σε δημόσια διαβούλευση Pol.is. Η μεθοδολογία πίσω από τις 20 προτάσεις.',
     image: '/og-methodologia.jpg',
   },
   '/epomena-vimata': {
@@ -47,7 +47,7 @@ const STATIC_PAGES = {
   },
   '/diavoulefsi': {
     title: 'Από τη διαβούλευση — Plan A',
-    description: '126.819 ψήφοι σε 817 statements από 2.077 πολίτες — τα statements που τροφοδότησαν τις προτάσεις.',
+    description: '126.819 ψήφοι σε 817 statements από 2.089 πολίτες — τα statements που τροφοδότησαν τις προτάσεις.',
     image: '/og-diavoulefsi.jpg',
   },
 };

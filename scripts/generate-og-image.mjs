@@ -285,7 +285,7 @@ if (existsSync(proposalDir)) {
 
 await generateStaticOG('methodologia', {
   title: 'Πώς φτιάχτηκε το Plan A',
-  description: '6 αρχές, 29 ειδικοί, και 2.077 πολίτες σε δημόσια διαβούλευση Pol.is.',
+  description: '6 αρχές, 29 ειδικοί, και 2.089 πολίτες σε δημόσια διαβούλευση Pol.is.',
 });
 await generateStaticOG('epomena-vimata', {
   title: 'Επόμενα βήματα',
@@ -301,5 +301,5 @@ await generateStaticOG('parapombes', {
 });
 await generateStaticOG('diavoulefsi', {
   title: 'Από τη διαβούλευση',
-  description: '126.819 ψήφοι σε 817 statements από 2.077 πολίτες — τα statements που τροφοδότησαν τις προτάσεις.',
+  description: '126.819 ψήφοι σε 817 statements από 2.089 πολίτες — τα statements που τροφοδότησαν τις προτάσεις.',
 });

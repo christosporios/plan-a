@@ -6,6 +6,11 @@ import { PresentationContext } from '../lib/presentation-context';
 import { track } from '../lib/analytics';
 import { PlanAMark } from './plan-a-mark';
 import { RELEASED } from '../lib/released';
+import { acknowledgments } from '../lib/acknowledgments';
+
+// The short funding line, with its closing phrase linked to /eucharisties.
+const FUND_LINK = 'δέκα κοινωφελείς οργανισμούς';
+const fundShortLead = acknowledgments.funding_short.split(FUND_LINK)[0];
 
 // Shared bottom-of-page footer with site nav.
 // Appears on the cover, proposal pages, static pages, and aggregated lists.
@@ -109,14 +114,14 @@ export const SiteFooter = ({ navigate }) => {
           marginLeft: mobile ? 'auto' : 0,
           marginRight: mobile ? 'auto' : 0,
         }}>
-          Η δράση υλοποιείται με την υποστήριξη του Helidoni Foundation στο πλαίσιο του προγράμματος «Σημεία Στήριξης», το οποίο συγχρηματοδοτείται από{' '}
+          {fundShortLead}
           <a
             href="/eucharisties"
             data-hover-underline
             onClick={(e) => { e.preventDefault(); navigate('/eucharisties'); }}
             style={{ color: C.light, textDecoration: 'underline', textUnderlineOffset: 2 }}
           >
-            δέκα κοινωφελείς οργανισμούς
+            {FUND_LINK}
           </a>.
         </p>
       </div>

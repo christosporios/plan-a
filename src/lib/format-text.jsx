@@ -1,5 +1,6 @@
 // Lightweight text renderer for proposal body fields.
-// Supports: **bold**, *italic*, ^N or ^[N] footnote refs, blank-line paragraphs.
+// Supports: **bold**, *italic*, [label](url) links, ^N or ^[N] footnote refs,
+// blank-line paragraphs.
 // Footnote refs become clickable superscripts that scroll to #ref-N.
 
 import { Fragment } from 'react';
@@ -44,11 +45,39 @@ function parseInline(text, onRefClick, keyPrefix = '') {
   }
   if (lastIdx < text.length) pieces.push({ kind: 'text', value: text.slice(lastIdx) });
 
-  // Now render each piece, splitting text pieces on bold/italic
+  // Now render each piece, splitting text pieces on links then bold/italic
   return pieces.flatMap((p, i) => {
     if (p.kind === 'fn') return <FootnoteRef key={`${keyPrefix}fn-${i}`} n={p.n} onClick={onRefClick} />;
-    return splitBoldItalic(p.value, `${keyPrefix}t${i}-`);
+    return splitLinks(p.value, `${keyPrefix}t${i}-`);
   });
+}
+
+// Split text on [label](url) markdown links. Non-link runs fall through to
+// bold/italic. External links open in a new tab; the label keeps inline styling.
+function splitLinks(text, keyPrefix) {
+  const re = /\[([^\]]+)\]\(([^)]+)\)/g;
+  const out = [];
+  let lastIdx = 0;
+  let m;
+  let i = 0;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > lastIdx) out.push(...splitBoldItalic(text.slice(lastIdx, m.index), `${keyPrefix}l${i}p-`));
+    const external = /^https?:\/\//.test(m[2]);
+    out.push(
+      <a
+        key={`${keyPrefix}l${i}`}
+        href={m[2]}
+        {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        style={{ color: C.ink, textDecoration: 'underline', textUnderlineOffset: 2 }}
+      >
+        {splitBoldItalic(m[1], `${keyPrefix}l${i}i-`)}
+      </a>,
+    );
+    lastIdx = m.index + m[0].length;
+    i++;
+  }
+  if (lastIdx < text.length) out.push(...splitBoldItalic(text.slice(lastIdx), `${keyPrefix}l${i}p-`));
+  return out;
 }
 
 function splitBoldItalic(text, keyPrefix) {

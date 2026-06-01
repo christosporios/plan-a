@@ -15,25 +15,22 @@ export const pages = {
   // "Επόμενα βήματα" — content single-sourced from src/data/epomena-vimata.yaml.
   'epomena-vimata': yaml.load(epomenaVimataRaw),
 
+  // Full Ευχαριστίες, composed from the reusable acknowledgments fields in their
+  // canonical order. Same parts feed the PDF section and (a subset) the slide.
   eucharisties: {
     title: 'Ευχαριστίες',
-    body: `${acknowledgments.funding}
-
-**Σύνταξη:** ${acknowledgments.authors.join(', ')}
-**Επιστημονική υποστήριξη:** 1830 lab
-
-Για την ερευνητική υποστήριξη και την επιστημονική επιμέλεια, καθοριστική ήταν η συμβολή της 1830 lab. Η 1830 lab είναι ένα white-label think tank που βοηθά καινοτόμες επιχειρήσεις στην Ελλάδα να διαμορφώσουν μια στρατηγική σχέση με τη γνώση που διαθέτουν ή χρειάζονται, μετατρέποντας την πληροφορία σε ανταγωνιστικό πλεονέκτημα και εργαλείο λήψης αποφάσεων.
-
-## Πολίτες και ειδικοί
-
-Ευχαριστούμε τους **2.077 πολίτες** που συμμετείχαν στη διαβούλευση του Pol.is, καθώς και τους **${acknowledgments.experts.length} ειδικούς** που αφιέρωσαν τον χρόνο και τις ιδέες τους:
-
-${acknowledgments.experts.map((n) => `- ${n}`).join('\n')}
-
-Η συμβολή τους υπήρξε ανεκτίμητη.
-
-Να σημειωθεί βέβαια ότι οι απόψεις που εκφράζονται ανήκουν αποκλειστικά στους συντάκτες και δεν αντανακλούν τις απόψεις όσων υποστήριξαν τη δράση ή συνέβαλαν σε αυτή. Τυχόν λάθη και παραλείψεις είναι αποκλειστικά ευθύνη των συντακτών.
-
-Καταλαβαίνετε, λοιπόν, ότι πολλές δεκάδες άνθρωποι βοήθησαν για να φτάσει αυτή η δουλειά στα χέρια σας — και ανυπομονούμε να γνωρίσουμε όσους θέλουν να πάρουν αυτές τις ιδέες ένα βήμα παραπέρα, με οποιονδήποτε τρόπο!`,
+    body: [
+      acknowledgments.intro.trim(),
+      acknowledgments.bridge,
+      acknowledgments.funding,
+      acknowledgments.adam,
+      acknowledgments.experts_intro.replace('{N}', acknowledgments.experts.length),
+      acknowledgments.experts.map((n) => `- ${n}`).join('\n'),
+      acknowledgments.experts_outro,
+      acknowledgments.polis,
+      acknowledgments.development,
+      acknowledgments.disclaimer,
+      `**${acknowledgments.author}**`,
+    ].join('\n\n'),
   },
 };

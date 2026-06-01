@@ -5,7 +5,7 @@
 // regenerated every build) and, when present, dist/plan-a.pdf for the deploy.
 
 import React from 'react';
-import { Document, Page, View, Text, Image, Font, Svg, Path, Circle, Line, Polyline, Polygon, Rect, Ellipse, renderToFile, renderToBuffer } from '@react-pdf/renderer';
+import { Document, Page, View, Text, Image, Font, Link, Svg, Path, Circle, Line, Polyline, Polygon, Rect, Ellipse, renderToFile, renderToBuffer } from '@react-pdf/renderer';
 import yaml from 'js-yaml';
 import qrcode from 'qrcode-generator';
 import sharp from 'sharp';
@@ -142,7 +142,6 @@ function inline(text, keyPrefix = '') {
       continue;
     }
     // bold then italic within text
-    let lb = 0; let bm; const boldRe = /\*\*([^*]+)\*\*/g;
     const pushItalic = (s) => {
       let li = 0; let im; const itRe = /(?:\*([^*]+)\*|_([^_]+)_)/g;
       while ((im = itRe.exec(s)) !== null) {
@@ -153,12 +152,23 @@ function inline(text, keyPrefix = '') {
       }
       if (li < s.length) out.push(h(Text, { key: `${keyPrefix}s${k++}` }, s.slice(li)));
     };
-    while ((bm = boldRe.exec(c.v)) !== null) {
-      if (bm.index > lb) pushItalic(c.v.slice(lb, bm.index));
-      out.push(h(Text, { key: `${keyPrefix}b${k++}`, style: { fontWeight: 700, color: C.ink } }, bm[1]));
-      lb = bm.index + bm[0].length;
+    const pushBold = (s) => {
+      let lb = 0; let bm; const boldRe = /\*\*([^*]+)\*\*/g;
+      while ((bm = boldRe.exec(s)) !== null) {
+        if (bm.index > lb) pushItalic(s.slice(lb, bm.index));
+        out.push(h(Text, { key: `${keyPrefix}b${k++}`, style: { fontWeight: 700, color: C.ink } }, bm[1]));
+        lb = bm.index + bm[0].length;
+      }
+      if (lb < s.length) pushItalic(s.slice(lb));
+    };
+    // [label](url) links wrap their (bold/italic-aware) label in a <Link>.
+    let ll = 0; let lm; const linkRe = /\[([^\]]+)\]\(([^)]+)\)/g;
+    while ((lm = linkRe.exec(c.v)) !== null) {
+      if (lm.index > ll) pushBold(c.v.slice(ll, lm.index));
+      out.push(h(Link, { key: `${keyPrefix}lk${k++}`, src: lm[2], style: { color: C.ink, textDecoration: 'underline' } }, lm[1]));
+      ll = lm.index + lm[0].length;
     }
-    if (lb < c.v.length) pushItalic(c.v.slice(lb));
+    if (ll < c.v.length) pushBold(c.v.slice(ll));
   }
   return out;
 }
@@ -424,17 +434,26 @@ function referencesBlock(refs, keyPrefix) {
 }
 
 function AckSection() {
+  const para = (text, key, mb = 8) =>
+    h(Text, { key, style: { fontSize: 9.5, color: C.mid, lineHeight: 1.6, marginBottom: mb } }, inline(text, `${key}-`));
   return h(View, { key: 'ack' }, [
     marker('ack'),
     h(Text, { key: 'h', style: { fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 19, color: C.ink, marginBottom: 12 } }, 'Ευχαριστίες'),
-    h(Text, { key: 'f', style: { fontSize: 9.5, color: C.mid, lineHeight: 1.6, marginBottom: 14 } }, inline(ack.funding, 'fund-')),
-    h(Text, { key: 'a', style: { fontSize: 9.5, color: C.mid, marginBottom: 16 } }, [
-      h(Text, { key: 'l', style: { fontFamily: MONO, fontSize: 7, color: C.faint } }, 'ΣΥΝΤΑΞΗ  '),
-      ack.authors.join(' · '),
-    ]),
-    eyebrow(`${ack.experts.length} ΕΙΔΙΚΟΙ`, { fontSize: 7.5, marginBottom: 8 }, 'eyb'),
-    h(View, { key: 'ex', style: { flexDirection: 'row', flexWrap: 'wrap' } },
+    // Personal essay → bridge → funding → thanks to Adam.
+    ...body(ack.intro, 'intro-', { fontSize: 9.5, color: C.mid, lineHeight: 1.6, marginBottom: 8 }),
+    para(ack.bridge, 'bridge'),
+    para(ack.funding, 'fund'),
+    para(ack.adam, 'adam', 14),
+    // Experts: intro, the names in three columns, closing line.
+    para(ack.experts_intro.replace('{N}', ack.experts.length), 'exi'),
+    h(View, { key: 'ex', style: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 8 } },
       ack.experts.map((n, i) => h(Text, { key: i, style: { width: '33%', fontSize: 9, color: C.ink, lineHeight: 1.4, marginBottom: 5, paddingRight: 8 } }, n))),
+    para(ack.experts_outro, 'exo', 14),
+    // Pol.is → development credit → disclaimer → signature.
+    para(ack.polis, 'polis'),
+    para(ack.development, 'dev', 14),
+    para(ack.disclaimer, 'disc', 14),
+    h(Text, { key: 'sig', style: { fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 11, color: C.ink } }, ack.author),
   ]);
 }
 
