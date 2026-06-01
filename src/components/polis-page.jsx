@@ -61,11 +61,38 @@ export const PolisPage = ({ navigate }) => {
           }}>
             Από τη διαβούλευση
           </h1>
-          <p style={{ fontSize: 14.5, color: C.light, marginTop: 0, marginBottom: 24, lineHeight: 1.7 }}>
+          <p style={{ fontSize: 14.5, color: C.light, marginTop: 0, marginBottom: 20, lineHeight: 1.7 }}>
             {grouped.length} statements από τη διαβούλευση Pol.is που τροφοδότησαν τις
             προτάσεις του Plan A. Κάθε statement συνοδεύεται από τις προτάσεις που
             το χρησιμοποιούν ως υποστηρικτικό στοιχείο.
           </p>
+
+          {/* Prominent link to the full, interactive Pol.is report. */}
+          <a
+            href="https://pol.is/report/r7brycbsvbxe94w2mufnf"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              ...EYEBROW,
+              fontSize: 12,
+              letterSpacing: '0.12em',
+              fontWeight: 500,
+              color: C.ink,
+              textDecoration: 'none',
+              border: `1px solid ${C.ink}`,
+              borderRadius: 4,
+              padding: '11px 18px',
+              marginBottom: 32,
+              transition: 'background 200ms cubic-bezier(0.16, 1, 0.3, 1), color 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = C.ink; e.currentTarget.style.color = C.bg; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.ink; }}
+          >
+            Δείτε την πλήρη αναφορά στο Pol.is ↗
+          </a>
 
           {/* Opinion groups explainer */}
           <div style={{ borderTop: `1px solid ${C.rule}`, borderBottom: `1px solid ${C.rule}`, padding: '20px 0', marginBottom: 36 }}>
