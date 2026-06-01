@@ -25,7 +25,7 @@ const Presentation = lazy(() => import('./components/presentation'));
 function parseRoute() {
   const path = window.location.pathname.replace(/\/$/, '');
   // Static pages first — these are word slugs, not numbers, so no conflict.
-  if (path === '/methodologia') return { kind: 'methodologia' };
+  if (path === '/about') return { kind: 'methodologia' };
   if (path === '/epomena-vimata') return { kind: 'epomena-vimata' };
   if (path === '/eucharisties') return { kind: 'eucharisties' };
   if (path === '/parapombes') return { kind: 'parapombes' };

@@ -17,7 +17,7 @@ const fundShortLead = acknowledgments.funding_short.split(FUND_LINK)[0];
 // `released`-only entries (Διαβούλευση, Παραπομπές) are hidden pre-launch since
 // those pages aren't available yet.
 const LINKS = [
-  { href: '/methodologia',    label: 'Μεθοδολογία' },
+  { href: '/about',           label: 'Τι είναι το Plan A' },
   { href: '/diavoulefsi',     label: 'Διαβούλευση', released: true },
   { href: '/parapombes',      label: 'Παραπομπές', released: true },
   { href: '/epomena-vimata',  label: 'Επόμενα βήματα' },

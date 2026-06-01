@@ -284,7 +284,7 @@ if (existsSync(proposalDir)) {
 }
 
 await generateStaticOG('methodologia', {
-  title: 'Πώς φτιάχτηκε το Plan A',
+  title: 'Τι είναι το Plan A',
   description: '6 αρχές, 29 ειδικοί, και 2.089 πολίτες σε δημόσια διαβούλευση Pol.is.',
 });
 await generateStaticOG('epomena-vimata', {

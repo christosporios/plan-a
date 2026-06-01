@@ -214,8 +214,8 @@ export const PlanACover = ({ proposals, navigate }) => {
           <p style={{ fontSize: 16, lineHeight: 1.85, color: C.mid, marginTop: 0, marginBottom: 22, ...enter(440) }}>
             {foreword}{' '}
             <a
-              href="/methodologia"
-              onClick={(e) => { e.preventDefault(); navigate('/methodologia'); }}
+              href="/about"
+              onClick={(e) => { e.preventDefault(); navigate('/about'); }}
               style={{
                 color: C.mid,
                 textDecoration: 'underline dotted',
@@ -226,7 +226,7 @@ export const PlanACover = ({ proposals, navigate }) => {
               onMouseEnter={(e) => { e.currentTarget.style.color = C.ink; }}
               onMouseLeave={(e) => { e.currentTarget.style.color = C.mid; }}
             >
-              Πώς φτιάχτηκε το Plan A;
+              Τι είναι το Plan A;
             </a>
           </p>
 

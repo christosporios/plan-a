@@ -25,8 +25,8 @@ const HOMEPAGE = {
 };
 
 const STATIC_PAGES = {
-  '/methodologia': {
-    title: 'Πώς φτιάχτηκε το Plan A — Plan A',
+  '/about': {
+    title: 'Τι είναι το Plan A — Plan A',
     description: '6 αρχές, 29 ειδικοί, και 2.089 πολίτες σε δημόσια διαβούλευση Pol.is. Η μεθοδολογία πίσω από τις 20 προτάσεις.',
     image: '/og-methodologia.jpg',
   },
