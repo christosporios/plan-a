@@ -1,6 +1,33 @@
-# Acknowledgments — single source for both the /eucharisties page and the
-# presentation-mode "Ευχαριστίες" slide. Edit here and both update.
-# (**bold** markdown is rendered on the page; stripped for the slide.)
+# Acknowledgments — single source for the /eucharisties page, the PDF report's
+# "Ευχαριστίες" section, and the presentation-mode "Ευχαριστίες" slide.
+#
+# Fields are split so each surface reuses only the parts it needs:
+#   page + PDF  → everything (intro essay → bridge → funding → Adam → experts →
+#                 Pol.is → development credit → disclaimer → signature)
+#   slide       → experts list + funding + short thanks to Adam
+#                 (essay, Pol.is and development credit omitted)
+#   footer      → funding_short only
+#
+# (**bold**, *italic* and [text](url) markdown render on the page & PDF;
+# bold/italic are stripped and links flattened to their text for the slide.)
+
+# Personal essay — page + PDF only.
+intro: |
+  Όταν ξεκίνησα να δουλεύω το Plan A, ένιωθα μια δημιουργική αμηχανία μπροστά στην αφθονία της πληροφορίας και στην επιθυμία να βγει κάτι που να είναι πραγματικά χρήσιμο.
+
+  Κάποιες φορές, ήταν δύσκολο να σταματήσεις να αναρωτιέσαι. Από πού ξεκινάς, τι συμπεριλαμβάνεις, τι αφήνεις απ' έξω, πώς ισορροπείς ανάμεσα στα σημαντικά, γνωστά θέματα χωρίς να πέφτεις σε κλισέ, και σε καινούριες ιδέες χωρίς να γίνεσαι αιθεροβάμων. Πώς φτιάχνεις κάτι που, σε μια συζήτηση για την πόλη που είναι ήδη ζωντανή, έχει κάτι ουσιαστικό να προσθέσει.
+
+  Αλλά μέσα από όλες αυτές τις σκέψεις, κάποια πράγματα έμειναν σταθερά. Κάποιες ιδέες άντεξαν τις συζητήσεις, τις ανατροφοδοτήσεις, τις αναζητήσεις — και έγιναν η ραχοκοκαλιά αυτής της δουλειάς.
+
+  Οι μήνες που έψαχνα, έγραφα και συζητούσα για το Plan A ήταν πολύ όμορφοι. Έμαθα πράγματα που δεν ήξερα, άφησα τον εαυτό μου ανοιχτό να αναρωτηθεί για πράγματα που πίστευα ότι ήξερα, και συνεργάστηκα με ανθρώπους που γνώριζα ή γνώρισα, γύρω από ένα πολύ ωραίο κοινό σκοπό. Και έχω τη χαρά να πιστεύω ότι αυτό που βγήκε είναι προσεγμένο και — αν και σίγουρα όχι πλήρες, γιατί κάτι τέτοιο είναι ανέφικτο — μπορεί να είναι αφετηρία για ωραίες συζητήσεις και χρήσιμες δράσεις.
+
+# Bridge into the thanks — page + PDF only.
+bridge: >-
+  Πολλές δεκάδες άνθρωποι βοήθησαν για να φτάσει αυτή η δουλειά στα χέρια σας — και
+  ανυπομονούμε να γνωρίσουμε όσους θέλουν να πάνε αυτές τις ιδέες ένα βήμα παραπέρα,
+  με οποιονδήποτε τρόπο!
+
+# Funding — long version (page + PDF + slide).
 funding: >-
   Το Plan A είναι μια δράση της **Astylab**, με χρηματοδότηση του προγράμματος
   «Σημεία Στήριξης», που συγχρηματοδοτείται από το Κοινωφελές Ίδρυμα Ιωάννη Σ.
@@ -9,9 +36,31 @@ funding: >-
   Κ. Λασκαρίδης, το Costas M. Lemos Foundation, το The Hellenic Initiative
   Canada, το Ίδρυμα Αθηνάς Ι. Μαρτίνου, το Helidoni Foundation, και το Ίδρυμα
   Μποδοσάκη.
-authors:
-  - Βασιλική Πουλά
-  - Αδάμ Μαρκάκης
+
+# Funding — short version (footer small print).
+funding_short: >-
+  Η δράση υλοποιείται με την υποστήριξη του Helidoni Foundation στο πλαίσιο του
+  προγράμματος «Σημεία Στήριξης», το οποίο συγχρηματοδοτείται από δέκα κοινωφελείς
+  οργανισμούς.
+
+# Special thanks to Adam — long version (page + PDF).
+adam: >-
+  Ιδιαίτερες ευχαριστίες στον **Αδάμ Μαρκάκη**, ιδρυτή της Astylab — που
+  οραματίστηκε το Plan A, που μου εμπιστεύτηκε να το αναπτύξω και με στήριξε με
+  ιδέες και ενέργεια σε κάθε βήμα, αλλά και που με ό,τι κάνει για αυτή την πόλη
+  μάς δίνει λόγους να είμαστε αισιόδοξοι ότι αλλαγή είναι εφικτή. Η συνεργασία
+  μαζί του είναι πάντα πηγή έμπνευσης.
+
+# Special thanks to Adam — short version (slide).
+adam_short: >-
+  Ιδιαίτερες ευχαριστίες στον Αδάμ Μαρκάκη, ιδρυτή της Astylab, που οραματίστηκε
+  το Plan A.
+
+# Experts — intro line ({N} = number of experts, interpolated), the names, and a
+# closing line. Page + PDF render all three; the slide lists just the names.
+experts_intro: >-
+  Ευχαριστούμε επίσης και τους **{N} ειδικούς** που αφιέρωσαν τον χρόνο και τις
+  ιδέες τους:
 experts:
   - Κοσμάς Αναγνωστόπουλος
   - Θεώνη Ανδρουλιδάκη
@@ -42,3 +91,28 @@ experts:
   - Περικλής Χατζηνάκος
   - Μαρία Χατζοπούλου
   - Άγγελος Χρόνης
+experts_outro: >-
+  Η συμβολή τους υπήρξε ανεκτίμητη και ελπίζω το τελικό αποτέλεσμα να τους
+  δικαιώνει.
+
+# Pol.is participants — page + PDF only.
+polis: >-
+  Ευχαριστούμε φυσικά και τους **2.089 πολίτες** που συμμετείχαν στη διαβούλευση
+  του Pol.is — αν και πολύ σημαντικό, δεν είναι καθόλου αυτονόητο, να αφιερώνουμε
+  τον χρόνο μας για να ασχοληθούμε με τα κοινά, μέσα στους ξέφρενους ρυθμούς της
+  καθημερινότητας.
+
+# Development credit — page + PDF only (omitted on the slide).
+development: >-
+  Η ανάπτυξη της πολύ όμορφης σελίδας έγινε από τη [Schema
+  Labs](https://schemalabs.gr).
+
+# Disclaimer — page + PDF only.
+disclaimer: >-
+  Να σημειωθεί βέβαια ότι οι απόψεις που εκφράζονται ανήκουν αποκλειστικά στη
+  συντάκτρια και δεν αντανακλούν τις απόψεις όσων υποστήριξαν τη δράση ή συνέβαλαν
+  σε αυτή. Τυχόν λάθη και παραλείψεις είναι επίσης αποκλειστικά ευθύνη της
+  συντάκτριας.
+
+# Signature.
+author: Βασιλική Πουλά

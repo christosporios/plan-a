@@ -244,7 +244,7 @@ function PolisExplainerSlide({ mobile }) {
         Πώς διαβάζουμε το Pol.is
       </div>
       <p style={{ fontFamily: C.serif, fontStyle: 'italic', fontSize: mobile ? 20 : 28, color: C.ink, lineHeight: 1.4, margin: 0 }}>
-        Ένας αλγόριθμος ομαδοποίησε τους 2.077 συμμετέχοντες σε τρεις ομάδες απόψεων, με βάση τα μοτίβα ψήφου τους.
+        Ένας αλγόριθμος ομαδοποίησε τους 2.089 συμμετέχοντες σε τρεις ομάδες απόψεων, με βάση τα μοτίβα ψήφου τους.
       </p>
 
       {/* The diagram — three groups, one shared centre. */}
@@ -361,9 +361,12 @@ function ThanksSlide({ mobile }) {
       <p style={{ fontSize: mobile ? 15 : 18, color: C.light, lineHeight: 1.55, marginTop: 18, marginBottom: 0 }}>
         {acknowledgments.funding.replace(/\*\*/g, '')}
       </p>
+      <p style={{ fontSize: mobile ? 15 : 18, color: C.light, lineHeight: 1.55, marginTop: 12, marginBottom: 0 }}>
+        {acknowledgments.adam_short.replace(/\*\*/g, '')}
+      </p>
       <div style={{ fontSize: mobile ? 17 : 22, color: C.mid, marginTop: 18, lineHeight: 1.5 }}>
         <span style={{ ...EYEBROW, fontSize: mobile ? 12 : 14, color: C.faint, marginRight: 12 }}>Σύνταξη</span>
-        {acknowledgments.authors.join(' · ')}
+        {acknowledgments.author}
       </div>
       <div style={{ ...EYEBROW, fontSize: mobile ? 12 : 14, color: C.faint, marginTop: mobile ? 24 : 32, marginBottom: 16 }}>
         {acknowledgments.experts.length} ειδικοί
