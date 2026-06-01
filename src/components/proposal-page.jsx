@@ -11,6 +11,8 @@ import { ProposalSection } from './proposal-section';
 import { SolidLine } from './scroll-line';
 import { SiteFooter } from './site-footer';
 import { SectionRail } from './section-rail';
+import { SignupCard } from './signup-card';
+import { RELEASED } from '../lib/released';
 
 export const ProposalPage = ({ entry, prev, next, navigate }) => {
   const mobile = useIsMobile();
@@ -65,7 +67,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
       animation: 'fade-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both',
     }}>
       <SolidLine color={theme.accent} showProgress />
-      {!mobile && <SectionRail sections={sectionList} accent={theme.accent} />}
+      {!mobile && RELEASED && <SectionRail sections={sectionList} accent={theme.accent} />}
       {/* Header — darkened image (or themed placeholder) behind white text */}
       <header style={{
         position: 'relative',
@@ -101,7 +103,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
             marginBottom: mobile ? 24 : 28,
           }}>
             <div style={{ minWidth: 0, overflow: 'hidden' }}>
-              {prev && (
+              {RELEASED && prev && (
                 <a
                   href={`/${prev.data.number}-${prev.data.slug || prev.slug}`}
                   onClick={(e) => { e.preventDefault(); navigate(`/${prev.data.number}-${prev.data.slug || prev.slug}`); }}
@@ -123,7 +125,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
               Plan A
             </a>
             <div style={{ minWidth: 0, overflow: 'hidden', textAlign: 'right' }}>
-              {next && (
+              {RELEASED && next && (
                 <a
                   href={`/${next.data.number}-${next.data.slug || next.slug}`}
                   onClick={(e) => { e.preventDefault(); navigate(`/${next.data.number}-${next.data.slug || next.slug}`); }}
@@ -183,7 +185,15 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
             </p>
           )}
 
-          {d.problem && (
+          {/* Pre-release: the full proposal text stays hidden behind the launch.
+              Show only the one-line teaser above, then the sign-up card. */}
+          {!RELEASED && (
+            <div style={{ marginTop: mobile ? 24 : 32 }}>
+              <SignupCard accent={theme.accent} />
+            </div>
+          )}
+
+          {RELEASED && d.problem && (
             <ProposalSection id="problem" title="Το πρόβλημα" accent={theme.accent}>
               <Body text={d.problem.body} onRefClick={onRefClick} accent={theme.accent} />
               {d.problem.callouts?.map((c, i) => (
@@ -192,7 +202,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
             </ProposalSection>
           )}
 
-          {d.proposal && (
+          {RELEASED && d.proposal && (
             <ProposalSection id="proposal" title="Η πρόταση" accent={theme.accent}>
               <Body text={d.proposal.body} onRefClick={onRefClick} accent={theme.accent} />
               {d.proposal.callouts?.map((c, i) => (
@@ -201,13 +211,13 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
             </ProposalSection>
           )}
 
-          {d.implementation?.body && (
+          {RELEASED && d.implementation?.body && (
             <ProposalSection id="implementation" title="Υλοποίηση" accent={theme.accent}>
               <Body text={d.implementation.body} onRefClick={onRefClick} accent={theme.accent} />
             </ProposalSection>
           )}
 
-          {d.limitations?.length > 0 && (
+          {RELEASED && d.limitations?.length > 0 && (
             <ProposalSection id="limitations" title="Περιορισμοί & τρόποι αντιμετώπισης" accent={theme.accent}>
               {d.limitations.map((l, i) => (
                 <LimitationQA key={i} q={l.q} a={l.a} onRefClick={onRefClick} />
@@ -215,7 +225,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
             </ProposalSection>
           )}
 
-          {d.benefits?.length > 0 && (
+          {RELEASED && d.benefits?.length > 0 && (
             <ProposalSection id="benefits" title="Επιπρόσθετα οφέλη" accent={theme.accent}>
               {d.benefits.map((b, i) => (
                 <div key={i} style={{ marginBottom: 18 }}>
@@ -228,7 +238,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
             </ProposalSection>
           )}
 
-          {d.polis?.length > 0 && (
+          {RELEASED && d.polis?.length > 0 && (
             <ProposalSection id="polis" title="Από το Pol.is" accent={theme.accent}>
               {d.polis.map((p, i) => (
                 <PolisStatement
@@ -243,13 +253,16 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
             </ProposalSection>
           )}
 
-          <div id="references">
-            <FootnotesSection references={d.references} />
-          </div>
+          {RELEASED && (
+            <div id="references">
+              <FootnotesSection references={d.references} />
+            </div>
+          )}
         </div>
       </main>
 
-      {/* Prev / next nav */}
+      {/* Prev / next nav — released only (pre-release proposals aren't navigable) */}
+      {RELEASED && (
       <nav style={{ borderTop: `1px solid ${C.rule}`, padding: mobile ? '20px 0' : '24px 0' }}>
         <div style={{
           maxWidth: 720,
@@ -285,6 +298,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
           </div>
         </div>
       </nav>
+      )}
       <SiteFooter navigate={navigate} />
     </div>
   );

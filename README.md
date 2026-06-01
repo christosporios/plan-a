@@ -65,6 +65,15 @@ The dev plugin and the build script share `scripts/page-meta.mjs` (single source
 
 ### Environment variables
 
+`RELEASED` controls whether the site shows its full, released form or the **pre-release** teaser used before the launch presentation:
+
+- `RELEASED=true` — the full site (all proposal text, references, Pol.is, presentation + PDF buttons).
+- `RELEASED=false` — pre-release: the cover hero stays but proposals are non-interactive teasers, full proposal text is hidden behind a prominent Luma sign-up card, and the presentation/PDF/references/Pol.is surfaces are removed.
+
+Defaults when unset: **production builds default to `false`** (so content can't leak early if the var is forgotten on Vercel), while **`npm run dev` defaults to `true`** (full site for day-to-day work). Override either: `RELEASED=true npm run build` or `RELEASED=false npm run dev`. The Luma event URL lives in [`src/data/site.yaml`](src/data/site.yaml) (`luma_url`).
+
+On **localhost only**, a floating switch (bottom-left) flips the flag at runtime via `localStorage` — no restart needed — so both states can be previewed. It never renders off localhost.
+
 `PLAN_A_URL` controls the canonical URL used in `og:url`, `og:image` (absolute), `<link rel="canonical">`, and sitemap entries:
 
 1. Explicit `PLAN_A_URL=https://plan-a.example.gr` — set this in Vercel project settings once a custom domain is wired up

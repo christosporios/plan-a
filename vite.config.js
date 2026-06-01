@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { readFileSync } from 'fs';
 import { resolveMeta, applyMeta } from './scripts/page-meta.mjs';
@@ -44,6 +44,26 @@ function planAMetaPlugin() {
   };
 }
 
-export default defineConfig({
-  plugins: [react(), planAMetaPlugin()],
+export default defineConfig(({ mode }) => {
+  // RELEASED flag: has Plan A been publicly released (presentation day, Fri 5 Jun)?
+  // Set RELEASED=true in the environment (Vercel) on/after that day to reveal the
+  // full site. Loaded with an empty prefix so it's picked up from Vercel's
+  // process.env as well as local .env files, then injected explicitly (the bare
+  // `RELEASED` name isn't VITE_-prefixed so it wouldn't be exposed otherwise).
+  //
+  // Default when unset: production builds default to FALSE (pre-release) so
+  // content can never leak early if the env var is forgotten; dev defaults to
+  // TRUE so day-to-day development still sees the full site. Override either with
+  // `RELEASED=true npm run build` or `RELEASED=false npm run dev`.
+  const env = loadEnv(mode, process.cwd(), '');
+  const released = env.RELEASED !== undefined
+    ? env.RELEASED === 'true'
+    : mode !== 'production';
+
+  return {
+    plugins: [react(), planAMetaPlugin()],
+    define: {
+      'import.meta.env.RELEASED': JSON.stringify(released),
+    },
+  };
 });

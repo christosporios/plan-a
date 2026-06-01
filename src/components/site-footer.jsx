@@ -5,13 +5,16 @@ import { useIsMobile } from '../hooks/use-is-mobile';
 import { PresentationContext } from '../lib/presentation-context';
 import { track } from '../lib/analytics';
 import { PlanAMark } from './plan-a-mark';
+import { RELEASED } from '../lib/released';
 
 // Shared bottom-of-page footer with site nav.
 // Appears on the cover, proposal pages, static pages, and aggregated lists.
+// `released`-only entries (Διαβούλευση, Παραπομπές) are hidden pre-launch since
+// those pages aren't available yet.
 const LINKS = [
   { href: '/methodologia',    label: 'Μεθοδολογία' },
-  { href: '/diavoulefsi',     label: 'Διαβούλευση' },
-  { href: '/parapombes',      label: 'Παραπομπές' },
+  { href: '/diavoulefsi',     label: 'Διαβούλευση', released: true },
+  { href: '/parapombes',      label: 'Παραπομπές', released: true },
   { href: '/epomena-vimata',  label: 'Επόμενα βήματα' },
   { href: '/eucharisties',    label: 'Ευχαριστίες' },
 ];
@@ -49,7 +52,7 @@ export const SiteFooter = ({ navigate }) => {
             gap: 16,
           }}>
             <nav style={{ display: 'flex', flexWrap: 'wrap', justifyContent: mobile ? 'center' : 'flex-end', gap: mobile ? '8px 18px' : '8px 22px' }}>
-              {LINKS.map(({ href, label }) => (
+              {LINKS.filter(l => RELEASED || !l.released).map(({ href, label }) => (
                 <a
                   key={href}
                   data-hover-underline
@@ -61,7 +64,9 @@ export const SiteFooter = ({ navigate }) => {
                 </a>
               ))}
             </nav>
-            {/* Presentation + PDF (download link to the pre-generated report). */}
+            {/* Presentation + PDF (download link to the pre-generated report).
+                Hidden pre-launch — neither surface is available yet. */}
+            {RELEASED && (
             <div data-no-print style={{ display: 'flex', flexWrap: 'wrap', justifyContent: mobile ? 'center' : 'flex-end', gap: 10 }}>
               <button
                 type="button"
@@ -84,6 +89,7 @@ export const SiteFooter = ({ navigate }) => {
                 ↓ PDF
               </a>
             </div>
+            )}
             <span style={{ ...EYEBROW, fontSize: 10, letterSpacing: '0.15em', color: C.faint }}>
               Astylab · Μάιος 2026
             </span>

@@ -3,10 +3,14 @@
 # everywhere. The foreword (πρόλογος) lives in src/data/foreword.yaml.
 wordmark: Plan A
 tagline: 20 προτάσεις για την Αθήνα
+
+# Luma event for the launch presentation (Fri 5 Jun 2026). Surfaced by the
+# pre-release sign-up card on the cover and proposal pages (see RELEASED flag).
+luma_url: https://luma.com/dr24shmd
 metrics:
-  - value: '2.077'
+  - value: '2.089'
     label: Πολίτες στη διαβούλευση
-  - value: '126.819'
+  - value: '127.381'
     label: Ψήφοι
   - value: '29'
     label: Ειδικοί

@@ -9,6 +9,8 @@ import { MethodologyPage } from './components/methodology-page';
 import { PresentationContext } from './lib/presentation-context';
 import { track } from './lib/analytics';
 import { C } from './lib/theme';
+import { RELEASED } from './lib/released';
+import { DevReleaseToggle } from './components/dev-release-toggle';
 
 // Presentation mode lives in its own chunk. Referencing lazy() here does NOT
 // fetch it — the import() only fires when <Presentation/> first renders (i.e.
@@ -45,8 +47,9 @@ function renderRoute(route, navigate) {
   if (route.kind === 'methodologia') return <MethodologyPage navigate={navigate} />;
   if (route.kind === 'epomena-vimata') return <StaticPage slug="epomena-vimata" navigate={navigate} />;
   if (route.kind === 'eucharisties') return <StaticPage slug="eucharisties" navigate={navigate} />;
-  if (route.kind === 'parapombes') return <AggregatedPage kind="references" navigate={navigate} />;
-  if (route.kind === 'diavoulefsi') return <PolisPage navigate={navigate} />;
+  // References + Pol.is pages don't exist pre-launch — fall through to the cover.
+  if (RELEASED && route.kind === 'parapombes') return <AggregatedPage kind="references" navigate={navigate} />;
+  if (RELEASED && route.kind === 'diavoulefsi') return <PolisPage navigate={navigate} />;
   return <PlanACover proposals={proposals} navigate={navigate} />;
 }
 
@@ -81,6 +84,7 @@ export default function App() {
           <Presentation onExit={() => setPresentationOpen(false)} />
         </Suspense>
       )}
+      <DevReleaseToggle />
     </PresentationContext.Provider>
   );
 }

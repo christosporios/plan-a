@@ -7,6 +7,8 @@ import { useIsMobile } from '../hooks/use-is-mobile';
 import { track } from '../lib/analytics';
 import { ScrollLine } from './scroll-line';
 import { SiteFooter } from './site-footer';
+import { SignupCard } from './signup-card';
+import { RELEASED } from '../lib/released';
 
 // Choreographed cover entrance — each block fades + slides up in sequence.
 // Keyframe `fade-up` is defined globally in main.jsx.
@@ -21,22 +23,25 @@ const BLURB_LINE_H = BLURB_FONT * 1.5;
 // Gap between the description's last word and the start of the inline leader.
 const LEADER_GAP = 8;
 
-// A proposal's short description, followed by a "read more" cue: a thin dotted
-// leader broken in the middle by an italic "διαβάστε" and ending in an arrow-
-// head, signalling the card is clickable. The cue continues on the description's
-// last line when at least 40% of that line is free; otherwise it drops to its
-// own line. Deciding that needs measuring where the last line ends, so this is
-// a JS-measured layout (re-measured on resize and after web fonts load).
+// A proposal's short description. On mobile it's followed by a "read more" cue:
+// a thin dotted leader broken in the middle by an italic "διαβάστε" and ending
+// in an arrowhead, signalling the card is tappable (touch devices get no hover
+// affordance — see the card's onMouseEnter, which is desktop-only). The cue
+// continues on the description's last line when at least 40% of that line is
+// free; otherwise it drops to its own line. Deciding that needs measuring where
+// the last line ends, so it's a JS-measured layout (re-measured on resize and
+// after web fonts load).
 //
 // The cue is always a full-width flex row (its dotted segments flex-fill exactly
 // to the right edge — no brittle pixel widths). For the inline case we lift it
 // onto the last line with a negative top-margin and indent its content past the
 // measured last-line width, so it reads as continuing that line.
-function ProposalBlurb({ text, mobile }) {
+function ProposalBlurb({ text, mobile, cue = true }) {
   const pRef = useRef(null);
   const [layout, setLayout] = useState({ inline: false, padLeft: 0 });
 
   useLayoutEffect(() => {
+    if (!mobile || !cue) return;
     const el = pRef.current;
     const textNode = el?.firstChild;
     if (!textNode) return;
@@ -59,26 +64,29 @@ function ProposalBlurb({ text, mobile }) {
     let cancelled = false;
     document.fonts?.ready.then(() => { if (!cancelled) measure(); });
     return () => { cancelled = true; window.removeEventListener('resize', measure); };
-  }, [text, mobile]);
+  }, [text, mobile, cue]);
 
   const dottedSeg = { flexGrow: 1, flexBasis: 0, minWidth: 6, borderTop: `1px dotted ${C.faint}` };
+  // paddingRight keeps the rotated arrowhead from poking past the right edge.
   const wrapStyle = layout.inline
-    ? { display: 'flex', alignItems: 'center', height: BLURB_LINE_H, marginTop: -BLURB_LINE_H, paddingLeft: layout.padLeft, color: C.faint }
-    : { display: 'flex', alignItems: 'center', marginTop: 7, color: C.faint };
+    ? { display: 'flex', alignItems: 'center', height: BLURB_LINE_H, marginTop: -BLURB_LINE_H, paddingLeft: layout.padLeft, paddingRight: 3, color: C.faint }
+    : { display: 'flex', alignItems: 'center', marginTop: 7, paddingRight: 3, color: C.faint };
 
   return (
     <p ref={pRef} style={{ fontSize: BLURB_FONT, color: C.light, marginTop: 4, marginBottom: 0, lineHeight: 1.5 }}>
       {text}
-      <span aria-hidden="true" style={wrapStyle}>
-        <span style={dottedSeg} />
-        <span style={{ fontFamily: C.serif, fontStyle: 'italic', fontSize: BLURB_FONT, lineHeight: 1, padding: '0 8px', whiteSpace: 'nowrap' }}>
-          διαβάστε
+      {mobile && cue && (
+        <span aria-hidden="true" style={wrapStyle}>
+          <span style={dottedSeg} />
+          <span style={{ fontFamily: C.serif, fontStyle: 'italic', fontSize: BLURB_FONT, lineHeight: 1, padding: '0 8px', whiteSpace: 'nowrap' }}>
+            διαβάστε
+          </span>
+          <span style={dottedSeg} />
+          {/* Arrowhead drawn in the same 1px stroke as the leader so the dotted
+              line appears to terminate in the arrow — one continuous mark. */}
+          <span style={{ width: 5, height: 5, marginLeft: -1, flexShrink: 0, borderTop: `1px solid ${C.faint}`, borderRight: `1px solid ${C.faint}`, transform: 'rotate(45deg)' }} />
         </span>
-        <span style={dottedSeg} />
-        {/* Arrowhead drawn in the same 1px stroke as the leader so the dotted
-            line appears to terminate in the arrow — one continuous mark. */}
-        <span style={{ width: 5, height: 5, marginLeft: -1, flexShrink: 0, borderTop: `1px solid ${C.faint}`, borderRight: `1px solid ${C.faint}`, transform: 'rotate(45deg)' }} />
-      </span>
+      )}
     </p>
   );
 }
@@ -222,46 +230,53 @@ export const PlanACover = ({ proposals, navigate }) => {
             </a>
           </p>
 
-          {/* Primary path: pick a starting proposal */}
-          <div style={{
-            display: 'flex', flexWrap: 'wrap', alignItems: 'baseline',
-            gap: mobile ? '8px 18px' : '0 24px',
-            ...enter(500),
-          }}>
-            <a
-              href={proposals[0] ? `/${proposals[0].data.number}-${proposals[0].data.slug || proposals[0].slug}` : '/1'}
-              onClick={(e) => {
-                e.preventDefault();
-                const p = proposals[0];
-                navigate(p ? `/${p.data.number}-${p.data.slug || p.slug}` : '/1');
-              }}
-              data-hover-underline
-              style={{
-                fontFamily: C.serif, fontStyle: 'italic', fontSize: mobile ? 17 : 19,
-                fontWeight: 500, color: C.ink, textUnderlineOffset: 4,
-              }}
-            >
-              Διαβάστε από την αρχή →
-            </a>
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                const p = proposals[Math.floor(Math.random() * proposals.length)];
-                if (p) {
-                  track('Random proposal');
-                  navigate(`/${p.data.number}-${p.data.slug || p.slug}`);
-                }
-              }}
-              data-hover-underline
-              style={{
-                fontFamily: C.serif, fontStyle: 'italic', fontSize: mobile ? 15 : 16,
-                color: C.light, textUnderlineOffset: 4,
-              }}
-            >
-              ή από μια τυχαία πρόταση ↻
-            </a>
-          </div>
+          {/* Primary path. Released: pick a starting proposal. Pre-release: a
+              prominent sign-up card for the launch presentation. */}
+          {RELEASED ? (
+            <div style={{
+              display: 'flex', flexWrap: 'wrap', alignItems: 'baseline',
+              gap: mobile ? '8px 18px' : '0 24px',
+              ...enter(500),
+            }}>
+              <a
+                href={proposals[0] ? `/${proposals[0].data.number}-${proposals[0].data.slug || proposals[0].slug}` : '/1'}
+                onClick={(e) => {
+                  e.preventDefault();
+                  const p = proposals[0];
+                  navigate(p ? `/${p.data.number}-${p.data.slug || p.slug}` : '/1');
+                }}
+                data-hover-underline
+                style={{
+                  fontFamily: C.serif, fontStyle: 'italic', fontSize: mobile ? 17 : 19,
+                  fontWeight: 500, color: C.ink, textUnderlineOffset: 4,
+                }}
+              >
+                Διαβάστε από την αρχή →
+              </a>
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const p = proposals[Math.floor(Math.random() * proposals.length)];
+                  if (p) {
+                    track('Random proposal');
+                    navigate(`/${p.data.number}-${p.data.slug || p.slug}`);
+                  }
+                }}
+                data-hover-underline
+                style={{
+                  fontFamily: C.serif, fontStyle: 'italic', fontSize: mobile ? 15 : 16,
+                  color: C.light, textUnderlineOffset: 4,
+                }}
+              >
+                ή από μια τυχαία πρόταση ↻
+              </a>
+            </div>
+          ) : (
+            <div style={enter(500)}>
+              <SignupCard />
+            </div>
+          )}
         </div>
       </section>
 
@@ -304,68 +319,91 @@ export const PlanACover = ({ proposals, navigate }) => {
                     </div>
                   </>
                 )}
-                {bucket.map(p => (
-                  <a
-                    key={p.slug}
-                    href={`/${p.data.number}-${p.data.slug || p.slug}`}
-                    onClick={(e) => { e.preventDefault(); navigate(`/${p.data.number}-${p.data.slug || p.slug}`); }}
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: mobile ? '56px 1fr' : '72px 1fr',
-                      gap: 16,
-                      padding: '18px 0',
-                      borderTop: `1px solid ${C.rule}`,
-                      textDecoration: 'none',
-                      color: 'inherit',
-                      transition: 'background 200ms cubic-bezier(0.16, 1, 0.3, 1)',
-                      alignItems: 'start',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = C.hover;
-                      const num = e.currentTarget.querySelector('[data-num]');
-                      const body = e.currentTarget.querySelector('[data-body]');
-                      if (num) num.style.color = tinfo.accent;
-                      if (body) body.style.transform = 'translateX(6px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                      const num = e.currentTarget.querySelector('[data-num]');
-                      const body = e.currentTarget.querySelector('[data-body]');
-                      if (num) num.style.color = C.faint;
-                      if (body) body.style.transform = 'translateX(0)';
-                    }}
-                  >
-                    <span data-num style={{
-                      fontFamily: C.serif,
-                      fontSize: mobile ? 30 : 38,
-                      fontWeight: 400,
-                      color: C.faint,
-                      lineHeight: 0.95,
-                      letterSpacing: '-0.02em',
-                      paddingTop: mobile ? 3 : 4,
-                      transition: 'color 240ms cubic-bezier(0.16, 1, 0.3, 1)',
-                    }}>
-                      {String(p.data.number).padStart(2, '0')}
-                    </span>
-                    <div data-body style={{ transition: 'transform 280ms cubic-bezier(0.16, 1, 0.3, 1)' }}>
-                      <div style={{
+                {bucket.map(p => {
+                  // Released: each row is a link into the proposal, with hover
+                  // affordances + a "διαβάστε" cue. Pre-release: a static, plainly
+                  // non-interactive teaser (no link, no hover, no cue, no blurb).
+                  const rowStyle = {
+                    display: 'grid',
+                    gridTemplateColumns: mobile ? '56px 1fr' : '72px 1fr',
+                    gap: 16,
+                    padding: '18px 0',
+                    borderTop: `1px solid ${C.rule}`,
+                    textDecoration: 'none',
+                    color: 'inherit',
+                    alignItems: 'start',
+                  };
+                  const inner = (
+                    <>
+                      <span data-num style={{
                         fontFamily: C.serif,
-                        fontSize: mobile ? 17 : 20,
-                        fontWeight: 600,
-                        color: C.ink,
-                        lineHeight: 1.3,
+                        fontSize: mobile ? 30 : 38,
+                        fontWeight: 400,
+                        color: C.faint,
+                        lineHeight: 0.95,
+                        letterSpacing: '-0.02em',
+                        paddingTop: mobile ? 3 : 4,
+                        transition: 'color 240ms cubic-bezier(0.16, 1, 0.3, 1)',
                       }}>
-                        {p.data.title}
+                        {String(p.data.number).padStart(2, '0')}
+                      </span>
+                      <div data-body style={{ transition: 'transform 280ms cubic-bezier(0.16, 1, 0.3, 1)' }}>
+                        <div style={{
+                          fontFamily: C.serif,
+                          fontSize: mobile ? 17 : 20,
+                          fontWeight: 600,
+                          color: C.ink,
+                          lineHeight: 1.3,
+                        }}>
+                          {p.data.title}
+                        </div>
+                        {p.data.one_line && (
+                          <ProposalBlurb text={p.data.one_line.trim().replace(/\n/g, ' ')} mobile={mobile} cue={RELEASED} />
+                        )}
                       </div>
-                      {p.data.one_line && (
-                        <ProposalBlurb text={p.data.one_line.trim().replace(/\n/g, ' ')} mobile={mobile} />
-                      )}
-                    </div>
-                  </a>
-                ))}
+                    </>
+                  );
+                  if (!RELEASED) {
+                    return <div key={p.slug} style={rowStyle}>{inner}</div>;
+                  }
+                  return (
+                    <a
+                      key={p.slug}
+                      href={`/${p.data.number}-${p.data.slug || p.slug}`}
+                      onClick={(e) => { e.preventDefault(); navigate(`/${p.data.number}-${p.data.slug || p.slug}`); }}
+                      style={{ ...rowStyle, transition: 'background 200ms cubic-bezier(0.16, 1, 0.3, 1)' }}
+                      {...(!mobile && {
+                        onMouseEnter: (e) => {
+                          e.currentTarget.style.background = C.hover;
+                          const num = e.currentTarget.querySelector('[data-num]');
+                          const body = e.currentTarget.querySelector('[data-body]');
+                          if (num) num.style.color = tinfo.accent;
+                          if (body) body.style.transform = 'translateX(6px)';
+                        },
+                        onMouseLeave: (e) => {
+                          e.currentTarget.style.background = 'transparent';
+                          const num = e.currentTarget.querySelector('[data-num]');
+                          const body = e.currentTarget.querySelector('[data-body]');
+                          if (num) num.style.color = C.faint;
+                          if (body) body.style.transform = 'translateX(0)';
+                        },
+                      })}
+                    >
+                      {inner}
+                    </a>
+                  );
+                })}
               </div>
             );
           })}
+
+          {/* Pre-release: repeat the sign-up call after the full proposal list,
+              for readers who scrolled all the way through the teasers. */}
+          {!RELEASED && (
+            <div style={{ marginTop: 8 }}>
+              <SignupCard />
+            </div>
+          )}
         </div>
       </section>
 
