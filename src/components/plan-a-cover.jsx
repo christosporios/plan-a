@@ -295,6 +295,13 @@ export const PlanACover = ({ proposals, navigate }) => {
                           lineHeight: 1.5,
                         }}>
                           {p.data.one_line.trim().replace(/\n/g, ' ')}
+                          {/* Touch devices get no hover affordance — a bold ink
+                              arrow signals the row is tappable. */}
+                          {mobile && (
+                            <span style={{ color: C.ink, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                              {' →'}
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>
