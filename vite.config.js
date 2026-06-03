@@ -64,6 +64,10 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), planAMetaPlugin(released)],
     define: {
       'import.meta.env.RELEASED': JSON.stringify(released),
+      // Vercel sets VERCEL_ENV to 'production' | 'preview' | 'development'.
+      // Exposed so the client can show dev-only tools (release toggle, warnings
+      // panel) on preview/staging deploys but never in production.
+      'import.meta.env.VERCEL_ENV': JSON.stringify(env.VERCEL_ENV || ''),
     },
   };
 });

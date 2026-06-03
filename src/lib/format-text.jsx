@@ -55,7 +55,9 @@ function parseInline(text, onRefClick, keyPrefix = '') {
 // Split text on [label](url) markdown links. Non-link runs fall through to
 // bold/italic. External links open in a new tab; the label keeps inline styling.
 function splitLinks(text, keyPrefix) {
-  const re = /\[([^\]]+)\]\(([^)]+)\)/g;
+  // URL group allows one level of nested parentheses so DOIs / publisher URLs
+  // like ".../PIIS0140-6736(16)30383-X/abstract" aren't truncated at the "(".
+  const re = /\[([^\]]+)\]\(((?:[^()\s]|\([^()]*\))+)\)/g;
   const out = [];
   let lastIdx = 0;
   let m;
@@ -155,32 +157,44 @@ export function Body({ text, onRefClick, style, accent = C.ink }) {
             </h2>
           );
         }
-        // Lists: a block whose every line is a "- " bullet (unordered) or a
-        // "N. " item (ordered). Markers hang to the left so wrapped lines indent.
+        // Lists: a block whose FIRST line is a "- " bullet (unordered) or a
+        // "N. " item (ordered). Wrapped continuation lines — those that don't
+        // start with a marker — are folded back into the current item, so list
+        // items can span multiple physical lines in the source YAML.
         const lines = trimmed.split(/\n/).map(l => l.trim()).filter(Boolean);
         const liStyle = { display: 'flex', gap: 10, fontSize: 15, color: C.mid, lineHeight: 1.6, marginBottom: 6 };
-        if (lines.length && lines.every(l => /^-\s+/.test(l))) {
+        if (lines.length && /^-\s+/.test(lines[0])) {
+          const items = [];
+          for (const l of lines) {
+            if (/^-\s+/.test(l)) items.push(l.replace(/^-\s+/, ''));
+            else if (items.length) items[items.length - 1] += ' ' + l;
+          }
           return (
             <ul key={i} style={{ listStyle: 'none', padding: 0, margin: '10px 0 18px' }}>
-              {lines.map((l, j) => (
+              {items.map((text, j) => (
                 <li key={j} style={liStyle}>
                   <ArrowMarker accent={accent} />
-                  <span>{parseInline(l.replace(/^-\s+/, ''), onRefClick, `li${i}-${j}-`)}</span>
+                  <span>{parseInline(text, onRefClick, `li${i}-${j}-`)}</span>
                 </li>
               ))}
             </ul>
           );
         }
-        const olItems = lines.map(l => l.match(/^(\d+)\.\s+(.*)$/));
-        if (lines.length && olItems.every(Boolean)) {
+        if (lines.length && /^\d+\.\s+/.test(lines[0])) {
+          const items = [];
+          for (const l of lines) {
+            const m = l.match(/^(\d+)\.\s+(.*)$/);
+            if (m) items.push({ num: m[1], text: m[2] });
+            else if (items.length) items[items.length - 1].text += ' ' + l;
+          }
           return (
             <ol key={i} style={{ listStyle: 'none', padding: 0, margin: '10px 0 18px' }}>
-              {olItems.map((m, j) => (
+              {items.map((it, j) => (
                 <li key={j} style={liStyle}>
                   <span aria-hidden="true" style={{ color: accent, fontWeight: 700, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
-                    {m[1]}.
+                    {it.num}.
                   </span>
-                  <span>{parseInline(m[2], onRefClick, `li${i}-${j}-`)}</span>
+                  <span>{parseInline(it.text, onRefClick, `li${i}-${j}-`)}</span>
                 </li>
               ))}
             </ol>

@@ -6,6 +6,7 @@ import { Body } from '../lib/format-text';
 import { CalloutBox } from './callout-box';
 import { PolisStatement } from './polis-statement';
 import { LimitationQA } from './limitation-qa';
+import { ChartGroup } from './chart-group';
 import { FootnotesSection } from './footnotes-section';
 import { ProposalSection } from './proposal-section';
 import { SolidLine } from './scroll-line';
@@ -49,14 +50,19 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
   const img = proposalImage(d.number);
   const px = mobile ? 20 : 40;
 
-  // Section anchors for the right-side rail (desktop only).
+  // Section anchors for the right-side rail (desktop only). Order matches the
+  // body flow below: lead proposal → Pol.is → goal contribution → Q&A → benefits
+  // → next steps → references. `problem`/`implementation` are legacy fields kept
+  // for proposals not yet migrated to the new structure.
   const sectionList = [
     d.problem && { id: 'problem', label: 'Το πρόβλημα' },
     d.proposal && { id: 'proposal', label: 'Η πρόταση' },
-    d.implementation && { id: 'implementation', label: 'Υλοποίηση' },
-    d.limitations?.length && { id: 'limitations', label: 'Περιορισμοί' },
-    d.benefits?.length && { id: 'benefits', label: 'Οφέλη' },
     d.polis?.length && { id: 'polis', label: 'Από το Pol.is' },
+    d.contribution && { id: 'contribution', label: 'Συμβολή στον στόχο' },
+    d.implementation && { id: 'implementation', label: 'Υλοποίηση' },
+    d.limitations?.length && { id: 'limitations', label: 'Ζητήματα υλοποίησης' },
+    d.benefits?.length && { id: 'benefits', label: 'Οφέλη' },
+    d.next_steps?.length && { id: 'next-steps', label: 'Επόμενα βήματα' },
     d.references?.length && { id: 'references', label: 'Παραπομπές' },
   ].filter(Boolean);
 
@@ -193,6 +199,8 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
             </div>
           )}
 
+          {/* Legacy "Το πρόβλημα" — only proposals not yet migrated to the new
+              goal-contribution structure carry a standalone `problem` field. */}
           {RELEASED && d.problem && (
             <ProposalSection id="problem" title="Το πρόβλημα" accent={theme.accent}>
               <Body text={d.problem.body} onRefClick={onRefClick} accent={theme.accent} />
@@ -211,6 +219,42 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
             </ProposalSection>
           )}
 
+          {RELEASED && d.polis?.length > 0 && (
+            <ProposalSection id="polis" title="Από το Pol.is" accent={theme.accent}>
+              {d.polis.map((p, i) => (
+                <PolisStatement
+                  key={i}
+                  statement={p.statement}
+                  overall={p.overall}
+                  groups={p.groups}
+                  statementId={p.statement_id}
+                  mobile={mobile}
+                  navigate={navigate}
+                  accent={theme.accent}
+                />
+              ))}
+            </ProposalSection>
+          )}
+
+          {RELEASED && d.contribution?.body && (
+            <ProposalSection
+              id="contribution"
+              title={`Πώς συμβάλλει στον στόχο «${theme.label}»`}
+              accent={theme.accent}
+            >
+              <Body text={d.contribution.body} onRefClick={onRefClick} accent={theme.accent} />
+              {d.contribution.callouts?.map((c, i) => (
+                <CalloutBox key={i} text={c} onRefClick={onRefClick} />
+              ))}
+              {d.contribution.charts?.length > 0 && (
+                <ChartGroup charts={d.contribution.charts} accent={theme.accent} mobile={mobile} />
+              )}
+              {d.contribution.body_after && (
+                <Body text={d.contribution.body_after} onRefClick={onRefClick} accent={theme.accent} />
+              )}
+            </ProposalSection>
+          )}
+
           {RELEASED && d.implementation?.body && (
             <ProposalSection id="implementation" title="Υλοποίηση" accent={theme.accent}>
               <Body text={d.implementation.body} onRefClick={onRefClick} accent={theme.accent} />
@@ -218,7 +262,7 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
           )}
 
           {RELEASED && d.limitations?.length > 0 && (
-            <ProposalSection id="limitations" title="Περιορισμοί & τρόποι αντιμετώπισης" accent={theme.accent}>
+            <ProposalSection id="limitations" title="Ζητήματα υλοποίησης" accent={theme.accent}>
               {d.limitations.map((l, i) => (
                 <LimitationQA key={i} q={l.q} a={l.a} onRefClick={onRefClick} />
               ))}
@@ -233,22 +277,23 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
                     {b.title}
                   </div>
                   <Body text={b.body} onRefClick={onRefClick} accent={theme.accent} style={{ marginBottom: 0, fontSize: 14.5 }} />
+                  {b.callouts?.map((c, j) => (
+                    <CalloutBox key={j} text={c} onRefClick={onRefClick} />
+                  ))}
                 </div>
               ))}
             </ProposalSection>
           )}
 
-          {RELEASED && d.polis?.length > 0 && (
-            <ProposalSection id="polis" title="Από το Pol.is" accent={theme.accent}>
-              {d.polis.map((p, i) => (
-                <PolisStatement
-                  key={i}
-                  statement={p.statement}
-                  overall={p.overall}
-                  groups={p.groups}
-                  statementId={p.statement_id}
-                  mobile={mobile}
-                />
+          {RELEASED && d.next_steps?.length > 0 && (
+            <ProposalSection id="next-steps" title="Δύο ενδεικτικά επόμενα βήματα" accent={theme.accent}>
+              {d.next_steps.map((s, i) => (
+                <div key={i} style={{ marginBottom: 18 }}>
+                  <div style={{ fontWeight: 600, color: C.ink, fontSize: 15, marginBottom: 6 }}>
+                    {s.title}
+                  </div>
+                  <Body text={s.body} onRefClick={onRefClick} accent={theme.accent} style={{ marginBottom: 0, fontSize: 14.5 }} />
+                </div>
               ))}
             </ProposalSection>
           )}

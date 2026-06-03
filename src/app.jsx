@@ -11,6 +11,7 @@ import { track } from './lib/analytics';
 import { C } from './lib/theme';
 import { RELEASED } from './lib/released';
 import { DevReleaseToggle } from './components/dev-release-toggle';
+import { WarningsPanel } from './components/warnings-panel';
 
 // Presentation mode lives in its own chunk. Referencing lazy() here does NOT
 // fetch it — the import() only fires when <Presentation/> first renders (i.e.
@@ -85,6 +86,7 @@ export default function App() {
         </Suspense>
       )}
       <DevReleaseToggle />
+      <WarningsPanel />
     </PresentationContext.Provider>
   );
 }

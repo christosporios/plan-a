@@ -19,8 +19,17 @@ export const IS_LOCALHOST =
   typeof window !== 'undefined' &&
   /^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname);
 
+// Vercel preview (staging) deployments — set by the build env. Never true for
+// production deploys, so anything gated on it can't leak to prod.
+export const IS_VERCEL_PREVIEW = (import.meta.env.VERCEL_ENV || '') === 'preview';
+
+// Where dev-only affordances may appear (the RELEASED toggle, the warnings
+// panel) and where the runtime RELEASED override is allowed to take effect:
+// local development and Vercel preview/staging — but NOT production.
+export const SHOW_DEV_TOOLS = IS_LOCALHOST || IS_VERCEL_PREVIEW;
+
 function readOverride() {
-  if (!IS_LOCALHOST) return null;
+  if (!SHOW_DEV_TOOLS) return null;
   try {
     const v = window.localStorage.getItem(OVERRIDE_KEY);
     if (v === 'true') return true;
@@ -35,9 +44,9 @@ const override = readOverride();
 export const RELEASED = override !== null ? override : BUILD_RELEASED;
 
 // Persist a local override and reload so every `RELEASED` consumer re-reads it.
-// No-op off localhost.
+// No-op in production (only localhost + Vercel preview can override).
 export function setReleasedOverride(value) {
-  if (!IS_LOCALHOST) return;
+  if (!SHOW_DEV_TOOLS) return;
   try {
     window.localStorage.setItem(OVERRIDE_KEY, value ? 'true' : 'false');
   } catch { /* ignore */ }

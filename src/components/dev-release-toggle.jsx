@@ -1,18 +1,18 @@
 import { C } from '../lib/theme';
-import { RELEASED, IS_LOCALHOST, setReleasedOverride } from '../lib/released';
+import { RELEASED, SHOW_DEV_TOOLS, setReleasedOverride } from '../lib/released';
 
-// Localhost-only floating switch (bottom-left) to flip the RELEASED flag at
-// runtime, so both the released and pre-release sites can be previewed without
-// restarting the dev server. Renders nothing off localhost — it can never reach
-// production. Flipping persists the choice (localStorage) and reloads.
+// Floating switch (bottom-left) to flip the RELEASED flag at runtime, so both
+// the released and pre-release sites can be previewed without a rebuild. Shows
+// on localhost AND Vercel preview/staging, but never in production. Flipping
+// persists the choice (localStorage) and reloads.
 export const DevReleaseToggle = () => {
-  if (!IS_LOCALHOST) return null;
+  if (!SHOW_DEV_TOOLS) return null;
   const on = RELEASED;
   return (
     <button
       type="button"
       onClick={() => setReleasedOverride(!on)}
-      title="Dev only — toggle the RELEASED flag (localhost)"
+      title="Dev/staging only — toggle the RELEASED flag"
       style={{
         position: 'fixed',
         left: 16,

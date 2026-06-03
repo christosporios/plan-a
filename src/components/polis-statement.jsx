@@ -1,6 +1,11 @@
 import { C, EYEBROW } from '../lib/theme';
 import { polisGroupByLabel } from '../lib/polis-groups';
 
+// Full Pol.is consultation report (all statements, all groups), and the
+// in-site consultation page summarising it.
+const POLIS_REPORT_URL = 'https://pol.is/report/r7brycbsvbxe94w2mufnf';
+const CONSULTATION_PATH = '/diavoulefsi';
+
 // The signature Plan A widget: a Pol.is statement with agreement bars
 // for OVERALL + group A + B + C.
 //
@@ -65,7 +70,11 @@ function GroupBlock({ label, data, large }) {
   );
 }
 
-export const PolisStatement = ({ statement, overall, groups = [], statementId, mobile = false, large = false }) => {
+export const PolisStatement = ({ statement, overall, groups = [], statementId, mobile = false, large = false, navigate, accent = C.ink }) => {
+  const linkStyle = {
+    ...EYEBROW, fontSize: 11, letterSpacing: '0.08em', color: accent,
+    fontWeight: 700, textDecoration: 'none',
+  };
   return (
     <div style={{
       background: C.card,
@@ -116,6 +125,34 @@ export const PolisStatement = ({ statement, overall, groups = [], statementId, m
           <GroupBlock key={i} label={g.label} data={g} large={large} />
         ))}
       </div>
+
+      {/* Footer links — only on proposal pages (where `navigate` is provided):
+          the in-site consultation summary and the full external Pol.is report. */}
+      {navigate && (
+        <div style={{
+          marginTop: 18, paddingTop: 14, borderTop: `1px solid ${C.rule}`,
+          display: 'flex', flexWrap: 'wrap', gap: '8px 18px', alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+          <a
+            href={CONSULTATION_PATH}
+            onClick={(e) => { e.preventDefault(); navigate(CONSULTATION_PATH); }}
+            data-hover-underline
+            style={linkStyle}
+          >
+            Δείτε όλη τη διαβούλευση →
+          </a>
+          <a
+            href={POLIS_REPORT_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-hover-underline
+            style={linkStyle}
+          >
+            Πλήρης αναφορά Pol.is ↗
+          </a>
+        </div>
+      )}
     </div>
   );
 };
