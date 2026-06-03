@@ -24,6 +24,14 @@ import { PolisStatement } from './polis-statement';
 const SITE_URL = (import.meta.env.VITE_SITE_URL || 'https://planathens.gr').replace(/\/$/, '');
 const SITE_HOST = SITE_URL.replace(/^https?:\/\//, '');
 
+// Lighten a hex colour toward white by `t` (0–1). Theme accents are mid-tone and
+// read muddy on a dark photo, so the cover splash uses a lightened version.
+function lightenHex(hex, t) {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const m = (c) => Math.round(c + (255 - c) * t);
+  return `rgb(${m(r)}, ${m(g)}, ${m(b)})`;
+}
+
 function buildSlides() {
   const slides = [{ type: 'cover' }, { type: 'title' }];
   slides.push({ type: 'methodology' });
@@ -103,17 +111,19 @@ function TitleSlide({ mobile }) {
       }}>
         {SITE.tagline}
       </div>
-      {/* Thematic areas, each in its colour */}
+      {/* Thematic areas — the five goals, each in its colour. Sized up so they
+          read as a headline feature, not a footnote. */}
       <div style={{
         display: 'flex', justifyContent: 'center', flexWrap: 'wrap', alignItems: 'baseline',
-        columnGap: mobile ? 14 : 20, rowGap: 8, marginTop: mobile ? 24 : 32, maxWidth: 760, marginLeft: 'auto', marginRight: 'auto',
+        columnGap: mobile ? 18 : 30, rowGap: mobile ? 8 : 12, marginTop: mobile ? 28 : 44,
+        maxWidth: 880, marginLeft: 'auto', marginRight: 'auto',
       }}>
-        {THEME_ORDER.map((t, i) => (
-          <span key={t} style={{ display: 'inline-flex', alignItems: 'baseline', gap: mobile ? 14 : 20 }}>
-            {i > 0 && <span style={{ color: C.rule, fontSize: mobile ? 14 : 18 }}>·</span>}
-            <span style={{ fontFamily: C.serif, fontStyle: 'italic', fontWeight: 500, fontSize: mobile ? 15 : 21, color: THEMES[t].accent }}>
-              {THEMES[t].label}
-            </span>
+        {THEME_ORDER.map((t) => (
+          <span key={t} style={{
+            fontFamily: C.serif, fontStyle: 'italic', fontWeight: 600,
+            fontSize: mobile ? 19 : 29, color: THEMES[t].accent, letterSpacing: '-0.01em', lineHeight: 1.15,
+          }}>
+            {THEMES[t].label}
           </span>
         ))}
       </div>
@@ -133,42 +143,92 @@ function TitleSlide({ mobile }) {
           </div>
         ))}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: mobile ? 40 : 60 }}>
-        <QRBlock value={SITE_URL} color={C.ink} size={mobile ? 120 : 156} mobile={mobile} />
-      </div>
     </div>
   );
 }
 
-// Opening splash: full-bleed proposal images that cross-fade every 20s, with the
-// wordmark in white, centred. The only thing it says is "Plan A".
+// Opening splash: full-bleed proposal images that jump to a *random* proposal
+// every 8s, with "Plan A" small at the top and the current proposal's number +
+// title along the bottom. The lights follow the showing proposal's theme colour.
 function CoverSplash({ mobile, onAdvance }) {
-  const imgs = useMemo(() => proposals.map((p) => proposalImage(p.data.number)).filter(Boolean), []);
+  const items = useMemo(
+    () => proposals
+      .map((p) => ({ src: proposalImage(p.data.number), number: p.data.number, title: p.data.title, theme: p.data.theme }))
+      .filter((it) => it.src),
+    [],
+  );
   const [i, setI] = useState(0);
   useEffect(() => {
-    if (imgs.length < 2) return undefined;
-    const t = setInterval(() => setI((n) => (n + 1) % imgs.length), 20000);
+    if (items.length < 2) return undefined;
+    const t = setInterval(() => {
+      setI((cur) => {
+        let n = cur;
+        while (n === cur) n = Math.floor(Math.random() * items.length);
+        return n;
+      });
+    }, 8000);
     return () => clearInterval(t);
-  }, [imgs.length]);
+  }, [items.length]);
+
+  // Drive the lights from whichever proposal is showing (warm white if it has
+  // no theme colour). Runs on mount and on every change.
+  useEffect(() => {
+    const it = items[i];
+    if (it) setHueColor(THEMES[it.theme]?.accent ?? null);
+  }, [i, items]);
+
+  const cur = items[i];
+  const theme = cur ? THEMES[cur.theme] : null;
+  const accentText = theme ? lightenHex(theme.accent, 0.45) : '#fff';
   return (
     <div
       onClick={onAdvance}
       style={{ flex: 1, position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.ink, cursor: 'pointer' }}
     >
-      {imgs.map((src, n) => (
-        <img key={n} src={src} alt="" style={{
+      {items.map((it, n) => (
+        <img key={n} src={it.src} alt="" style={{
           position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center',
           opacity: n === i ? 1 : 0, transition: 'opacity 1500ms ease-in-out',
         }} />
       ))}
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
+      {/* A smooth vertical gradient: a touch of shade up top so "Plan A" reads,
+          clear through the middle, deepening to near-black at the bottom so the
+          proposal caption sits on solid contrast. */}
       <div style={{
-        ...WORDMARK, position: 'relative', color: '#fff',
-        fontSize: mobile ? 76 : 150, letterSpacing: '-0.03em', lineHeight: 1,
-        textShadow: '0 2px 40px rgba(0,0,0,0.5)',
-      }}>
-        Plan A
+        position: 'absolute', inset: 0,
+        background: 'linear-gradient(to bottom, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.10) 22%, rgba(0,0,0,0) 44%, rgba(0,0,0,0.48) 72%, rgba(0,0,0,0.85) 100%)',
+      }} />
+
+      {/* "Plan A" — small, centred at the top */}
+      <div style={{ position: 'absolute', top: mobile ? 28 : 44, left: 0, right: 0, textAlign: 'center' }}>
+        <div style={{
+          ...WORDMARK, color: '#fff',
+          fontSize: mobile ? 40 : 60, letterSpacing: '-0.02em', lineHeight: 1,
+          textShadow: '0 2px 24px rgba(0,0,0,0.5)',
+        }}>
+          Plan A
+        </div>
       </div>
+
+      {/* Current proposal — number + thematic area (in the area's colour) over
+          the title, along the bottom. */}
+      {cur && (
+        <div style={{ position: 'absolute', bottom: mobile ? 32 : 52, left: 0, right: 0, textAlign: 'center', color: '#fff', padding: '0 24px' }}>
+          <div style={{
+            ...EYEBROW, fontSize: mobile ? 12 : 15, letterSpacing: '0.22em',
+            color: accentText, textShadow: '0 1px 12px rgba(0,0,0,0.7)',
+          }}>
+            {`Πρόταση ${String(cur.number).padStart(2, '0')}${theme ? ` · ${theme.label}` : ''}`}
+          </div>
+          <div style={{
+            fontFamily: C.serif, fontWeight: 600, fontSize: mobile ? 24 : 38,
+            lineHeight: 1.2, marginTop: 10, letterSpacing: '-0.01em',
+            textShadow: '0 2px 24px rgba(0,0,0,0.6)',
+          }}>
+            {cur.title}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -364,7 +424,7 @@ function ThanksSlide({ mobile }) {
       <p style={{ fontSize: mobile ? 15 : 18, color: C.light, lineHeight: 1.55, marginTop: 12, marginBottom: 0 }}>
         {acknowledgments.adam_short.replace(/\*\*/g, '')}
       </p>
-      <div style={{ fontSize: mobile ? 17 : 22, color: C.mid, marginTop: 18, lineHeight: 1.5 }}>
+      <div style={{ fontSize: mobile ? 15 : 19, color: C.ink, marginTop: 18, lineHeight: 1.5 }}>
         <span style={{ ...EYEBROW, fontSize: mobile ? 12 : 14, color: C.faint, marginRight: 12 }}>Σύνταξη</span>
         {acknowledgments.author}
       </div>
@@ -385,11 +445,14 @@ function ThanksSlide({ mobile }) {
 function QuestionsSlide({ mobile }) {
   return (
     <div style={{ textAlign: 'center' }}>
-      <div style={{ ...WORDMARK, fontSize: mobile ? 52 : 100, color: C.ink, lineHeight: 1.05 }}>
-        Ας συζητήσουμε
+      <div style={{ ...WORDMARK, fontSize: mobile ? 38 : 64, color: C.ink, lineHeight: 1.1 }}>
+        Διαβάστε ολόκληρο το Plan A εδώ
       </div>
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: mobile ? 32 : 48 }}>
         <QRBlock value={SITE_URL} color={C.ink} size={mobile ? 132 : 172} mobile={mobile} />
+      </div>
+      <div style={{ fontSize: mobile ? 14 : 17, color: C.light, marginTop: mobile ? 28 : 36, lineHeight: 1.6 }}>
+        vasiliki@astylab.gr · adam@astylab.gr
       </div>
     </div>
   );
