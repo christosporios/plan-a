@@ -179,8 +179,14 @@ next_steps:
 # ── ΠΑΡΑΠΟΜΠΕΣ ──────────────────────────────────────────────────────────────
 references:
   - n: 1
-    title: "Rotterdam Rooftop Days — Rotterdam Rooftop Catalogue by MVRDV"
+    author: "METALOCUS / MVRDV"
+    title: "Innovation on Rotterdam Rooftop Days. Rotterdam Rooftop Catalogue by MVRDV"
+    year: 2021
+    publication: "METALOCUS"
     url: "https://www.metalocus.es/en/news/innovation-rotterdam-rooftop-days-rotterdam-rooftop-catalogue-mvrdv"
   - n: 2
-    title: "URBACT — Temporary use: European good practices"
+    author: "URBACT"
+    title: "Temporary use: European good practices"
+    year: 2015
+    publication: "URBACT"
     url: "https://urbact.eu/articles/temporary-use-european-good-practices"

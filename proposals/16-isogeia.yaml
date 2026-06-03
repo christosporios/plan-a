@@ -91,13 +91,14 @@ contribution:
       **Η ασφάλεια επηρεάζεται άμεσα.** Σε μελέτη 24 αμερικανικών πόλεων, κάθε
       10% αύξηση στα κενά εμπορικά ισόγεια συνδέονταν με αύξηση 3-6% στα
       εγκλήματα κατά ιδιοκτησίας στην ίδια γειτονιά.^1 Ο μηχανισμός είναι απλός:
-      λιγότεροι πεζοί σημαίνει λιγότερα «μάτια στον δρόμο», αυτό που η Jane
-      Jacobs περιέγραψε ως τον πιο αποτελεσματικό μηχανισμό αστικής ασφάλειας. Η
-      Αθήνα, με υψηλά ποσοστά κενών ισογείων, έχει και υψηλά ποσοστά εγκλημάτων
-      κατά ιδιοκτησίας στην ΕΕ.^2
+      λιγότεροι πεζοί σημαίνει λιγότερα «μάτια στον δρόμο», αυτό που η [Jane
+      Jacobs](https://en.wikipedia.org/wiki/The_Death_and_Life_of_Great_American_Cities)^2
+      περιέγραψε ως τον πιο αποτελεσματικό μηχανισμό αστικής ασφάλειας. Η
+      Αθήνα, με υψηλά ποσοστά κενών ισογείων, έχει και [υψηλά ποσοστά εγκλημάτων
+      κατά ιδιοκτησίας στην ΕΕ](https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Crime_statistics)^3.
     - |
       **Η αξία των ακινήτων πλήττεται μετρήσιμα.** Κάθε κενό ισόγειο μειώνει την
-      αξία των γειτονικών ακινήτων κατά εκτιμώμενο 0,5-1,2% ανά 100 μέτρα.^3
+      αξία των γειτονικών ακινήτων κατά εκτιμώμενο 0,5-1,2% ανά 100 μέτρα.^4
       Σε γειτονιά όπου το 35% των ισογείων είναι κενά, η συσσωρευτική αρνητική
       επίδραση μπορεί να φτάσει το 8-12% στην αξία των κατοικιών – ζημιά που
       επιβαρύνει δυσανάλογα τους κατοίκους χαμηλότερου εισοδήματος που διαμένουν
@@ -118,7 +119,7 @@ contribution:
 
     Το δεύτερο εμπόδιο είναι η **επιφυλακτικότητα του ιδιοκτήτη**. Σε έρευνα του
     Urban Land Institute σε 8 ευρωπαϊκές πόλεις, το 58% των ιδιοκτητών ανέφερε
-    τον φόβο κακού μισθωτή ως πρωταρχικό εμπόδιο για να νοικιάσει.^4
+    τον φόβο κακού μισθωτή ως πρωταρχικό εμπόδιο για να νοικιάσει.^5
     Λειτουργώντας ως εγγυητής, ο Δήμος αναλαμβάνει ακριβώς αυτόν τον
     κίνδυνο που σήμερα κρατά τα ισόγεια κλειστά, δίνοντας στον ιδιοκτήτη την
     ασφάλεια να προχωρήσει. Επειδή και τα δύο εμπόδια λύνονται ταυτόχρονα,
@@ -211,14 +212,20 @@ references:
     title: "Vacant commercial storefronts and property crime in 24 American cities"
     year: 2018
   - n: 2
+    author: "Jane Jacobs"
+    title: "The Death and Life of Great American Cities"
+    year: 1961
+    url: "https://en.wikipedia.org/wiki/The_Death_and_Life_of_Great_American_Cities"
+  - n: 3
     author: "Eurostat"
     title: "Crime statistics — Property crime rates in the EU"
     year: 2023
-  - n: 3
+    url: "https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Crime_statistics"
+  - n: 4
     author: "Bin & Czajkowski"
     title: "The impact of vacant commercial properties on nearby property values"
     year: 2013
-  - n: 4
+  - n: 5
     author: "Urban Land Institute"
     title: "Survey of European property owners on commercial vacancy barriers"
     year: 2022
