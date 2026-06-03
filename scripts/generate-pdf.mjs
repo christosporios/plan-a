@@ -361,20 +361,37 @@ function ProposalPage(d) {
   kids.push(proposalTitleCover(d, theme));
   kids.push(marker(`prop-${d.number}`));
   if (d.one_line) kids.push(h(Text, { key: 'ol', style: { fontSize: 12, color: C.mid, lineHeight: 1.55 } }, d.one_line.trim().replace(/\n/g, ' ')));
-  // Body — starts on a fresh page.
+  // Body — starts on a fresh page. Section order mirrors the web proposal page
+  // (src/components/proposal-page.jsx): legacy problem → proposal → Pol.is →
+  // contribution → legacy implementation → limitations → benefits → next steps.
   const b = [];
+  // Legacy "Το πρόβλημα" — only proposals not yet migrated to `contribution`.
   if (d.problem) b.push(proposalSection('Το πρόβλημα', theme.accent, [...body(d.problem.body, `p${d.number}pr-`, {}, theme.accent), ...(d.problem.callouts || []).map((c, i) => calloutBox(c, `p${d.number}pc${i}`))], `s-prob`));
   if (d.proposal) b.push(proposalSection('Η πρόταση', theme.accent, [...body(d.proposal.body, `p${d.number}pp-`, {}, theme.accent), ...(d.proposal.callouts || []).map((c, i) => calloutBox(c, `p${d.number}ppc${i}`))], `s-prop`));
+  if (d.polis?.length) b.push(proposalSection('Από το Pol.is', theme.accent, d.polis.map((p, i) => polisCard(p, `p${d.number}po${i}`)), `s-polis`));
+  if (d.contribution?.body) b.push(proposalSection(`Πώς συμβάλλει στον στόχο «${theme.label}»`, theme.accent, [
+    ...body(d.contribution.body, `p${d.number}co-`, {}, theme.accent),
+    ...(d.contribution.callouts || []).map((c, i) => calloutBox(c, `p${d.number}coc${i}`)),
+    ...(d.contribution.charts || []).map((c, i) => chartFigure(c, theme.accent, `p${d.number}coch${i}`)),
+    ...(d.contribution.body_after ? body(d.contribution.body_after, `p${d.number}coa-`, {}, theme.accent) : []),
+  ], `s-contrib`));
   if (d.implementation?.body) b.push(proposalSection('Υλοποίηση', theme.accent, body(d.implementation.body, `p${d.number}im-`, {}, theme.accent), `s-impl`));
-  if (d.limitations?.length) b.push(proposalSection('Περιορισμοί & τρόποι αντιμετώπισης', theme.accent, d.limitations.map((l, i) => h(View, { key: i, minPresenceAhead: 40, style: { marginBottom: 9 } }, [
+  if (d.limitations?.length) b.push(proposalSection('Ζητήματα υλοποίησης', theme.accent, d.limitations.map((l, i) => h(View, { key: i, minPresenceAhead: 40, style: { marginBottom: 9 } }, [
     h(Text, { key: 'q', style: { fontSize: 9.5, fontWeight: 600, color: C.ink, lineHeight: 1.45, marginBottom: 3 } }, inline(l.q, `p${d.number}lq${i}-`)),
     h(Text, { key: 'a', style: { fontSize: 9, color: C.mid, lineHeight: 1.5 } }, inline(l.a, `p${d.number}la${i}-`)),
   ])), `s-lim`));
   if (d.benefits?.length) b.push(proposalSection('Επιπρόσθετα οφέλη', theme.accent, d.benefits.map((bf, i) => h(View, { key: i, minPresenceAhead: 40, style: { marginBottom: 9 } }, [
     h(Text, { key: 't', style: { fontSize: 9.5, fontWeight: 600, color: C.ink, marginBottom: 3 } }, bf.title),
     ...body(bf.body, `p${d.number}bf${i}-`, {}, theme.accent),
+    ...(bf.callouts || []).map((c, j) => calloutBox(c, `p${d.number}bfc${i}-${j}`)),
   ])), `s-ben`));
-  if (d.polis?.length) b.push(proposalSection('Από το Pol.is', theme.accent, d.polis.map((p, i) => polisCard(p, `p${d.number}po${i}`)), `s-polis`));
+  if (d.next_steps?.length) b.push(proposalSection('Δύο ενδεικτικά επόμενα βήματα', theme.accent, [
+    ...d.next_steps.map((s, i) => h(View, { key: `ns${i}`, minPresenceAhead: 40, style: { marginBottom: 9 } }, [
+      h(Text, { key: 't', style: { fontSize: 9.5, fontWeight: 600, color: C.ink, marginBottom: 3 } }, s.title),
+      ...body(s.body, `p${d.number}ns${i}-`, {}, theme.accent),
+    ])),
+    h(Link, { key: 'cta', src: `${SITE_URL}/epomena-vimata`, style: { fontSize: 9.5, fontWeight: 700, color: theme.accent, textDecoration: 'none', marginTop: 2 } }, 'Δείτε πώς μπορείτε να συμβάλετε →'),
+  ], `s-next`));
   if (d.references?.length) b.push(referencesBlock(d.references, `p${d.number}`));
   if (b.length) kids.push(h(View, { key: 'body', break: true }, b));
   return h(Page, { key: `prop-${d.number}`, size: 'A4', style: bodyPageStyle }, [Footer(), ...kids]);
@@ -414,6 +431,42 @@ function SectionCoverPage(t) {
 function calloutBox(text, key) {
   return h(View, { key, wrap: false, style: { borderWidth: 1, borderColor: C.rule, borderRadius: 3, padding: 10, marginTop: 4, marginBottom: 10, backgroundColor: C.card } },
     body(text, `${key}-`, { marginBottom: 0, fontSize: 9.5, color: C.mid }));
+}
+
+// On-brand vertical bar chart (mirrors src/components/bar-chart.jsx): the
+// highlighted city (default Αθήνα) reads in the accent with its value above;
+// every other bar is a neutral rule-coloured column with a tiny rotated label.
+function chartFigure(ch, accent, key) {
+  const data = ch.data || [];
+  if (!data.length) return null;
+  const max = Math.max(...data.map((d) => d.value), 1);
+  const highlight = ch.highlight || 'Αθήνα';
+  const chartH = 150;
+  const barAreaH = chartH - 16;
+  return h(View, { key, wrap: false, style: { marginTop: 12, marginBottom: 12 } }, [
+    h(Text, { key: 'ti', style: { fontFamily: SERIF, fontWeight: 700, fontSize: 11, color: C.ink, lineHeight: 1.3 } }, ch.title),
+    ch.subtitle ? h(Text, { key: 'st', style: { fontSize: 8, color: C.light, lineHeight: 1.4, marginTop: 3 } }, ch.subtitle) : null,
+    h(View, { key: 'plot', style: { flexDirection: 'row', alignItems: 'flex-end', height: chartH, borderBottomWidth: 1, borderBottomColor: C.rule, marginTop: 10, gap: 1 } },
+      data.map((d, i) => {
+        const hi = d.label === highlight;
+        const bh = Math.max(1.5, (d.value / max) * barAreaH);
+        return h(View, { key: i, style: { flex: 1, flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', height: '100%' } }, [
+          hi ? h(Text, { key: 'v', style: { fontFamily: MONO, fontSize: 6, color: accent, marginBottom: 2 } }, `${d.value}${ch.unit || ''}`) : null,
+          h(View, { key: 'b', style: { width: '100%', height: bh, backgroundColor: hi ? accent : C.rule } }),
+        ]);
+      })),
+    h(View, { key: 'labs', style: { flexDirection: 'row', marginTop: 3, height: 40, gap: 1 } },
+      data.map((d, i) => {
+        const hi = d.label === highlight;
+        return h(View, { key: i, style: { flex: 1, alignItems: 'center' } },
+          h(Text, { key: 't', style: { fontSize: 5.5, color: hi ? accent : C.faint, fontWeight: hi ? 700 : 400, transform: 'rotate(-90deg)', width: 40, textAlign: 'right' } }, d.label));
+      })),
+    ch.source ? h(Text, { key: 'src', style: { fontSize: 7, color: C.faint, marginTop: 2 } }, [
+      'Πηγή: ',
+      ch.source_url ? h(Link, { key: 'l', src: ch.source_url, style: { color: C.light, textDecoration: 'underline' } }, ch.source) : ch.source,
+      ch.year ? `, ${ch.year}` : '',
+    ]) : null,
+  ]);
 }
 
 function referencesBlock(refs, keyPrefix) {

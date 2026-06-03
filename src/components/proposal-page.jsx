@@ -295,6 +295,13 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
                   <Body text={s.body} onRefClick={onRefClick} accent={theme.accent} style={{ marginBottom: 0, fontSize: 14.5 }} />
                 </div>
               ))}
+              <a
+                href="/epomena-vimata"
+                onClick={(e) => { e.preventDefault(); navigate('/epomena-vimata'); }}
+                style={{ display: 'inline-block', marginTop: 6, color: theme.accent, fontWeight: 600, fontSize: 14.5, textDecoration: 'none', borderBottom: `1px solid ${theme.accent}` }}
+              >
+                Δείτε πώς μπορείτε να συμβάλετε →
+              </a>
             </ProposalSection>
           )}
 

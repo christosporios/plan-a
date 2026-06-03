@@ -6,10 +6,8 @@ import { pages } from '../lib/pages';
 import { proposals, proposalPath } from '../lib/proposals';
 import { proposalImage } from '../lib/proposal-images';
 import { acknowledgments } from '../lib/acknowledgments';
-import { POLIS_GROUPS } from '../lib/polis-groups';
 import { useIsMobile } from '../hooks/use-is-mobile';
 import { setHueColor, flashHue } from '../lib/hue';
-import { PolisStatement } from './polis-statement';
 
 // Full-screen slide deck generated entirely from the same config/YAML the
 // regular site uses (SITE, pages.methodologia, THEMES, proposals,
@@ -35,7 +33,6 @@ function lightenHex(hex, t) {
 function buildSlides() {
   const slides = [{ type: 'cover' }, { type: 'title' }];
   slides.push({ type: 'methodology' });
-  slides.push({ type: 'polis' });
   for (const themeKey of THEME_ORDER) {
     const inArea = proposals
       .filter((p) => p.data.theme === themeKey)
@@ -271,72 +268,6 @@ function MethodologySlide({ mobile }) {
   );
 }
 
-// Three overlapping circles (one per opinion group). Per-circle multiply blend
-// darkens the overlaps, so the triple-overlap centre — the consensus, where
-// Plan A builds — is visibly the darkest. That's the whole point of Pol.is.
-function PolisVenn({ mobile }) {
-  const [A, B, Cg] = POLIS_GROUPS;
-  const w = mobile ? 270 : 340;
-  const circle = (cx, cy, fill) => (
-    <circle cx={cx} cy={cy} r="76" fill={fill} opacity="0.55" style={{ mixBlendMode: 'multiply' }} />
-  );
-  const letter = (x, y, t, fill) => (
-    <text x={x} y={y} textAnchor="middle" fontFamily={C.serif} fontStyle="italic" fontWeight="700" fontSize="26" fill={fill}>{t}</text>
-  );
-  return (
-    <svg viewBox="0 0 300 252" width={w} height={w * 252 / 300} role="img" aria-label="Τρεις ομάδες απόψεων που μοιράζονται ένα κοινό έδαφος στο κέντρο">
-      {circle(110, 100, A.color)}
-      {circle(190, 100, B.color)}
-      {circle(150, 172, Cg.color)}
-      {letter(56, 96, 'A', A.color)}
-      {letter(244, 96, 'B', B.color)}
-      {letter(150, 224, 'C', Cg.color)}
-      <rect x="101" y="115" width="98" height="34" rx="17" fill="#fff" stroke={C.rule} />
-      <text x="150" y="137" textAnchor="middle" fontFamily={C.sans} fontWeight="600" fontSize="13" fill={C.ink}>Κοινό έδαφος</text>
-    </svg>
-  );
-}
-
-function PolisExplainerSlide({ mobile }) {
-  return (
-    <div>
-      <div style={{ ...EYEBROW, fontSize: mobile ? 12 : 14, color: C.faint, marginBottom: 16 }}>
-        Πώς διαβάζουμε το Pol.is
-      </div>
-      <p style={{ fontFamily: C.serif, fontStyle: 'italic', fontSize: mobile ? 20 : 28, color: C.ink, lineHeight: 1.4, margin: 0 }}>
-        Ένας αλγόριθμος ομαδοποίησε τους 2.089 συμμετέχοντες σε τρεις ομάδες απόψεων, με βάση τα μοτίβα ψήφου τους.
-      </p>
-
-      {/* The diagram — three groups, one shared centre. */}
-      <div style={{ display: 'flex', justifyContent: 'center', margin: mobile ? '24px 0' : '34px 0' }}>
-        <PolisVenn mobile={mobile} />
-      </div>
-
-      {/* The three groups, side by side, each under its colour. */}
-      <div style={{ display: 'flex', flexDirection: mobile ? 'column' : 'row', gap: mobile ? 18 : 24 }}>
-        {POLIS_GROUPS.map((g) => (
-          <div key={g.label} style={{ flex: 1, borderTop: `3px solid ${g.color}`, paddingTop: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 7 }}>
-              <g.icon size={mobile ? 22 : 26} color={g.color} strokeWidth={1.75} aria-hidden />
-              <div style={{ fontSize: mobile ? 16 : 19, fontWeight: 700, color: C.ink, lineHeight: 1.2 }}>
-                <span style={{ color: g.color }}>{g.label}</span> · {g.title}
-              </div>
-            </div>
-            <div style={{ ...EYEBROW, fontSize: mobile ? 10 : 11, color: C.faint, marginBottom: 7 }}>
-              ~{g.size.toLocaleString('el')} ψηφοφόροι
-            </div>
-            <div style={{ fontSize: mobile ? 14 : 17, color: C.mid, lineHeight: 1.5 }}>{g.desc}</div>
-          </div>
-        ))}
-      </div>
-
-      <p style={{ fontSize: mobile ? 16 : 21, color: C.ink, lineHeight: 1.5, marginTop: mobile ? 26 : 34, marginBottom: 0, textAlign: 'center' }}>
-        Δεν μας ενδιαφέρουν οι διαφωνίες, αλλά το <strong>κοινό έδαφος</strong> — εκεί όπου συμφωνούν και οι τρεις ομάδες. Εκεί χτίζει το Plan A.
-      </p>
-    </div>
-  );
-}
-
 function AreaSlide({ themeKey, mobile }) {
   const t = THEMES[themeKey];
   return (
@@ -382,20 +313,6 @@ function ProposalSlide({ entry, themeKey, mobile }) {
           <QRBlock value={qrUrl} color={accent} size={116} mobile />
         </div>
       )}
-
-      <div style={{ marginTop: mobile ? 20 : 28 }}>
-        {d.polis?.map((p, i) => (
-          <PolisStatement
-            key={i}
-            statement={p.statement}
-            overall={p.overall}
-            groups={p.groups}
-            statementId={p.statement_id}
-            mobile={mobile}
-            large={!mobile}
-          />
-        ))}
-      </div>
 
       {!mobile && (
         <div style={{
@@ -461,7 +378,6 @@ function QuestionsSlide({ mobile }) {
 function Slide({ slide, mobile }) {
   if (slide.type === 'title') return <TitleSlide mobile={mobile} />;
   if (slide.type === 'methodology') return <MethodologySlide mobile={mobile} />;
-  if (slide.type === 'polis') return <PolisExplainerSlide mobile={mobile} />;
   if (slide.type === 'area') return <AreaSlide themeKey={slide.themeKey} mobile={mobile} />;
   if (slide.type === 'proposal') return <ProposalSlide entry={slide.entry} themeKey={slide.themeKey} mobile={mobile} />;
   if (slide.type === 'thanks') return <ThanksSlide mobile={mobile} />;
