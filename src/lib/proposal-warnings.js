@@ -56,6 +56,36 @@ function warningsFor(entry) {
   }
   if (!norm(d.one_line)) push('warn', 'Missing one_line (cover/teaser text)', 'one_line');
 
+  // ── schema migration (old structure) ───────────────────────────────────────
+  // New proposals follow problem → proposal → … → contribution → next_steps.
+  // `problem`/`implementation` are LEGACY fields, and a proposal with no
+  // `next_steps` / `contribution` hasn't been migrated yet. Flag these as
+  // critical so unmigrated proposals are caught before release.
+  if (d.problem) {
+    push('error', 'Old schema: uses legacy «Το πρόβλημα» (problem) — migrate to contribution', 'problem');
+  }
+  if (d.implementation) {
+    push('error', 'Old schema: uses legacy «Υλοποίηση» (implementation) — fold into the new structure', 'implementation');
+  }
+  if (!d.contribution?.body) {
+    push('error', 'Old schema: missing contribution («Πώς συμβάλλει στον στόχο»)', 'contribution');
+  }
+  if (!d.next_steps?.length) {
+    push('error', 'Old schema: missing next_steps («Δύο ενδεικτικά επόμενα βήματα»)', 'next_steps');
+  }
+
+  // ── core completeness ──────────────────────────────────────────────────────
+  if (!norm(d.proposal?.body)) {
+    push('error', 'Missing the core «Η πρόταση» (proposal.body)', 'proposal');
+  }
+  // The section is literally titled «Δύο ενδεικτικά επόμενα βήματα» — expect two.
+  if (d.next_steps?.length && d.next_steps.length !== 2) {
+    push('warn', `next_steps has ${d.next_steps.length} item(s) (expected 2)`, 'next_steps');
+  }
+  if (!d.limitations?.length) {
+    push('warn', 'Missing limitations («Ζητήματα υλοποίησης»)', 'limitations');
+  }
+
   const texts = gatherTexts(d);
   const allText = texts.map((t) => t.text).join('\n');
 
@@ -67,6 +97,10 @@ function warningsFor(entry) {
 
   const refs = d.references || [];
   const refNums = new Set(refs.map((r) => r.n));
+
+  if (refs.length < 3) {
+    push('error', `Too few citations: ${refs.length} reference${refs.length === 1 ? '' : 's'} (need at least 3)`, 'references');
+  }
 
   for (const n of usedFn) {
     if (!refNums.has(n)) push('error', `Footnote ^${n} has no matching reference`, 'references');
@@ -146,9 +180,39 @@ function warningsFor(entry) {
 
 const LEVEL_RANK = { error: 0, warn: 1, info: 2 };
 
+// Cross-proposal checks that a single-proposal pass can't see: collisions on the
+// `number`/`slug` that route and order proposals, and out-of-range numbers. A
+// duplicate is attributed to every proposal sharing the value.
+function globalWarnings(proposals) {
+  const w = [];
+  const push = (entry, level, message, field) =>
+    w.push({ number: entry.data.number, title: entry.data.title, slug: entry.slug, level, message, field });
+
+  const byNum = new Map();
+  const bySlug = new Map();
+  for (const e of proposals) {
+    const n = e.data.number;
+    if (!Number.isInteger(n) || n < 1 || n > 20) {
+      push(e, 'error', `Invalid number "${n}" (must be an integer 1–20)`, 'number');
+    }
+    if (!byNum.has(n)) byNum.set(n, []);
+    byNum.get(n).push(e);
+    const s = e.slug;
+    if (!bySlug.has(s)) bySlug.set(s, []);
+    bySlug.get(s).push(e);
+  }
+  for (const [n, list] of byNum) {
+    if (list.length > 1) list.forEach((e) => push(e, 'error', `Duplicate proposal number ${n} (shared by ${list.length} proposals — routing/order collision)`, 'number'));
+  }
+  for (const [s, list] of bySlug) {
+    if (list.length > 1) list.forEach((e) => push(e, 'error', `Duplicate slug "${s}" (shared by ${list.length} proposals — only the first is reachable)`, 'slug'));
+  }
+  return w;
+}
+
 // Collect warnings across all proposals, sorted by proposal number then severity.
 export function collectWarnings(proposals) {
-  const all = proposals.flatMap(warningsFor);
+  const all = [...proposals.flatMap(warningsFor), ...globalWarnings(proposals)];
   all.sort((a, b) => a.number - b.number || LEVEL_RANK[a.level] - LEVEL_RANK[b.level]);
   return all;
 }
