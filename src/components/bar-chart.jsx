@@ -35,6 +35,12 @@ export function BarChart({
   const max = Math.max(...data.map(d => d.value), 1);
   const chartH = mobile ? 150 : 180;
   const isHi = (label) => label === highlight;
+  // Few categories (e.g. 4 Athens neighbourhoods) get wide bars and short
+  // labels: cap the bar width, center the row, and set labels horizontally.
+  // Many cities (~30) keep the dense, full-width layout with rotated labels.
+  const few = data.length <= 6;
+  const barMax = mobile ? 64 : 96;
+  const gap = few ? (mobile ? 14 : 24) : (mobile ? 2 : 3);
 
   return (
     <figure style={{ margin: '22px 0', padding: 0 }}>
@@ -53,7 +59,8 @@ export function BarChart({
       <div style={{
         display: 'flex',
         alignItems: 'flex-end',
-        gap: mobile ? 2 : 3,
+        justifyContent: few ? 'center' : 'flex-start',
+        gap,
         height: chartH,
         borderBottom: `1px solid ${C.rule}`,
         overflow: 'visible',
@@ -62,7 +69,7 @@ export function BarChart({
           const hi = isHi(d.label);
           const h = Math.max(2, Math.round((d.value / max) * (chartH - 22)));
           return (
-            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', height: '100%', minWidth: 0 }}>
+            <div key={i} style={{ flex: 1, maxWidth: few ? barMax : undefined, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', height: '100%', minWidth: 0 }}>
               {hi && (
                 <div style={{ ...EYEBROW, fontSize: 11, letterSpacing: '0.02em', color: accent, marginBottom: 3 }}>
                   {d.value}{unit}
@@ -82,22 +89,24 @@ export function BarChart({
         })}
       </div>
 
-      {/* City labels — rotated to fit; the highlighted city reads bold/accent. */}
-      <div style={{ display: 'flex', gap: mobile ? 2 : 3, marginTop: 6 }}>
+      {/* Labels. Few categories: horizontal, wrapped, under each bar. Many
+          cities: rotated to fit. The highlighted entry reads bold/accent. */}
+      <div style={{ display: 'flex', justifyContent: few ? 'center' : 'flex-start', gap, marginTop: few ? 8 : 6 }}>
         {data.map((d, i) => {
           const hi = isHi(d.label);
           return (
-            <div key={i} style={{ flex: 1, minWidth: 0, height: mobile ? 48 : 56, display: 'flex', justifyContent: 'center' }}>
+            <div key={i} style={{ flex: 1, maxWidth: few ? barMax : undefined, minWidth: 0, height: few ? 'auto' : (mobile ? 48 : 56), display: 'flex', justifyContent: 'center' }}>
               <span style={{
-                fontSize: mobile ? 8 : 9,
-                lineHeight: 1,
+                fontSize: few ? (mobile ? 11 : 12.5) : (mobile ? 8 : 9),
+                lineHeight: few ? 1.25 : 1,
                 color: hi ? accent : C.faint,
                 fontWeight: hi ? 700 : 400,
-                whiteSpace: 'nowrap',
-                transform: 'rotate(-90deg)',
+                textAlign: few ? 'center' : undefined,
+                whiteSpace: few ? 'normal' : 'nowrap',
+                transform: few ? undefined : 'rotate(-90deg)',
                 transformOrigin: 'center',
-                alignSelf: 'flex-start',
-                marginTop: mobile ? 22 : 26,
+                alignSelf: few ? 'flex-start' : 'flex-start',
+                marginTop: few ? 0 : (mobile ? 22 : 26),
               }}>
                 {d.label}
               </span>

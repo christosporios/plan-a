@@ -434,8 +434,10 @@ function calloutBox(text, key) {
 }
 
 // On-brand vertical bar chart (mirrors src/components/bar-chart.jsx): the
-// highlighted city (default Αθήνα) reads in the accent with its value above;
-// every other bar is a neutral rule-coloured column with a tiny rotated label.
+// highlighted city (default Αθήνα) reads in the accent with its value above.
+// Many cities (~30) get full-width bars with tiny rotated labels; few
+// categories (e.g. 4 Athens neighbourhoods) get capped, centred bars with
+// horizontal labels so long names don't collide with the source line.
 function chartFigure(ch, accent, key) {
   const data = ch.data || [];
   if (!data.length) return null;
@@ -443,23 +445,29 @@ function chartFigure(ch, accent, key) {
   const highlight = ch.highlight || 'Αθήνα';
   const chartH = 150;
   const barAreaH = chartH - 16;
+  const few = data.length <= 6;
+  const barMax = 70;
+  const gap = few ? 16 : 1;
   return h(View, { key, wrap: false, style: { marginTop: 12, marginBottom: 12 } }, [
     h(Text, { key: 'ti', style: { fontFamily: SERIF, fontWeight: 700, fontSize: 11, color: C.ink, lineHeight: 1.3 } }, ch.title),
     ch.subtitle ? h(Text, { key: 'st', style: { fontSize: 8, color: C.light, lineHeight: 1.4, marginTop: 3 } }, ch.subtitle) : null,
-    h(View, { key: 'plot', style: { flexDirection: 'row', alignItems: 'flex-end', height: chartH, borderBottomWidth: 1, borderBottomColor: C.rule, marginTop: 10, gap: 1 } },
+    h(View, { key: 'plot', style: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: few ? 'center' : 'flex-start', height: chartH, borderBottomWidth: 1, borderBottomColor: C.rule, marginTop: 10, gap } },
       data.map((d, i) => {
         const hi = d.label === highlight;
         const bh = Math.max(1.5, (d.value / max) * barAreaH);
-        return h(View, { key: i, style: { flex: 1, flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', height: '100%' } }, [
+        return h(View, { key: i, style: { flex: 1, maxWidth: few ? barMax : undefined, flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', height: '100%' } }, [
           hi ? h(Text, { key: 'v', style: { fontFamily: MONO, fontSize: 6, color: accent, marginBottom: 2 } }, `${d.value}${ch.unit || ''}`) : null,
           h(View, { key: 'b', style: { width: '100%', height: bh, backgroundColor: hi ? accent : C.rule } }),
         ]);
       })),
-    h(View, { key: 'labs', style: { flexDirection: 'row', marginTop: 3, height: 40, gap: 1 } },
+    h(View, { key: 'labs', style: { flexDirection: 'row', justifyContent: few ? 'center' : 'flex-start', marginTop: few ? 5 : 3, height: few ? 'auto' : 40, gap } },
       data.map((d, i) => {
         const hi = d.label === highlight;
-        return h(View, { key: i, style: { flex: 1, alignItems: 'center' } },
-          h(Text, { key: 't', style: { fontSize: 5.5, color: hi ? accent : C.faint, fontWeight: hi ? 700 : 400, transform: 'rotate(-90deg)', width: 40, textAlign: 'right' } }, d.label));
+        return few
+          ? h(View, { key: i, style: { flex: 1, maxWidth: barMax, alignItems: 'center' } },
+            h(Text, { key: 't', style: { fontSize: 7, color: hi ? accent : C.faint, fontWeight: hi ? 700 : 400, textAlign: 'center', lineHeight: 1.2 } }, d.label))
+          : h(View, { key: i, style: { flex: 1, alignItems: 'center' } },
+            h(Text, { key: 't', style: { fontSize: 5.5, color: hi ? accent : C.faint, fontWeight: hi ? 700 : 400, transform: 'rotate(-90deg)', width: 40, textAlign: 'right' } }, d.label));
       })),
     ch.source ? h(Text, { key: 'src', style: { fontSize: 7, color: C.faint, marginTop: 2 } }, [
       'Πηγή: ',
