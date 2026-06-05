@@ -16,7 +16,7 @@ import { setHueColor, flashHue } from '../lib/hue';
 //
 // Deck order:
 //   title → methodology (3+3) → for each theme: area title + one slide/proposal
-//   → ευχαριστίες → ερωτήσεις (last).
+//   + an area-summary recap → ευχαριστίες → ερωτήσεις (last).
 
 // Public URL (for QR codes). Kept in env so the domain lives in one place.
 const SITE_URL = (import.meta.env.VITE_SITE_URL || 'https://planathens.gr').replace(/\/$/, '');
@@ -40,6 +40,8 @@ function buildSlides() {
     if (!inArea.length) continue;
     slides.push({ type: 'area', themeKey });
     for (const entry of inArea) slides.push({ type: 'proposal', entry, themeKey });
+    // Recap slide closing the goal: the category name + every proposal title.
+    slides.push({ type: 'areaSummary', themeKey });
   }
   slides.push({ type: 'thanks' });
   slides.push({ type: 'questions' });
@@ -285,6 +287,47 @@ function AreaSlide({ themeKey, mobile }) {
   );
 }
 
+// Recap that closes a goal: the category name, then every proposal title in it.
+// Mirrors the methodology slide's numbered-list rhythm, in the theme's colour.
+function AreaSummarySlide({ themeKey, mobile }) {
+  const t = THEMES[themeKey];
+  const inArea = proposals
+    .filter((p) => p.data.theme === themeKey)
+    .sort((a, b) => (a.data.number ?? 0) - (b.data.number ?? 0));
+  return (
+    <div>
+      <div style={{ ...EYEBROW, fontSize: mobile ? 12 : 15, color: t.accent, marginBottom: 14, letterSpacing: '0.2em' }}>
+        {`ΣΤΟΧΟΣ ${THEME_ORDER.indexOf(themeKey) + 1} · ΣΥΝΟΨΗ`}
+      </div>
+      <div style={{
+        fontFamily: C.serif, fontStyle: 'italic', fontWeight: 600,
+        fontSize: mobile ? 34 : 56, color: t.accent, lineHeight: 1.05,
+        letterSpacing: '-0.02em', marginBottom: mobile ? 26 : 38,
+      }}>
+        {t.label}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: mobile ? 12 : 16 }}>
+        {inArea.map((entry) => (
+          <div key={entry.data.number} style={{ display: 'flex', alignItems: 'baseline', gap: mobile ? 14 : 20 }}>
+            <span style={{
+              ...EYEBROW, fontSize: mobile ? 13 : 16, fontVariantNumeric: 'tabular-nums',
+              color: t.accent, width: mobile ? 26 : 34, flexShrink: 0,
+            }}>
+              {String(entry.data.number).padStart(2, '0')}
+            </span>
+            <span style={{
+              fontFamily: C.serif, fontWeight: 600, fontSize: mobile ? 19 : 27,
+              color: C.ink, lineHeight: 1.25, letterSpacing: '-0.01em',
+            }}>
+              {entry.data.title}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ProposalSlide({ entry, themeKey, mobile }) {
   const d = entry.data;
   const accent = THEMES[themeKey]?.accent || C.ink;
@@ -379,6 +422,7 @@ function Slide({ slide, mobile }) {
   if (slide.type === 'title') return <TitleSlide mobile={mobile} />;
   if (slide.type === 'methodology') return <MethodologySlide mobile={mobile} />;
   if (slide.type === 'area') return <AreaSlide themeKey={slide.themeKey} mobile={mobile} />;
+  if (slide.type === 'areaSummary') return <AreaSummarySlide themeKey={slide.themeKey} mobile={mobile} />;
   if (slide.type === 'proposal') return <ProposalSlide entry={slide.entry} themeKey={slide.themeKey} mobile={mobile} />;
   if (slide.type === 'thanks') return <ThanksSlide mobile={mobile} />;
   return <QuestionsSlide mobile={mobile} />;

@@ -8,6 +8,7 @@ import { pages } from '../lib/pages';
 import { RELEASED } from '../lib/released';
 import { SiteFooter } from './site-footer';
 import { SolidLine } from './scroll-line';
+import { TopNav } from './top-nav';
 
 // /epomena-vimata — the contribute intro, then every proposal's "επόμενα βήματα"
 // grouped by their shared category, so readers can see all the work of one kind
@@ -41,15 +42,9 @@ export const NextStepsPage = ({ navigate }) => {
       animation: 'fade-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both',
     }}>
       <SolidLine color={C.ink} />
-      <div style={{ padding: mobile ? '40px 0 56px' : '64px 0 80px' }}>
+      <TopNav navigate={navigate} variant="light" />
+      <div style={{ padding: mobile ? '56px 0 56px' : '80px 0 80px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto', padding: `0 ${px}px` }}>
-          <a
-            href="/"
-            onClick={(e) => { e.preventDefault(); navigate('/'); }}
-            style={{ ...EYEBROW, fontSize: 11, letterSpacing: '0.15em', fontWeight: 400, textDecoration: 'none' }}
-          >
-            ← Plan A
-          </a>
           <h1 style={{
             fontFamily: C.serif,
             fontSize: mobile ? 32 : 44,

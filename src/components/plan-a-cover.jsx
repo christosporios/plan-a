@@ -107,7 +107,7 @@ export const PlanACover = ({ proposals, navigate }) => {
   return (
     <div style={{ fontFamily: C.sans, background: C.bg, color: C.ink, minHeight: '100vh' }}>
       <ScrollLine />
-      <TopNav navigate={navigate} variant="light" />
+      <TopNav navigate={navigate} variant="light" revealWordmarkOnScroll />
       {/* Hero — extra top padding clears the fixed TopNav. */}
       <section style={{ padding: mobile ? '84px 0 32px' : '108px 0 56px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto', padding: `0 ${px}px` }}>

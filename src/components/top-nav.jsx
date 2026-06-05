@@ -22,7 +22,7 @@ const INLINE_MIN_WIDTH = 900;
 //
 // `variant`: 'dark' = dark image hero (white links when transparent);
 //            'light' = light cover hero (ink links throughout).
-export function TopNav({ navigate, variant = 'light' }) {
+export function TopNav({ navigate, variant = 'light', revealWordmarkOnScroll = false }) {
   const [vw, setVw] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1200));
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
@@ -66,18 +66,17 @@ export function TopNav({ navigate, variant = 'light' }) {
   // The bar is "solid" when scrolled or when the mobile menu is open.
   const solid = scrolled || open;
 
-  // The wordmark: on the cover (light hero) it's hidden at the top — where the
-  // page's own large "Plan A" sits — and revealed (with a one-time dance) as the
-  // bar solidifies on scroll. On proposal pages (dark hero) there's no other
-  // "Plan A", so it's shown in the header at all times.
-  const alwaysShowWordmark = variant === 'dark';
-  const showWordmark = alwaysShowWordmark || solid;
+  // The wordmark: only the cover sets `revealWordmarkOnScroll`, because its own
+  // large "Plan A" hero is on screen at the top — so the nav mark stays hidden
+  // there and is revealed (with a one-time dance) as the bar solidifies on
+  // scroll. Everywhere else (proposals, static pages) it's shown at all times.
+  const showWordmark = !revealWordmarkOnScroll || solid;
   useEffect(() => {
-    if (!alwaysShowWordmark && solid && !hasPlayed.current) {
+    if (revealWordmarkOnScroll && solid && !hasPlayed.current) {
       hasPlayed.current = true;
       setDanceToken((t) => t + 1);
     }
-  }, [alwaysShowWordmark, solid]);
+  }, [revealWordmarkOnScroll, solid]);
 
   // White links only while transparent over a dark hero; ink once solid/light.
   const fg = variant === 'dark' && !solid ? '#fff' : C.ink;
