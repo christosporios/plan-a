@@ -5,17 +5,19 @@
 // regenerated every build) and, when present, dist/plan-a.pdf for the deploy.
 
 import React from 'react';
-import { Document, Page, View, Text, Image, Font, Link, Svg, Path, Circle, Line, Polyline, Polygon, Rect, Ellipse, renderToFile, renderToBuffer } from '@react-pdf/renderer';
+import { Document, Page, View, Text, Image, Font, Link, Svg, Path, Circle, Line, Polyline, Polygon, Rect, Ellipse, renderToBuffer } from '@react-pdf/renderer';
 import yaml from 'js-yaml';
 import qrcode from 'qrcode-generator';
 import sharp from 'sharp';
+import { PDFDocument } from 'pdf-lib';
 import { Car, Landmark } from 'lucide';
 import { treesForest } from '@lucide/lab';
-import { readFileSync, readdirSync, existsSync } from 'fs';
+import { readFileSync, readdirSync, existsSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 import { C, THEMES, THEME_ORDER, themeOf } from '../src/lib/theme.js';
+import { nextStepTitles } from '../src/lib/next-steps.mjs';
 import { POLIS_GROUPS_DATA } from '../src/lib/polis-groups-data.js';
 
 const h = React.createElement;
@@ -176,8 +178,27 @@ function inline(text, keyPrefix = '') {
 // Render a markdown-ish body string into paragraph/heading/list <View>s.
 // `accent` colors list markers (arrow for "- " bullets, number for "N." items),
 // matching the web renderer (src/lib/format-text.jsx).
+// Inline callout fence: ::: callout … ::: anywhere in a body string becomes a
+// bordered box exactly where it sits in the prose. Mirrors src/lib/format-text.jsx.
+// A FRESH regex is built per call — body() recurses (via calloutBox), so a shared
+// /g regex's lastIndex would be corrupted reentrantly.
 function body(text, keyPrefix = '', base = {}, accent = C.ink) {
   if (!text) return [];
+  if (text.includes(':::')) {
+    const fence = /:::[ \t]*callout\s*([\s\S]*?)\s*:::/g;
+    const out = [];
+    let last = 0, m, seg = 0;
+    while ((m = fence.exec(text)) !== null) {
+      const chunk = text.slice(last, m.index);
+      if (chunk.trim()) out.push(...body(chunk, `${keyPrefix}s${seg}-`, base, accent));
+      out.push(calloutBox(m[1].trim(), `${keyPrefix}co${seg}`));
+      last = m.index + m[0].length;
+      seg++;
+    }
+    const tail = text.slice(last);
+    if (tail.trim()) out.push(...body(tail, `${keyPrefix}s${seg}-`, base, accent));
+    return out;
+  }
   return text.trim().split(/\n{2,}/).map((block, i) => {
     const t = block.trim();
     if (t.startsWith('### ')) {
@@ -255,11 +276,13 @@ function proposalSection(title, accent, children, key) {
 // metrics + QR band anchored at the foot.
 function CoverPage() {
   return h(View, { key: 'cover', style: { flexGrow: 1, position: 'relative', backgroundColor: C.bg } }, [
-    // Left rail — one band per thematic area, full height.
-    h(View, { key: 'rail', style: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 12, flexDirection: 'column' } },
+    // Colour rail — one band per thematic area, full height. Sits on the OUTER
+    // (right) edge: the cover is a recto page, so its binding is on the left and
+    // the rail must never fall on the βιβλιοδεσία side.
+    h(View, { key: 'rail', style: { position: 'absolute', right: 0, top: 0, bottom: 0, width: 12, flexDirection: 'column' } },
       THEME_ORDER.map((t) => h(View, { key: t, style: { flexGrow: 1, backgroundColor: THEMES[t].accent } }))),
 
-    h(View, { key: 'content', style: { flexGrow: 1, justifyContent: 'space-between', paddingTop: 56, paddingBottom: 48, paddingLeft: 64, paddingRight: 56 } }, [
+    h(View, { key: 'content', style: { flexGrow: 1, justifyContent: 'space-between', paddingTop: 56, paddingBottom: 48, paddingLeft: 56, paddingRight: 64 } }, [
       // Top — publisher.
       h(View, { key: 'top', style: { flexDirection: 'row', alignItems: 'center' } }, [
         h(Image, { key: 'lg', src: LOGO, style: { width: 16, height: 16, marginRight: 9 } }),
@@ -385,13 +408,13 @@ function ProposalPage(d) {
     ...body(bf.body, `p${d.number}bf${i}-`, {}, theme.accent),
     ...(bf.callouts || []).map((c, j) => calloutBox(c, `p${d.number}bfc${i}-${j}`)),
   ])), `s-ben`));
-  if (d.next_steps?.length) b.push(proposalSection('Δύο ενδεικτικά επόμενα βήματα', theme.accent, [
+  if (d.next_steps?.length) { const nsTitles = nextStepTitles(d.next_steps); b.push(proposalSection('Δύο ενδεικτικά επόμενα βήματα', theme.accent, [
     ...d.next_steps.map((s, i) => h(View, { key: `ns${i}`, minPresenceAhead: 40, style: { marginBottom: 9 } }, [
-      h(Text, { key: 't', style: { fontSize: 9.5, fontWeight: 600, color: C.ink, marginBottom: 3 } }, s.title),
+      h(Text, { key: 't', style: { fontSize: 9.5, fontWeight: 600, color: C.ink, marginBottom: 3 } }, nsTitles[i]),
       ...body(s.body, `p${d.number}ns${i}-`, {}, theme.accent),
     ])),
     h(Link, { key: 'cta', src: `${SITE_URL}/epomena-vimata`, style: { fontSize: 9.5, fontWeight: 700, color: theme.accent, textDecoration: 'none', marginTop: 2 } }, 'Δείτε πώς μπορείτε να συμβάλετε →'),
-  ], `s-next`));
+  ], `s-next`)); }
   if (d.references?.length) b.push(referencesBlock(d.references, `p${d.number}`));
   if (b.length) kids.push(h(View, { key: 'body', break: true }, b));
   return h(Page, { key: `prop-${d.number}`, size: 'A4', style: bodyPageStyle }, [Footer(), ...kids]);
@@ -423,9 +446,11 @@ function SectionCoverPage(t) {
       ]) : null,
     ]);
   });
-  // Theme-colour rail down the left edge (as on the cover).
-  const leftBar = h(View, { key: 'bar', style: { position: 'absolute', top: 0, left: 0, bottom: 0, width: 12, backgroundColor: theme.accent } });
-  return h(Page, { key: `area-${t}`, size: 'A4', style: { flexDirection: 'column', backgroundColor: C.ink } }, [...bands, leftBar]);
+  // Theme-colour rail down the OUTER (right) edge — section covers are forced
+  // onto recto pages (see buildDoc), whose binding is on the left, so the rail
+  // stays clear of the βιβλιοδεσία.
+  const railBar = h(View, { key: 'bar', style: { position: 'absolute', top: 0, right: 0, bottom: 0, width: 12, backgroundColor: theme.accent } });
+  return h(Page, { key: `area-${t}`, size: 'A4', style: { flexDirection: 'column', backgroundColor: C.ink } }, [...bands, railBar]);
 }
 
 function calloutBox(text, key) {
@@ -587,8 +612,16 @@ function Footer() {
   ]);
 }
 
+// An intentional blank page — used to push the next section cover onto a recto
+// (right-hand) page. No footer (so no folio); a quiet centred wordmark in the
+// signature serif italic marks it as a deliberate blank rather than a misprint.
+const BlankPage = (key) => h(Page, { key, size: 'A4', style: { backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' } },
+  h(Text, { key: 'w', style: { fontFamily: SERIF, fontStyle: 'italic', fontSize: 32, color: C.faint } }, SITE.wordmark));
+
 // ── Document ─────────────────────────────────────────────────────────────────
-const buildDoc = () => h(Document, { title: 'Plan A — 20 προτάσεις για την Αθήνα', author: 'Astylab' }, [
+// `fillers` is a Set of theme keys whose section cover must be preceded by a
+// blank page (computed below so every section cover opens on a recto page).
+const buildDoc = (fillers = new Set()) => h(Document, { title: 'Plan A — 20 προτάσεις για την Αθήνα', author: 'Astylab' }, [
   h(Page, { key: 'cover', size: 'A4', style: { backgroundColor: C.bg } }, CoverPage()),
   StripesPage(),
   h(Page, { key: 'foreword', size: 'A4', style: { backgroundColor: C.bg, paddingHorizontal: 92, paddingVertical: 72 } }, ForewordPage()),
@@ -598,17 +631,34 @@ const buildDoc = () => h(Document, { title: 'Plan A — 20 προτάσεις γ
     TableOfContents(),
     MethodologySection(),
   ]),
-  // Each goal: a full-bleed section cover, then one page per proposal.
+  // Each goal: a full-bleed section cover (preceded by a blank page when needed
+  // to keep it on a recto), then one page per proposal.
   ...THEME_ORDER.flatMap((t) => {
     const items = proposals.filter((p) => p.theme === t).sort((a, b) => a.number - b.number);
     if (!items.length) return [];
-    return [SectionCoverPage(t), ...items.map((d) => ProposalPage(d))];
+    const pages = [SectionCoverPage(t), ...items.map((d) => ProposalPage(d))];
+    return fillers.has(t) ? [BlankPage(`blank-${t}`), ...pages] : pages;
   }),
   h(Page, { key: 'ack', size: 'A4', style: bodyPageStyle }, [Footer(), AckSection()]),
 ]);
 
-// Pass 1 fills pageOf + total via the markers/footer; then map pages → running area.
-await renderToBuffer(buildDoc());
+// Themes that actually have a section cover, in book order.
+const activeThemes = THEME_ORDER.filter((t) => proposals.some((p) => p.theme === t));
+
+// Force every section cover onto a recto (odd) page. A blank page before a
+// cover flips the parity of it and everything after, so we walk the sections in
+// order, re-measuring after each blank we insert — earlier (already-recto)
+// covers never move, so this converges in one pass.
+const fillers = new Set();
+await renderToBuffer(buildDoc(fillers));
+for (const t of activeThemes) {
+  if (pageOf[`area-${t}`] && pageOf[`area-${t}`] % 2 === 0) {
+    fillers.add(t);
+    await renderToBuffer(buildDoc(fillers)); // re-measure so later covers see the shift
+  }
+}
+
+// Map pages → running area for the footer (uses the final, filler-adjusted pageOf).
 const total = pageOf.__total || 0;
 const sections = [];
 if (pageOf.methodology) sections.push({ page: pageOf.methodology, label: 'Μεθοδολογία' });
@@ -621,8 +671,25 @@ sections.forEach((s, i) => {
   for (let p = s.page; p <= end; p++) areaByPage[p] = greekUpper(s.label);
 });
 
-const targets = ['public/plan-a.pdf', existsSync('dist') ? 'dist/plan-a.pdf' : null].filter(Boolean);
-for (const out of targets) {
-  await renderToFile(buildDoc(), out);
-  console.log(`Generated ${out}`);
+// Render the final A4 once, then derive A5 from it. A4 and A5 share the same
+// 1:√2 proportions, so scaling every page by 1/√2 yields a pixel-faithful A5
+// booklet (type, margins, images and links all shrink together) with the same
+// page count — so the recto placement of the section covers is preserved.
+const a4Buffer = await renderToBuffer(buildDoc(fillers));
+async function scaleToA5(buffer) {
+  const doc = await PDFDocument.load(buffer);
+  const f = 1 / Math.SQRT2;
+  for (const page of doc.getPages()) page.scale(f, f);
+  return Buffer.from(await doc.save());
 }
+const a5Buffer = await scaleToA5(a4Buffer);
+
+const writeAll = (buffer, name) => {
+  for (const dir of ['public', existsSync('dist') ? 'dist' : null].filter(Boolean)) {
+    const out = join(dir, name);
+    writeFileSync(out, buffer);
+    console.log(`Generated ${out}`);
+  }
+};
+writeAll(a4Buffer, 'plan-a.pdf');
+writeAll(a5Buffer, 'plan-a-a5.pdf');

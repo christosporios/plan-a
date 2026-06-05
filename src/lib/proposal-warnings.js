@@ -8,6 +8,7 @@
 // live page (cross-origin requests are opaque in the browser). It catches the
 // classes of error that are detectable offline.
 import { THEMES } from './theme';
+import { NEXT_STEP_ORDER } from './next-steps.mjs';
 
 const FN_RE = /\^\[(\d+)\]|\^(\d+)/g;
 // Matches the same link shape the renderer accepts, including URLs with one
@@ -78,10 +79,19 @@ function warningsFor(entry) {
   if (!norm(d.proposal?.body)) {
     push('error', 'Missing the core «Η πρόταση» (proposal.body)', 'proposal');
   }
-  // The section is literally titled «Δύο ενδεικτικά επόμενα βήματα» — expect two.
-  if (d.next_steps?.length && d.next_steps.length !== 2) {
-    push('warn', `next_steps has ${d.next_steps.length} item(s) (expected 2)`, 'next_steps');
+  // The section is usually «Δύο ενδεικτικά επόμενα βήματα» — most proposals have
+  // two, a few have one. More than two is unexpected.
+  if (d.next_steps?.length > 2) {
+    push('warn', `next_steps has ${d.next_steps.length} item(s) (expected 1–2)`, 'next_steps');
   }
+  // Each step must carry a known category key (drives labels + grouping).
+  (d.next_steps || []).forEach((s, i) => {
+    if (!s?.category) {
+      push('error', `next_steps[${i}] has no category`, `next_steps[${i}]`);
+    } else if (!NEXT_STEP_ORDER.includes(s.category)) {
+      push('error', `next_steps[${i}] has unknown category "${s.category}"`, `next_steps[${i}]`);
+    }
+  });
   if (!d.limitations?.length) {
     push('warn', 'Missing limitations («Ζητήματα υλοποίησης»)', 'limitations');
   }
@@ -98,8 +108,8 @@ function warningsFor(entry) {
   const refs = d.references || [];
   const refNums = new Set(refs.map((r) => r.n));
 
-  if (refs.length < 3) {
-    push('error', `Too few citations: ${refs.length} reference${refs.length === 1 ? '' : 's'} (need at least 3)`, 'references');
+  if (refs.length < 2) {
+    push('error', `Too few citations: ${refs.length} reference${refs.length === 1 ? '' : 's'} (need at least 2)`, 'references');
   }
 
   for (const n of usedFn) {

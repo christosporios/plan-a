@@ -390,10 +390,26 @@ export default function Presentation({ onExit }) {
   const mobile = useIsMobile();
   const slides = useMemo(buildSlides, []);
   const [index, setIndex] = useState(0);
+  const rootRef = useRef(null);
 
   const go = useCallback((delta) => {
     setIndex((i) => Math.min(slides.length - 1, Math.max(0, i + delta)));
   }, [slides.length]);
+
+  // Enter the browser's native fullscreen on open; leave it on close. The deck
+  // is already a fixed full-viewport overlay, but real fullscreen hides the
+  // browser chrome (tabs, address bar) — what you want on a projector. Requires
+  // a user gesture, which opening the deck is. Both calls can reject (denied /
+  // not-active) — that's fine, the overlay still covers the screen.
+  useEffect(() => {
+    const el = rootRef.current;
+    if (el?.requestFullscreen && !document.fullscreenElement) {
+      el.requestFullscreen().catch(() => {});
+    }
+    return () => {
+      if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+    };
+  }, []);
 
   // Keyboard navigation + lock background scroll while the deck is open.
   useEffect(() => {
@@ -429,6 +445,7 @@ export default function Presentation({ onExit }) {
 
   return (
     <div
+      ref={rootRef}
       data-no-print
       style={{
         position: 'fixed', inset: 0, zIndex: 9999,

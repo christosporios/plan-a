@@ -9,6 +9,7 @@ import { LimitationQA } from './limitation-qa';
 import { ChartGroup } from './chart-group';
 import { FootnotesSection } from './footnotes-section';
 import { ProposalSection } from './proposal-section';
+import { nextStepTitles } from '../lib/next-steps.mjs';
 import { SolidLine } from './scroll-line';
 import { SiteFooter } from './site-footer';
 import { SectionRail } from './section-rail';
@@ -203,18 +204,18 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
               goal-contribution structure carry a standalone `problem` field. */}
           {RELEASED && d.problem && (
             <ProposalSection id="problem" title="Το πρόβλημα" accent={theme.accent}>
-              <Body text={d.problem.body} onRefClick={onRefClick} accent={theme.accent} />
+              <Body text={d.problem.body} onRefClick={onRefClick} accent={theme.accent} navigate={navigate} />
               {d.problem.callouts?.map((c, i) => (
-                <CalloutBox key={i} text={c} onRefClick={onRefClick} />
+                <CalloutBox key={i} text={c} onRefClick={onRefClick} accent={theme.accent} navigate={navigate} />
               ))}
             </ProposalSection>
           )}
 
           {RELEASED && d.proposal && (
             <ProposalSection id="proposal" title="Η πρόταση" accent={theme.accent}>
-              <Body text={d.proposal.body} onRefClick={onRefClick} accent={theme.accent} />
+              <Body text={d.proposal.body} onRefClick={onRefClick} accent={theme.accent} navigate={navigate} />
               {d.proposal.callouts?.map((c, i) => (
-                <CalloutBox key={i} text={c} onRefClick={onRefClick} />
+                <CalloutBox key={i} text={c} onRefClick={onRefClick} accent={theme.accent} navigate={navigate} />
               ))}
             </ProposalSection>
           )}
@@ -242,29 +243,29 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
               title={`Πώς συμβάλλει στον στόχο «${theme.label}»`}
               accent={theme.accent}
             >
-              <Body text={d.contribution.body} onRefClick={onRefClick} accent={theme.accent} />
+              <Body text={d.contribution.body} onRefClick={onRefClick} accent={theme.accent} navigate={navigate} />
               {d.contribution.callouts?.map((c, i) => (
-                <CalloutBox key={i} text={c} onRefClick={onRefClick} />
+                <CalloutBox key={i} text={c} onRefClick={onRefClick} accent={theme.accent} navigate={navigate} />
               ))}
               {d.contribution.charts?.length > 0 && (
                 <ChartGroup charts={d.contribution.charts} accent={theme.accent} mobile={mobile} />
               )}
               {d.contribution.body_after && (
-                <Body text={d.contribution.body_after} onRefClick={onRefClick} accent={theme.accent} />
+                <Body text={d.contribution.body_after} onRefClick={onRefClick} accent={theme.accent} navigate={navigate} />
               )}
             </ProposalSection>
           )}
 
           {RELEASED && d.implementation?.body && (
             <ProposalSection id="implementation" title="Υλοποίηση" accent={theme.accent}>
-              <Body text={d.implementation.body} onRefClick={onRefClick} accent={theme.accent} />
+              <Body text={d.implementation.body} onRefClick={onRefClick} accent={theme.accent} navigate={navigate} />
             </ProposalSection>
           )}
 
           {RELEASED && d.limitations?.length > 0 && (
             <ProposalSection id="limitations" title="Ζητήματα υλοποίησης" accent={theme.accent}>
               {d.limitations.map((l, i) => (
-                <LimitationQA key={i} q={l.q} a={l.a} onRefClick={onRefClick} />
+                <LimitationQA key={i} q={l.q} a={l.a} onRefClick={onRefClick} accent={theme.accent} navigate={navigate} />
               ))}
             </ProposalSection>
           )}
@@ -276,9 +277,9 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
                   <div style={{ fontWeight: 600, color: C.ink, fontSize: 15, marginBottom: 6 }}>
                     {b.title}
                   </div>
-                  <Body text={b.body} onRefClick={onRefClick} accent={theme.accent} style={{ marginBottom: 0, fontSize: 14.5 }} />
+                  <Body text={b.body} onRefClick={onRefClick} accent={theme.accent} navigate={navigate} style={{ marginBottom: 0, fontSize: 14.5 }} />
                   {b.callouts?.map((c, j) => (
-                    <CalloutBox key={j} text={c} onRefClick={onRefClick} />
+                    <CalloutBox key={j} text={c} onRefClick={onRefClick} accent={theme.accent} navigate={navigate} />
                   ))}
                 </div>
               ))}
@@ -287,14 +288,17 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
 
           {RELEASED && d.next_steps?.length > 0 && (
             <ProposalSection id="next-steps" title="Δύο ενδεικτικά επόμενα βήματα" accent={theme.accent}>
-              {d.next_steps.map((s, i) => (
+              {(() => {
+                const titles = nextStepTitles(d.next_steps);
+                return d.next_steps.map((s, i) => (
                 <div key={i} style={{ marginBottom: 18 }}>
                   <div style={{ fontWeight: 600, color: C.ink, fontSize: 15, marginBottom: 6 }}>
-                    {s.title}
+                    {titles[i]}
                   </div>
-                  <Body text={s.body} onRefClick={onRefClick} accent={theme.accent} style={{ marginBottom: 0, fontSize: 14.5 }} />
+                  <Body text={s.body} onRefClick={onRefClick} accent={theme.accent} navigate={navigate} style={{ marginBottom: 0, fontSize: 14.5 }} />
                 </div>
-              ))}
+                ));
+              })()}
               <a
                 href="/epomena-vimata"
                 onClick={(e) => { e.preventDefault(); navigate('/epomena-vimata'); }}

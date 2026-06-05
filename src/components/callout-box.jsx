@@ -3,7 +3,7 @@ import { Body } from '../lib/format-text';
 
 // Bordered call-out box used in problem / proposal / benefits sections.
 // Renders multi-paragraph body text.
-export const CalloutBox = ({ children, text, onRefClick }) => (
+export const CalloutBox = ({ children, text, onRefClick, accent, navigate }) => (
   <div style={{
     border: `1px solid ${C.rule}`,
     background: C.card,
@@ -12,7 +12,7 @@ export const CalloutBox = ({ children, text, onRefClick }) => (
     borderRadius: 2,
   }}>
     {text
-      ? <Body text={text} onRefClick={onRefClick} style={{ fontSize: 14, marginBottom: 12 }} />
+      ? <Body text={text} onRefClick={onRefClick} accent={accent} navigate={navigate} style={{ fontSize: 14, marginBottom: 12 }} />
       : children}
   </div>
 );

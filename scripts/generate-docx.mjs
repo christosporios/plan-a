@@ -26,6 +26,7 @@ import { readFileSync, readdirSync, existsSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
 import { themeOf } from '../src/lib/theme.js';
+import { nextStepTitles } from '../src/lib/next-steps.mjs';
 
 // ── Read raw data (same discovery as generate-pdf.mjs) ───────────────────────
 const proposals = readdirSync('proposals')
@@ -97,8 +98,27 @@ function runs(text) {
 // Mirrors the `body()` block logic in format-text.jsx / generate-pdf.mjs:
 // blank-line separated blocks → ## / ### headings, "- " bullets, "N." ordered
 // lists, or plain paragraphs (single newlines folded to spaces).
+// Inline callout fence: ::: callout … ::: becomes a bordered box exactly where
+// it sits in the prose. Mirrors src/lib/format-text.jsx. A FRESH regex is built
+// per call — bodyParas recurses (via calloutBox), so a shared /g regex's
+// lastIndex would be corrupted reentrantly.
 function bodyParas(text, paraOpts = {}) {
   if (!text) return [];
+  if (text.includes(':::')) {
+    const fence = /:::[ \t]*callout\s*([\s\S]*?)\s*:::/g;
+    const out = [];
+    let last = 0, m;
+    while ((m = fence.exec(text)) !== null) {
+      const chunk = text.slice(last, m.index);
+      if (chunk.trim()) out.push(...bodyParas(chunk, paraOpts));
+      out.push(calloutBox(m[1].trim()));
+      out.push(new Paragraph({ spacing: { after: 80 }, children: [] }));
+      last = m.index + m[0].length;
+    }
+    const tail = text.slice(last);
+    if (tail.trim()) out.push(...bodyParas(tail, paraOpts));
+    return out;
+  }
   return text.trim().split(/\n{2,}/).flatMap((block) => {
     const t = block.trim();
     if (t.startsWith('### ')) return [new Paragraph({ heading: HeadingLevel.HEADING_4, children: runs(t.slice(4)) })];
@@ -250,10 +270,11 @@ function buildProposalDoc(file, d) {
 
   if (d.next_steps?.length) {
     children.push(sectionHeading('Δύο ενδεικτικά επόμενα βήματα'));
-    for (const s of d.next_steps) {
-      children.push(new Paragraph({ spacing: { before: 120, after: 40 }, children: [new TextRun({ text: s.title, bold: true })] }));
+    const nsTitles = nextStepTitles(d.next_steps);
+    d.next_steps.forEach((s, i) => {
+      children.push(new Paragraph({ spacing: { before: 120, after: 40 }, children: [new TextRun({ text: nsTitles[i], bold: true })] }));
       if (s.body) children.push(...bodyParas(s.body));
-    }
+    });
   }
 
   if (d.references?.length) children.push(...referencesBlocks(d.references));

@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { C, EYEBROW } from '../lib/theme';
 import { SITE } from '../lib/site';
 import { useIsMobile } from '../hooks/use-is-mobile';
@@ -82,17 +82,7 @@ export const SiteFooter = ({ navigate }) => {
               >
                 ▷ Παρουσίαση
               </button>
-              <a
-                href="/plan-a.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => track('PDF download')}
-                style={{ ...presentButton, textDecoration: 'none', display: 'inline-block' }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = C.ink; e.currentTarget.style.borderColor = C.light; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = C.light; e.currentTarget.style.borderColor = C.rule; }}
-              >
-                ↓ PDF
-              </a>
+              <PdfDownload mobile={mobile} />
             </div>
             )}
             <span style={{ ...EYEBROW, fontSize: 10, letterSpacing: '0.15em', color: C.faint }}>
@@ -101,33 +91,104 @@ export const SiteFooter = ({ navigate }) => {
           </div>
         </div>
 
-        {/* Funding line — small print. */}
-        <p style={{
-          marginTop: mobile ? 28 : 32,
-          paddingTop: 18,
-          borderTop: `1px solid ${C.rule}`,
-          fontSize: 10.5,
-          lineHeight: 1.6,
-          color: C.faint,
-          maxWidth: 640,
-          textAlign: mobile ? 'center' : 'left',
-          marginLeft: mobile ? 'auto' : 0,
-          marginRight: mobile ? 'auto' : 0,
-        }}>
-          {fundShortLead}
-          <a
-            href="/eucharisties"
-            data-hover-underline
-            onClick={(e) => { e.preventDefault(); navigate('/eucharisties'); }}
-            style={{ color: C.light, textDecoration: 'underline', textUnderlineOffset: 2 }}
-          >
-            {FUND_LINK}
-          </a>.
-        </p>
+        {/* Funding line — small print. The divider spans the full footer width
+            (aligning with the columns above); the copy stays narrow for reading. */}
+        <div style={{ marginTop: mobile ? 28 : 32, paddingTop: 18, borderTop: `1px solid ${C.rule}` }}>
+          <p style={{
+            margin: 0,
+            fontSize: 10.5,
+            lineHeight: 1.6,
+            color: C.faint,
+            textAlign: mobile ? 'center' : 'left',
+          }}>
+            {fundShortLead}
+            <a
+              href="/eucharisties"
+              data-hover-underline
+              onClick={(e) => { e.preventDefault(); navigate('/eucharisties'); }}
+              style={{ color: C.light, textDecoration: 'underline', textUnderlineOffset: 2 }}
+            >
+              {FUND_LINK}
+            </a>.
+          </p>
+        </div>
       </div>
     </footer>
   );
 };
+
+// PDF download as a single button that opens a small A4 / A5 menu. The menu
+// opens upward (the footer sits at the page foot) and closes on outside click
+// or Escape.
+const PDF_FORMATS = [
+  { href: '/plan-a.pdf', label: 'A4', size: 'A4' },
+  { href: '/plan-a-a5.pdf', label: 'A5', size: 'A5' },
+];
+
+function PdfDownload({ mobile }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onClick = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('mousedown', onClick);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('mousedown', onClick); document.removeEventListener('keydown', onKey); };
+  }, [open]);
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        style={{ ...presentButton, color: open ? C.ink : C.light, borderColor: open ? C.light : C.rule }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = C.ink; e.currentTarget.style.borderColor = C.light; }}
+        onMouseLeave={(e) => { if (!open) { e.currentTarget.style.color = C.light; e.currentTarget.style.borderColor = C.rule; } }}
+      >
+        ↓ PDF
+        <span style={{ marginLeft: 7, fontSize: 8, display: 'inline-block', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 200ms cubic-bezier(0.16, 1, 0.3, 1)' }}>▾</span>
+      </button>
+      {open && (
+        <div
+          role="menu"
+          style={{
+            position: 'absolute', bottom: 'calc(100% + 6px)', zIndex: 10,
+            left: mobile ? '50%' : 'auto', right: mobile ? 'auto' : 0,
+            transform: mobile ? 'translateX(-50%)' : 'none',
+            minWidth: 120, padding: 4,
+            background: C.bg, border: `1px solid ${C.rule}`, borderRadius: 4,
+            boxShadow: '0 8px 28px rgba(0,0,0,0.10)',
+            animation: 'fade-in 160ms cubic-bezier(0.16, 1, 0.3, 1) both',
+          }}
+        >
+          {PDF_FORMATS.map(({ href, label, size }) => (
+            <a
+              key={href}
+              role="menuitem"
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => { track('PDF download', { size }); setOpen(false); }}
+              style={{
+                display: 'block',
+                padding: '8px 10px', borderRadius: 3, textDecoration: 'none',
+                transition: 'background 160ms cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = C.rule; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+            >
+              <span style={{ ...EYEBROW, fontSize: 11, letterSpacing: '0.14em', fontWeight: 400, color: C.ink }}>↓ PDF {label}</span>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const footLink = {
   ...EYEBROW,

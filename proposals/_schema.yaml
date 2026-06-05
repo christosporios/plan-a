@@ -15,6 +15,11 @@
 # CITATIONS: the final text style is an inline link IMMEDIATELY followed by a
 # footnote marker, e.g.  [εκτός προδιαγραφών](https://…)^1  — the link target and
 # the numbered reference (references[] with n: 1) point at the same source.
+#
+# CROSS-REFERENCES between proposals: link with an internal path,
+# [Πρόταση 4](/4-apomakrynsi-paranomis-stathmeysis) — any href of the form
+# /<number> or /<number>-<slug> renders as a themed cross-reference (accent
+# color, subtle underline) and navigates within the SPA. No footnote marker.
 
 number: 1                                # 1–20; also the URL number and image key (assets/proposals/NN.jpg)
 slug: mikres-pezodromiseis               # URL-safe ASCII transliteration; canonical URL is /<number>-<slug>
@@ -78,8 +83,14 @@ benefits:                                # OPTIONAL
         Σύμφωνα με τον ΠΟΥ, τουλάχιστον [1,6 εκατομμύρια υγιή χρόνια ζωής χάνονται](https://…)^7…
 
 # ── ΔΥΟ ΕΝΔΕΙΚΤΙΚΑ ΕΠΟΜΕΝΑ ΒΗΜΑΤΑ ──────────────────────────────────────────────
-next_steps:                              # OPTIONAL — title + body list
-  - title: Χαρτογράφηση σημείων εφαρμογής
+# Usually two items, sometimes one. Each item's `category` is a fixed key from
+# src/lib/next-steps.mjs — the displayed heading is derived from it, and the
+# /epomena-vimata page groups every proposal's steps by shared category. When a
+# proposal has two steps of the SAME category they auto-number "(1)"/"(2)".
+# Categories: mapping | legal | pricing | costing | digital | financial-flow |
+#             peer-cities
+next_steps:                              # OPTIONAL — category + body list
+  - category: mapping                    # → «Χαρτογράφηση σημείων εφαρμογής»
     body: |
       Να εντοπιστούν δρόμοι που πληρούν δύο κριτήρια ταυτόχρονα…
 

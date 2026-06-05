@@ -6,6 +6,7 @@ import { StaticPage } from './components/static-page';
 import { AggregatedPage } from './components/aggregated-page';
 import { PolisPage } from './components/polis-page';
 import { MethodologyPage } from './components/methodology-page';
+import { NextStepsPage } from './components/next-steps-page';
 import { PresentationContext } from './lib/presentation-context';
 import { track } from './lib/analytics';
 import { C } from './lib/theme';
@@ -47,7 +48,7 @@ function renderRoute(route, navigate) {
     return <ProposalPage entry={entry} prev={prev} next={next} navigate={navigate} />;
   }
   if (route.kind === 'methodologia') return <MethodologyPage navigate={navigate} />;
-  if (route.kind === 'epomena-vimata') return <StaticPage slug="epomena-vimata" navigate={navigate} />;
+  if (route.kind === 'epomena-vimata') return <NextStepsPage navigate={navigate} />;
   if (route.kind === 'eucharisties') return <StaticPage slug="eucharisties" navigate={navigate} />;
   // References + Pol.is pages don't exist pre-launch — fall through to the cover.
   if (RELEASED && route.kind === 'parapombes') return <AggregatedPage kind="references" navigate={navigate} />;
