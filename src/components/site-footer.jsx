@@ -4,24 +4,18 @@ import { SITE } from '../lib/site';
 import { useIsMobile } from '../hooks/use-is-mobile';
 import { PresentationContext } from '../lib/presentation-context';
 import { track } from '../lib/analytics';
-import { RELEASED } from '../lib/released';
+import { RELEASED, SHOW_DEV_TOOLS } from '../lib/released';
 import { acknowledgments } from '../lib/acknowledgments';
+import { NAV_LINKS } from '../lib/nav-links';
 
 // The short funding line, with its closing phrase linked to /eucharisties.
 const FUND_LINK = 'δέκα κοινωφελείς οργανισμούς';
 const fundShortLead = acknowledgments.funding_short.split(FUND_LINK)[0];
 
-// Shared bottom-of-page footer with site nav.
-// Appears on the cover, proposal pages, static pages, and aggregated lists.
-// `released`-only entries (Διαβούλευση, Παραπομπές) are hidden pre-launch since
-// those pages aren't available yet.
-const LINKS = [
-  { href: '/about',           label: 'Τι είναι το Plan A' },
-  { href: '/diavoulefsi',     label: 'Διαβούλευση', released: true },
-  { href: '/parapombes',      label: 'Παραπομπές', released: true },
-  { href: '/epomena-vimata',  label: 'Επόμενα βήματα' },
-  { href: '/eucharisties',    label: 'Ευχαριστίες' },
-];
+// Shared bottom-of-page footer with site nav. Appears on the cover, proposal
+// pages, static pages, and aggregated lists. Nav entries are shared with the
+// top nav (src/lib/nav-links.js).
+const LINKS = NAV_LINKS;
 
 export const SiteFooter = ({ navigate }) => {
   const mobile = useIsMobile();
@@ -91,20 +85,23 @@ export const SiteFooter = ({ navigate }) => {
                 </a>
               ))}
             </nav>
-            {/* Presentation + PDF (download link to the pre-generated report).
-                Hidden pre-launch — neither surface is available yet. */}
-            {RELEASED && (
-            <div data-no-print style={{ display: 'flex', flexWrap: 'wrap', justifyContent: mobile ? 'center' : 'flex-end', gap: mobile ? '8px 18px' : '8px 22px' }}>
-              <button
-                type="button"
-                onClick={() => present()}
-                style={presentButton}
-                onMouseEnter={(e) => { e.currentTarget.style.color = C.ink; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = C.faint; }}
-              >
-                ▷ Παρουσίαση
-              </button>
-              <PdfDownload mobile={mobile} />
+            {/* PDF download (the pre-generated report) is released-only — hidden
+                pre-launch since the report isn't available yet. The presentation
+                button is staging-only (localhost + Vercel preview, never prod). */}
+            {(RELEASED || SHOW_DEV_TOOLS) && (
+            <div data-no-print style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: mobile ? 'center' : 'flex-end', gap: mobile ? '8px 18px' : '8px 22px' }}>
+              {SHOW_DEV_TOOLS && (
+                <button
+                  type="button"
+                  onClick={() => present()}
+                  style={presentButton}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = C.ink; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = C.faint; }}
+                >
+                  ▷ Παρουσίαση
+                </button>
+              )}
+              {RELEASED && <PdfDownload mobile={mobile} />}
             </div>
             )}
             <a
@@ -132,9 +129,27 @@ export const SiteFooter = ({ navigate }) => {
               </svg>
               Email
             </a>
-            <span style={{ ...EYEBROW, fontSize: 10, letterSpacing: '0.15em', color: C.faint }}>
-              Astylab · Μάιος 2026
-            </span>
+            <a
+              href="https://astylab.gr"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 7,
+                textDecoration: 'none',
+                ...EYEBROW,
+                fontSize: 10,
+                letterSpacing: '0.15em',
+                color: C.faint,
+                transition: 'color 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = C.ink; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = C.faint; }}
+            >
+              <img src="/astylab-logo.png" alt="" style={{ width: 12, height: 12, display: 'block' }} />
+              Astylab
+            </a>
           </div>
         </div>
 
@@ -164,12 +179,13 @@ export const SiteFooter = ({ navigate }) => {
   );
 };
 
-// PDF download as a single button that opens a small A4 / A5 menu. The menu
-// opens upward (the footer sits at the page foot) and closes on outside click
-// or Escape.
+// PDF download as a single button that opens a small menu: the full report
+// (A4 / A5) plus a one-page A5 flyer. The menu opens upward (the footer sits at
+// the page foot) and closes on outside click or Escape.
 const PDF_FORMATS = [
-  { href: '/plan-a.pdf', label: 'A4', size: 'A4' },
-  { href: '/plan-a-a5.pdf', label: 'A5', size: 'A5' },
+  { href: '/plan-a.pdf', label: 'Α4', size: 'A4' },
+  { href: '/plan-a-a5.pdf', label: 'Α5', size: 'A5' },
+  { href: '/plan-a-flyer.pdf', label: 'Φυλλάδιο Α5', size: 'Flyer' },
 ];
 
 function PdfDownload({ mobile }) {
@@ -186,7 +202,7 @@ function PdfDownload({ mobile }) {
   }, [open]);
 
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
+    <div ref={ref} style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
       <button
         type="button"
         aria-haspopup="menu"
@@ -228,7 +244,7 @@ function PdfDownload({ mobile }) {
               onMouseEnter={(e) => { e.currentTarget.style.background = C.rule; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
             >
-              <span style={{ ...EYEBROW, fontSize: 11, letterSpacing: '0.14em', fontWeight: 400, color: C.ink }}>↓ PDF {label}</span>
+              <span style={{ ...EYEBROW, fontSize: 11, letterSpacing: '0.14em', fontWeight: 400, color: C.ink }}>↓ {label}</span>
             </a>
           ))}
         </div>
@@ -254,6 +270,10 @@ const presentButton = {
   background: 'transparent',
   border: 'none',
   padding: 0,
+  margin: 0,
   cursor: 'pointer',
+  display: 'inline-flex',
+  alignItems: 'center',
+  lineHeight: 1,
   transition: 'color 200ms cubic-bezier(0.16, 1, 0.3, 1)',
 };

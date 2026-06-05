@@ -6,6 +6,7 @@ import { foreword } from '../lib/foreword';
 import { useIsMobile } from '../hooks/use-is-mobile';
 import { track } from '../lib/analytics';
 import { ScrollLine } from './scroll-line';
+import { TopNav } from './top-nav';
 import { SiteFooter } from './site-footer';
 import { SignupCard } from './signup-card';
 import { RELEASED } from '../lib/released';
@@ -106,8 +107,9 @@ export const PlanACover = ({ proposals, navigate }) => {
   return (
     <div style={{ fontFamily: C.sans, background: C.bg, color: C.ink, minHeight: '100vh' }}>
       <ScrollLine />
-      {/* Hero */}
-      <section style={{ padding: mobile ? '60px 0 32px' : '96px 0 56px' }}>
+      <TopNav navigate={navigate} variant="light" />
+      {/* Hero — extra top padding clears the fixed TopNav. */}
+      <section style={{ padding: mobile ? '84px 0 32px' : '108px 0 56px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto', padding: `0 ${px}px` }}>
           <h1 style={{ margin: 0, ...enter(80) }}>
             <PlanAMark

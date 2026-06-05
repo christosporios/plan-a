@@ -385,13 +385,12 @@ function ProposalPage(d) {
   kids.push(marker(`prop-${d.number}`));
   if (d.one_line) kids.push(h(Text, { key: 'ol', style: { fontSize: 12, color: C.mid, lineHeight: 1.55 } }, d.one_line.trim().replace(/\n/g, ' ')));
   // Body — starts on a fresh page. Section order mirrors the web proposal page
-  // (src/components/proposal-page.jsx): legacy problem → proposal → Pol.is →
-  // contribution → legacy implementation → limitations → benefits → next steps.
+  // (src/components/proposal-page.jsx): legacy problem → proposal → contribution
+  // → legacy implementation → limitations → benefits → next steps → Pol.is.
   const b = [];
   // Legacy "Το πρόβλημα" — only proposals not yet migrated to `contribution`.
   if (d.problem) b.push(proposalSection('Το πρόβλημα', theme.accent, [...body(d.problem.body, `p${d.number}pr-`, {}, theme.accent), ...(d.problem.callouts || []).map((c, i) => calloutBox(c, `p${d.number}pc${i}`))], `s-prob`));
   if (d.proposal) b.push(proposalSection('Η πρόταση', theme.accent, [...body(d.proposal.body, `p${d.number}pp-`, {}, theme.accent), ...(d.proposal.callouts || []).map((c, i) => calloutBox(c, `p${d.number}ppc${i}`))], `s-prop`));
-  if (d.polis?.length) b.push(proposalSection('Από το Pol.is', theme.accent, d.polis.map((p, i) => polisCard(p, `p${d.number}po${i}`)), `s-polis`));
   if (d.contribution?.body) b.push(proposalSection(`Πώς συμβάλλει στον στόχο «${theme.label}»`, theme.accent, [
     ...body(d.contribution.body, `p${d.number}co-`, {}, theme.accent),
     ...(d.contribution.callouts || []).map((c, i) => calloutBox(c, `p${d.number}coc${i}`)),
@@ -415,6 +414,7 @@ function ProposalPage(d) {
     ])),
     h(Link, { key: 'cta', src: `${SITE_URL}/epomena-vimata`, style: { fontSize: 9.5, fontWeight: 700, color: theme.accent, textDecoration: 'none', marginTop: 2 } }, 'Δείτε πώς μπορείτε να συμβάλετε →'),
   ], `s-next`)); }
+  if (d.polis?.length) b.push(proposalSection('Από το Pol.is', theme.accent, d.polis.map((p, i) => polisCard(p, `p${d.number}po${i}`)), `s-polis`));
   if (d.references?.length) b.push(referencesBlock(d.references, `p${d.number}`));
   if (b.length) kids.push(h(View, { key: 'body', break: true }, b));
   return h(Page, { key: `prop-${d.number}`, size: 'A4', style: bodyPageStyle }, [Footer(), ...kids]);
@@ -693,3 +693,55 @@ const writeAll = (buffer, name) => {
 };
 writeAll(a4Buffer, 'plan-a.pdf');
 writeAll(a5Buffer, 'plan-a-a5.pdf');
+
+// ── A5 flyer ─────────────────────────────────────────────────────────────────
+// A standalone single-page A5 handout (separate from the report): the wordmark,
+// a QR to the site, and every thematic area with its proposal titles — names
+// only, no body. Two columns so the 20 titles fit on one A5 sheet.
+function FlyerPage() {
+  const areas = THEME_ORDER
+    .map((t) => ({ t, info: THEMES[t], items: proposals.filter((p) => p.theme === t).sort((a, b) => a.number - b.number) }))
+    .filter((a) => a.items.length);
+
+  // Split the areas across two columns, balanced by estimated height (each item
+  // ≈ one row, plus a header per area) so neither column overruns the page. The
+  // areas keep their reading order: top-down the left column, then the right.
+  const weight = (a) => a.items.length + 1.8;
+  const half = areas.reduce((s, a) => s + weight(a), 0) / 2;
+  const left = []; const right = []; let acc = 0;
+  for (const a of areas) { if (acc < half) { left.push(a); acc += weight(a); } else right.push(a); }
+
+  const areaBlock = ({ t, info, items }) => h(View, { key: t, style: { marginBottom: 14 } }, [
+    h(View, { key: 'e', style: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 4 } }, [
+      h(View, { key: 'r', style: { width: 18, height: 3, backgroundColor: info.accent } }),
+      h(Text, { key: 'k', style: { fontFamily: MONO, fontSize: 6.5, letterSpacing: 1.2, color: info.accent } }, greekUpper(`ΣΤΟΧΟΣ ${THEME_ORDER.indexOf(t) + 1}`)),
+    ]),
+    h(Text, { key: 'l', style: { fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 13, color: info.accent, marginBottom: 7, lineHeight: 1.15 } }, info.label),
+    ...items.map((p, i) => h(View, { key: i, style: { flexDirection: 'row', marginBottom: 4 } }, [
+      h(Text, { key: 'n', style: { fontFamily: SERIF, fontSize: 9, color: C.faint, width: 16 } }, String(p.number).padStart(2, '0')),
+      h(Text, { key: 'ti', style: { flex: 1, fontFamily: SERIF, fontWeight: 700, fontSize: 9, color: C.ink, lineHeight: 1.2 } }, p.title),
+    ])),
+  ]);
+
+  return h(Page, { key: 'flyer', size: 'A5', style: { backgroundColor: C.bg, paddingTop: 34, paddingBottom: 28, paddingLeft: 38, paddingRight: 38 } }, [
+    // Header — wordmark + tagline on the left, QR on the right.
+    h(View, { key: 'hd', style: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', borderBottomWidth: 1, borderBottomColor: C.rule, paddingBottom: 14, marginBottom: 16 } }, [
+      h(View, { key: 'l', style: { flex: 1 } }, [
+        h(Text, { key: 'w', style: { fontFamily: SERIF, fontStyle: 'italic', fontSize: 48, color: C.ink, letterSpacing: -1.5, lineHeight: 1 } }, SITE.wordmark),
+        h(Text, { key: 't', style: { fontFamily: SERIF, fontStyle: 'italic', fontSize: 12, color: C.mid, marginTop: 6 } }, SITE.tagline),
+      ]),
+      h(View, { key: 'qr', style: { alignItems: 'center', marginLeft: 14 } }, [
+        h(View, { key: 'b', style: { backgroundColor: '#fff', padding: 4, borderWidth: 1, borderColor: C.rule, borderRadius: 3 } }, qrSvg(SITE_URL, 60)),
+        h(Text, { key: 'c', style: { fontFamily: MONO, fontSize: 6, color: C.light, marginTop: 4, letterSpacing: 0.5 } }, SITE_HOST),
+      ]),
+    ]),
+    // Two fixed columns, each flowing its areas top-to-bottom.
+    h(View, { key: 'cols', style: { flexDirection: 'row', justifyContent: 'space-between' } }, [
+      h(View, { key: 'cl', style: { width: '48%' } }, left.map(areaBlock)),
+      h(View, { key: 'cr', style: { width: '48%' } }, right.map(areaBlock)),
+    ]),
+  ]);
+}
+
+const flyerBuffer = await renderToBuffer(h(Document, { title: 'Plan A — Φυλλάδιο', author: 'Astylab' }, FlyerPage()));
+writeAll(flyerBuffer, 'plan-a-flyer.pdf');

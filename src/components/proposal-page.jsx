@@ -11,6 +11,7 @@ import { FootnotesSection } from './footnotes-section';
 import { ProposalSection } from './proposal-section';
 import { nextStepTitles } from '../lib/next-steps.mjs';
 import { SolidLine } from './scroll-line';
+import { TopNav } from './top-nav';
 import { SiteFooter } from './site-footer';
 import { SectionRail } from './section-rail';
 import { SignupCard } from './signup-card';
@@ -52,18 +53,18 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
   const px = mobile ? 20 : 40;
 
   // Section anchors for the right-side rail (desktop only). Order matches the
-  // body flow below: lead proposal → Pol.is → goal contribution → Q&A → benefits
-  // → next steps → references. `problem`/`implementation` are legacy fields kept
-  // for proposals not yet migrated to the new structure.
+  // body flow below: lead proposal → goal contribution → Q&A → benefits →
+  // next steps → Pol.is → references. `problem`/`implementation` are legacy
+  // fields kept for proposals not yet migrated to the new structure.
   const sectionList = [
     d.problem && { id: 'problem', label: 'Το πρόβλημα' },
     d.proposal && { id: 'proposal', label: 'Η πρόταση' },
-    d.polis?.length && { id: 'polis', label: 'Από το Pol.is' },
     d.contribution && { id: 'contribution', label: 'Συμβολή στον στόχο' },
     d.implementation && { id: 'implementation', label: 'Υλοποίηση' },
     d.limitations?.length && { id: 'limitations', label: 'Ζητήματα υλοποίησης' },
     d.benefits?.length && { id: 'benefits', label: 'Οφέλη' },
     d.next_steps?.length && { id: 'next-steps', label: 'Επόμενα βήματα' },
+    d.polis?.length && { id: 'polis', label: 'Από το Pol.is' },
     d.references?.length && { id: 'references', label: 'Παραπομπές' },
   ].filter(Boolean);
 
@@ -74,15 +75,17 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
       animation: 'fade-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both',
     }}>
       <SolidLine color={theme.accent} showProgress />
+      <TopNav navigate={navigate} variant="dark" />
       {!mobile && RELEASED && <SectionRail sections={sectionList} accent={theme.accent} />}
-      {/* Header — darkened image (or themed placeholder) behind white text */}
+      {/* Header — darkened image (or themed placeholder) behind white text.
+          Top padding clears the fixed TopNav above the contextual prev/next row. */}
       <header style={{
         position: 'relative',
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         minHeight: mobile ? 340 : 460,
-        padding: mobile ? '36px 0 40px' : '56px 0 56px',
+        padding: mobile ? '64px 0 40px' : '84px 0 56px',
         background: C.ink,
       }}>
         {img ? (
@@ -101,10 +104,10 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
           background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.52) 45%, rgba(0,0,0,0.7) 100%)',
         }} />
         <div style={{ position: 'relative', width: '100%', maxWidth: 720, margin: '0 auto', padding: `0 ${px}px`, flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          {/* Top nav: ← prev title | Plan A | next title → */}
+          {/* Contextual prev/next within the goal — home/menu live in the TopNav. */}
           <nav style={{
             display: 'grid',
-            gridTemplateColumns: '1fr auto 1fr',
+            gridTemplateColumns: '1fr 1fr',
             alignItems: 'baseline',
             gap: mobile ? 10 : 20,
             marginBottom: mobile ? 24 : 28,
@@ -123,14 +126,6 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
                 </a>
               )}
             </div>
-            <a
-              href="/"
-              onClick={(e) => { e.preventDefault(); navigate('/'); }}
-              data-hover-underline
-              style={{ ...backLinkStyle, color: '#fff' }}
-            >
-              Plan A
-            </a>
             <div style={{ minWidth: 0, overflow: 'hidden', textAlign: 'right' }}>
               {RELEASED && next && (
                 <a
@@ -220,23 +215,6 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
             </ProposalSection>
           )}
 
-          {RELEASED && d.polis?.length > 0 && (
-            <ProposalSection id="polis" title="Από το Pol.is" accent={theme.accent}>
-              {d.polis.map((p, i) => (
-                <PolisStatement
-                  key={i}
-                  statement={p.statement}
-                  overall={p.overall}
-                  groups={p.groups}
-                  statementId={p.statement_id}
-                  mobile={mobile}
-                  navigate={navigate}
-                  accent={theme.accent}
-                />
-              ))}
-            </ProposalSection>
-          )}
-
           {RELEASED && d.contribution?.body && (
             <ProposalSection
               id="contribution"
@@ -306,6 +284,23 @@ export const ProposalPage = ({ entry, prev, next, navigate }) => {
               >
                 Δείτε πώς μπορείτε να συμβάλετε →
               </a>
+            </ProposalSection>
+          )}
+
+          {RELEASED && d.polis?.length > 0 && (
+            <ProposalSection id="polis" title="Από το Pol.is" accent={theme.accent}>
+              {d.polis.map((p, i) => (
+                <PolisStatement
+                  key={i}
+                  statement={p.statement}
+                  overall={p.overall}
+                  groups={p.groups}
+                  statementId={p.statement_id}
+                  mobile={mobile}
+                  navigate={navigate}
+                  accent={theme.accent}
+                />
+              ))}
             </ProposalSection>
           )}
 

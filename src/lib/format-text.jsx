@@ -47,7 +47,6 @@ function ProposalRef({ href, accent, navigate, children }) {
         fontWeight: 500,
         textDecoration: 'none',
         borderBottom: `1px solid ${accent}59`,
-        whiteSpace: 'nowrap',
       }}
     >
       {children}
