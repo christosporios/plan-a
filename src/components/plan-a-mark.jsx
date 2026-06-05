@@ -4,7 +4,7 @@ import { C, THEMES, THEME_ORDER, WORDMARK } from '../lib/theme';
 // The "Plan A" wordmark with a hidden easter egg: click it and the A pulls away
 // from "Plan", springs back and pops, while the whole mark flashes a (random)
 // theme colour before settling back — a little dance. No pointer cursor: it's an
-// egg, discovered by accident. Used on the landing hero and the footer.
+// egg, discovered by accident. Used on the landing hero.
 export function PlanAMark({ style, label = 'Plan A' }) {
   const [run, setRun] = useState(0);   // bump to retrigger the keyframe
   const [flash, setFlash] = useState(null);

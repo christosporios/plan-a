@@ -109,26 +109,6 @@ export const PlanACover = ({ proposals, navigate }) => {
       {/* Hero */}
       <section style={{ padding: mobile ? '60px 0 32px' : '96px 0 56px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto', padding: `0 ${px}px` }}>
-          <a
-            href="https://astylab.gr"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              marginBottom: 28,
-              textDecoration: 'none',
-              color: 'inherit',
-              width: 'fit-content',
-              ...enter(0),
-            }}
-          >
-            <img src="/astylab-logo.png" alt="" style={{ width: 18, height: 18, display: 'block' }} />
-            <span data-external-link style={{ ...EYEBROW, fontSize: 11, letterSpacing: '0.25em', fontWeight: 400 }}>
-              Astylab
-            </span>
-          </a>
           <h1 style={{ margin: 0, ...enter(80) }}>
             <PlanAMark
               label={SITE.wordmark}

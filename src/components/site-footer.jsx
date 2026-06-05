@@ -1,10 +1,9 @@
 import { useContext, useEffect, useRef, useState } from 'react';
-import { C, EYEBROW } from '../lib/theme';
+import { C, EYEBROW, WORDMARK } from '../lib/theme';
 import { SITE } from '../lib/site';
 import { useIsMobile } from '../hooks/use-is-mobile';
 import { PresentationContext } from '../lib/presentation-context';
 import { track } from '../lib/analytics';
-import { PlanAMark } from './plan-a-mark';
 import { RELEASED } from '../lib/released';
 import { acknowledgments } from '../lib/acknowledgments';
 
@@ -39,9 +38,32 @@ export const SiteFooter = ({ navigate }) => {
           gap: mobile ? 28 : 24,
           textAlign: mobile ? 'center' : 'left',
         }}>
-          {/* Left — the wordmark, written the signature way (click it for a dance). */}
+          {/* Left — the wordmark. Clicking it goes home: scrolls to top if already
+              on the landing page, otherwise navigates there. */}
           <div>
-            <PlanAMark label={SITE.wordmark} style={{ fontSize: mobile ? 34 : 40, letterSpacing: '-0.02em', lineHeight: 1 }} />
+            <a
+              href="/"
+              onClick={(e) => {
+                e.preventDefault();
+                if (window.location.pathname === '/') {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                  navigate('/');
+                }
+              }}
+              style={{
+                ...WORDMARK,
+                fontSize: mobile ? 34 : 40,
+                letterSpacing: '-0.02em',
+                lineHeight: 1,
+                display: 'inline-block',
+                whiteSpace: 'nowrap',
+                textDecoration: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              {SITE.wordmark}
+            </a>
             <div style={{
               fontFamily: C.serif, fontStyle: 'italic', fontSize: mobile ? 15 : 17,
               color: C.mid, marginTop: 8, lineHeight: 1.3,
@@ -72,19 +94,44 @@ export const SiteFooter = ({ navigate }) => {
             {/* Presentation + PDF (download link to the pre-generated report).
                 Hidden pre-launch — neither surface is available yet. */}
             {RELEASED && (
-            <div data-no-print style={{ display: 'flex', flexWrap: 'wrap', justifyContent: mobile ? 'center' : 'flex-end', gap: 10 }}>
+            <div data-no-print style={{ display: 'flex', flexWrap: 'wrap', justifyContent: mobile ? 'center' : 'flex-end', gap: mobile ? '8px 18px' : '8px 22px' }}>
               <button
                 type="button"
                 onClick={() => present()}
                 style={presentButton}
-                onMouseEnter={(e) => { e.currentTarget.style.color = C.ink; e.currentTarget.style.borderColor = C.light; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = C.light; e.currentTarget.style.borderColor = C.rule; }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = C.ink; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = C.faint; }}
               >
                 ▷ Παρουσίαση
               </button>
               <PdfDownload mobile={mobile} />
             </div>
             )}
+            <a
+              href="mailto:adam@astylab.gr,vasiliki@astylab.gr"
+              aria-label="Επικοινωνία με email"
+              title="adam@astylab.gr, vasiliki@astylab.gr"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                color: C.faint,
+                textDecoration: 'none',
+                ...EYEBROW,
+                fontSize: 10,
+                letterSpacing: '0.18em',
+                fontWeight: 400,
+                transition: 'color 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = C.ink; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = C.faint; }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="2.5" y="4.5" width="19" height="15" rx="2" />
+                <path d="M3 6l9 7 9-7" />
+              </svg>
+              Email
+            </a>
             <span style={{ ...EYEBROW, fontSize: 10, letterSpacing: '0.15em', color: C.faint }}>
               Astylab · Μάιος 2026
             </span>
@@ -145,9 +192,9 @@ function PdfDownload({ mobile }) {
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        style={{ ...presentButton, color: open ? C.ink : C.light, borderColor: open ? C.light : C.rule }}
-        onMouseEnter={(e) => { e.currentTarget.style.color = C.ink; e.currentTarget.style.borderColor = C.light; }}
-        onMouseLeave={(e) => { if (!open) { e.currentTarget.style.color = C.light; e.currentTarget.style.borderColor = C.rule; } }}
+        style={{ ...presentButton, color: open ? C.ink : C.faint }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = C.ink; }}
+        onMouseLeave={(e) => { if (!open) { e.currentTarget.style.color = C.faint; } }}
       >
         ↓ PDF
         <span style={{ marginLeft: 7, fontSize: 8, display: 'inline-block', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 200ms cubic-bezier(0.16, 1, 0.3, 1)' }}>▾</span>
@@ -203,11 +250,10 @@ const presentButton = {
   fontSize: 10,
   letterSpacing: '0.18em',
   fontWeight: 400,
-  color: C.light,
+  color: C.faint,
   background: 'transparent',
-  border: `1px solid ${C.rule}`,
-  borderRadius: 3,
-  padding: '7px 14px',
+  border: 'none',
+  padding: 0,
   cursor: 'pointer',
-  transition: 'color 200ms cubic-bezier(0.16, 1, 0.3, 1), border-color 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+  transition: 'color 200ms cubic-bezier(0.16, 1, 0.3, 1)',
 };

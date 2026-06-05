@@ -185,11 +185,11 @@ function CalloutBlock({ text, ctx }) {
   );
 }
 
-// Marker for an unordered-list item: a small stylish arrow in the accent color.
+// Marker for an unordered-list item: a small bullet in the accent color.
 function ArrowMarker({ accent }) {
   return (
     <span aria-hidden="true" style={{ color: accent, fontWeight: 700, flexShrink: 0, lineHeight: 1.6 }}>
-      →
+      •
     </span>
   );
 }
