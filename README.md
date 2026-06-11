@@ -156,10 +156,3 @@ Defined in [`src/lib/theme.js`](src/lib/theme.js):
 
 React 19, Vite, js-yaml, sharp (for OG images). No router library — client-side routing via `pushState`. No CSS-in-JS framework — inline `style` objects driven by the design tokens. Deployed on Vercel.
 
----
-
-## Credits
-
-- **Σύνταξη**: Βασιλική Πουλά, Αδάμ Μαρκάκης
-- **Επιστημονική υποστήριξη**: 1830 lab
-- **Χρηματοδότηση**: «Σημεία Στήριξης»
